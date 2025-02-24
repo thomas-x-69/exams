@@ -19,6 +19,7 @@ export default function RootLayout({ children }) {
         className={`${cairo.className} antialiased`}
         suppressHydrationWarning
       >
+        {/* Google AdSense Script */}
         <Script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbrowser.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
@@ -57,6 +58,7 @@ export default function RootLayout({ children }) {
                         width={60}
                         height={40}
                         className="w-full h-full object-contain p-1"
+                        priority
                       />
                     </div>
                     <h1 className="text-lg font-bold text-white hidden sm:block">
@@ -82,7 +84,7 @@ export default function RootLayout({ children }) {
 
                     {/* Contact Button */}
                     <a
-                      href="#contact"
+                      href="/"
                       className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
                     >
                       <span>ابدأ الآن</span>

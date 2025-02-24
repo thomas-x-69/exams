@@ -1,6 +1,7 @@
+// src/app/exams/questions/page.js
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -21,7 +22,8 @@ const QuizPage = () => {
 
   // Get exam state from Redux
   const examState = useSelector((state) => state.exam);
-  const phaseState = examState.phases[phase];
+  const phaseState = phase ? examState.phases[phase] : null;
+  const activeExam = examState.activeExam;
 
   const [currentQuestion, setCurrentQuestionState] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -29,93 +31,115 @@ const QuizPage = () => {
   const [remainingTime, setRemainingTime] = useState(600); // Default 10 min
   const [showTimer, setShowTimer] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Parse phase and subphase if present
   const [mainPhase, subPhase] = phase ? phase.split("_") : [phase, null];
 
+  // This is a simplified version of getPhaseQuestions
+  const getPhaseQuestions = useCallback(
+    (phaseId) => {
+      try {
+        // Use the improved getRandomQuestions from questionsUtils
+        const questionsFromUtils = getRandomQuestions(
+          activeExam?.subject || "mail",
+          phaseId,
+          10 // Number of questions to get
+        );
+
+        // The improved function will always return something (at least dummy questions)
+        return questionsFromUtils;
+      } catch (error) {
+        console.error("Error in getPhaseQuestions:", error);
+        // Provide fallback questions
+        return [
+          {
+            id: "q1",
+            text: "سؤال اختبار رقم 1",
+            options: [
+              "الخيار الأول",
+              "الخيار الثاني",
+              "الخيار الثالث",
+              "الخيار الرابع",
+            ],
+            correctAnswer: 0,
+          },
+          {
+            id: "q2",
+            text: "سؤال اختبار رقم 2",
+            options: [
+              "الخيار الأول",
+              "الخيار الثاني",
+              "الخيار الثالث",
+              "الخيار الرابع",
+            ],
+            correctAnswer: 1,
+          },
+          {
+            id: "q3",
+            text: "سؤال اختبار رقم 3",
+            options: [
+              "الخيار الأول",
+              "الخيار الثاني",
+              "الخيار الثالث",
+              "الخيار الرابع",
+            ],
+            correctAnswer: 2,
+          },
+        ];
+      }
+    },
+    [activeExam]
+  );
+
+  // Redirect if no active exam
   useEffect(() => {
-    if (!phase) return;
+    if (!activeExam) {
+      router.push("/");
+    }
+  }, [activeExam, router]);
+
+  // Initialize exam phase
+  useEffect(() => {
+    if (!phase || !activeExam) return;
 
     // Get questions for the current phase
     const fetchQuestions = () => {
       try {
+        setLoading(true);
+
         // Check if questions are already in Redux store
         if (examState.examData[phase]?.questions?.length > 0) {
           setQuestionsState(examState.examData[phase].questions);
-          setLoading(false);
         } else {
           // If not, get new questions
           console.log("Fetching questions for phase:", phase);
+          const phaseQuestions = getPhaseQuestions(phase);
 
-          // Hardcoded questions if getRandomQuestions isn't working
-          const dummyQuestions = [
-            {
-              id: "q1",
-              text: "سؤال اختبار رقم 1",
-              options: [
-                "الخيار الأول",
-                "الخيار الثاني",
-                "الخيار الثالث",
-                "الخيار الرابع",
-              ],
-              correctAnswer: 0,
-            },
-            {
-              id: "q2",
-              text: "سؤال اختبار رقم 2",
-              options: [
-                "الخيار الأول",
-                "الخيار الثاني",
-                "الخيار الثالث",
-                "الخيار الرابع",
-              ],
-              correctAnswer: 1,
-            },
-            {
-              id: "q3",
-              text: "سؤال اختبار رقم 3",
-              options: [
-                "الخيار الأول",
-                "الخيار الثاني",
-                "الخيار الثالث",
-                "الخيار الرابع",
-              ],
-              correctAnswer: 2,
-            },
-          ];
+          if (!phaseQuestions || !phaseQuestions.length) {
+            setError("لا توجد أسئلة متاحة لهذه المرحلة");
+            setQuestionsState([]);
+          } else {
+            setQuestionsState(phaseQuestions);
 
-          // Try to get actual questions, fallback to dummy questions
-          let phaseQuestions;
-          try {
-            phaseQuestions = getPhaseQuestions(phase);
-            if (!phaseQuestions || !phaseQuestions.length) {
-              console.log("No questions returned, using dummy questions");
-              phaseQuestions = dummyQuestions;
-            }
-          } catch (error) {
-            console.error("Error getting questions:", error);
-            phaseQuestions = dummyQuestions;
+            // Save questions to Redux
+            dispatch(
+              setQuestions({
+                phaseId: phase,
+                questions: phaseQuestions,
+              })
+            );
           }
-
-          setQuestionsState(phaseQuestions);
-
-          // Save questions to Redux
-          dispatch(
-            setQuestions({
-              phaseId: phase,
-              questions: phaseQuestions,
-            })
-          );
-
-          setLoading(false);
         }
       } catch (error) {
         console.error("Error in fetchQuestions:", error);
+        setError("حدث خطأ في تحميل الأسئلة");
+      } finally {
         setLoading(false);
       }
     };
 
-    // Initialize or resume timer
+    // Initialize or resume phase state
     if (!phaseState) {
       // Start a new phase if not already started
       dispatch(
@@ -125,6 +149,7 @@ const QuizPage = () => {
           duration: 600, // 10 minutes
         })
       );
+      fetchQuestions();
     } else {
       // Resume from existing state
       if (phaseState.answers) {
@@ -148,50 +173,18 @@ const QuizPage = () => {
           handleTimeUp();
         }
       }
+
+      fetchQuestions();
     }
-
-    fetchQuestions();
-  }, [phase, dispatch]);
-
-  // This is a simplified version of getPhaseQuestions that doesn't rely on complex logic
-  const getPhaseQuestions = (phaseId) => {
-    // For testing, return a simple set of questions
-    return [
-      {
-        id: "q1",
-        text: "سؤال اختبار رقم 1",
-        options: [
-          "الخيار الأول",
-          "الخيار الثاني",
-          "الخيار الثالث",
-          "الخيار الرابع",
-        ],
-        correctAnswer: 0,
-      },
-      {
-        id: "q2",
-        text: "سؤال اختبار رقم 2",
-        options: [
-          "الخيار الأول",
-          "الخيار الثاني",
-          "الخيار الثالث",
-          "الخيار الرابع",
-        ],
-        correctAnswer: 1,
-      },
-      {
-        id: "q3",
-        text: "سؤال اختبار رقم 3",
-        options: [
-          "الخيار الأول",
-          "الخيار الثاني",
-          "الخيار الثالث",
-          "الخيار الرابع",
-        ],
-        correctAnswer: 2,
-      },
-    ];
-  };
+  }, [
+    phase,
+    dispatch,
+    examState.examData,
+    phaseState,
+    mainPhase,
+    subPhase,
+    getPhaseQuestions,
+  ]);
 
   // Timer effect
   useEffect(() => {
@@ -281,16 +274,26 @@ const QuizPage = () => {
       .padStart(2, "0")}`;
   };
 
-  const getTimerColor = () => {
-    if (remainingTime < 60) return "red";
-    return "amber";
-  };
-
   // Display a loading state while fetching questions
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-center min-h-[60vh]">
+      <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-center min-h-[60vh] mt-0">
         <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // If there was an error
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-2 flex flex-col items-center justify-center min-h-[60vh] mt-0">
+        <div className="text-red-500 mb-4">{error}</div>
+        <button
+          onClick={() => router.push("/exams/phases")}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
+          العودة إلى المراحل
+        </button>
       </div>
     );
   }
@@ -298,7 +301,7 @@ const QuizPage = () => {
   // If no questions were loaded after loading completes, show an error
   if (!questions.length) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="max-w-3xl mx-auto px-4 py-2 flex flex-col items-center justify-center min-h-[60vh] mt-0">
         <div className="text-red-500 mb-4">
           لا توجد أسئلة متاحة لهذه المرحلة
         </div>
@@ -320,7 +323,7 @@ const QuizPage = () => {
   const progressPercentage = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="max-w-3xl mx-auto px-4 py-2 mt-0">
       {/* Timer and Progress Bar */}
       <div className="bg-white rounded-xl shadow-sm mb-6">
         <div className="p-4 border-b border-gray-100">
@@ -380,7 +383,7 @@ const QuizPage = () => {
           <div className="mt-4">
             <div className="relative h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
               <div
-                className="absolute top-0 right-0 h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300 ease-out"
+                className="absolute top-0 right-0 h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>

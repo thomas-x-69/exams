@@ -80,7 +80,9 @@ const ExamInstructions = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto px-4 py-2 ">
+      {" "}
+      {/* Removed top padding */}
       {/* Main Card */}
       <div className="bg-white rounded-2xl shadow-xl shadow-indigo-200/20">
         {/* Header with Subject Info */}
