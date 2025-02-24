@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { initExam } from "../../../../store/examSlice";
 
 const subjectInfo = {
   mail: {
@@ -46,11 +48,12 @@ const ExamInstructions = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const subject = searchParams.get("subject");
+  const dispatch = useDispatch();
+
   const [name, setName] = useState("");
   const organizationCode = "A" + Math.random().toString().slice(2, 8);
   const currentSubject = subjectInfo[subject] || subjectInfo.mail;
 
-  // In your ExamInstructions component
   const handleStartExam = async (e) => {
     e.preventDefault();
 
@@ -60,32 +63,19 @@ const ExamInstructions = () => {
     }
 
     try {
-      const response = await fetch("/api/submit-exam", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          subjectName: currentSubject.name,
+      // Initialize exam in Redux
+      dispatch(
+        initExam({
+          subject,
+          userName: name,
           organizationCode,
-        }),
-        cache: "no-store", // Prevent caching
-      });
+        })
+      );
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Save result:", result);
-
-      // Navigate regardless of save success
+      // Navigate to phases page
       router.push(`/exams/phases?subject=${subject}`);
     } catch (error) {
-      console.error("Error saving data:", error);
-      // Still navigate even if save fails
-      router.push(`/exams/phases?subject=${subject}`);
+      console.error("Error starting exam:", error);
     }
   };
 
