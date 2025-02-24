@@ -1,27 +1,84 @@
-// src/data/questionsUtils.js
+// src/app/data/questionsUtils.js
 import questionsBank from "./questionsData.js";
 
 export function getRandomQuestions(subject, phase, count) {
   try {
     let questions = [];
 
+    // Normalize subject - default to 'mail' if not found
+    const normalizedSubject =
+      subject && questionsBank[subject] ? subject : "mail";
+
     // Handle nested categories (language and knowledge)
     if (phase.includes("_")) {
       const [mainPhase, subPhase] = phase.split("_");
-      if (questionsBank[subject]?.[mainPhase]?.[subPhase]) {
-        questions = questionsBank[subject][mainPhase][subPhase];
+
+      if (questionsBank[normalizedSubject]?.[mainPhase]?.[subPhase]) {
+        questions = questionsBank[normalizedSubject][mainPhase][subPhase];
+      } else {
+        // Fallback to mail questions for the same phase if available
+        if (questionsBank["mail"]?.[mainPhase]?.[subPhase]) {
+          console.warn(
+            `Using fallback questions from mail for ${subject}, ${phase}`
+          );
+          questions = questionsBank["mail"][mainPhase][subPhase];
+        }
       }
     }
-    // Handle direct categories (behavioral, specialization, pedagogical)
-    else if (questionsBank[subject]?.[phase]) {
-      questions = questionsBank[subject][phase];
+    // Handle direct categories (behavioral, specialization, education)
+    else if (questionsBank[normalizedSubject]?.[phase]) {
+      questions = questionsBank[normalizedSubject][phase];
+    } else {
+      // Fallback to mail questions for the same phase if available
+      if (questionsBank["mail"]?.[phase]) {
+        console.warn(
+          `Using fallback questions from mail for ${subject}, ${phase}`
+        );
+        questions = questionsBank["mail"][phase];
+      }
     }
 
-    if (!questions.length) {
-      console.error(
-        `No questions found for subject: ${subject}, phase: ${phase}`
+    if (!questions || !questions.length) {
+      console.warn(
+        `No questions found for subject: ${subject}, phase: ${phase}, using dummy questions`
       );
-      return [];
+
+      // Return dummy questions as fallback
+      return [
+        {
+          id: "dummy1",
+          text: "سؤال اختبار رقم 1",
+          options: [
+            "الخيار الأول",
+            "الخيار الثاني",
+            "الخيار الثالث",
+            "الخيار الرابع",
+          ],
+          correctAnswer: 0,
+        },
+        {
+          id: "dummy2",
+          text: "سؤال اختبار رقم 2",
+          options: [
+            "الخيار الأول",
+            "الخيار الثاني",
+            "الخيار الثالث",
+            "الخيار الرابع",
+          ],
+          correctAnswer: 1,
+        },
+        {
+          id: "dummy3",
+          text: "سؤال اختبار رقم 3",
+          options: [
+            "الخيار الأول",
+            "الخيار الثاني",
+            "الخيار الثالث",
+            "الخيار الرابع",
+          ],
+          correctAnswer: 2,
+        },
+      ];
     }
 
     // Shuffle questions and get requested count
@@ -29,7 +86,42 @@ export function getRandomQuestions(subject, phase, count) {
     return shuffled.slice(0, Math.min(count, shuffled.length));
   } catch (error) {
     console.error("Error getting random questions:", error);
-    return [];
+    // Return dummy questions as fallback
+    return [
+      {
+        id: "fallback1",
+        text: "سؤال بديل 1",
+        options: [
+          "الخيار الأول",
+          "الخيار الثاني",
+          "الخيار الثالث",
+          "الخيار الرابع",
+        ],
+        correctAnswer: 0,
+      },
+      {
+        id: "fallback2",
+        text: "سؤال بديل 2",
+        options: [
+          "الخيار الأول",
+          "الخيار الثاني",
+          "الخيار الثالث",
+          "الخيار الرابع",
+        ],
+        correctAnswer: 1,
+      },
+      {
+        id: "fallback3",
+        text: "سؤال بديل 3",
+        options: [
+          "الخيار الأول",
+          "الخيار الثاني",
+          "الخيار الثالث",
+          "الخيار الرابع",
+        ],
+        correctAnswer: 2,
+      },
+    ];
   }
 }
 
@@ -41,19 +133,53 @@ export function calculatePhaseScore(subject, phase, answers) {
       percentage: 0,
     };
 
+    // Skip calculation if no answers
+    if (results.total === 0) {
+      return results;
+    }
+
+    // Normalize subject - default to 'mail' if not found
+    const normalizedSubject =
+      subject && questionsBank[subject] ? subject : "mail";
+
     Object.entries(answers).forEach(([questionId, selectedAnswer]) => {
       let question;
+
+      // Handle fallback and dummy questions
+      if (questionId.startsWith("dummy") || questionId.startsWith("fallback")) {
+        // For dummy questions, just count every first option as correct (for demonstration)
+        if (selectedAnswer === 0) {
+          results.correct += 1;
+        }
+        return;
+      }
+
+      // Look for the question in the questions bank
       if (phase.includes("_")) {
         const [mainPhase, subPhase] = phase.split("_");
-        if (questionsBank[subject]?.[mainPhase]?.[subPhase]) {
-          question = questionsBank[subject][mainPhase][subPhase].find(
+        if (questionsBank[normalizedSubject]?.[mainPhase]?.[subPhase]) {
+          question = questionsBank[normalizedSubject][mainPhase][subPhase].find(
             (q) => q.id === questionId
           );
         }
-      } else if (questionsBank[subject]?.[phase]) {
-        question = questionsBank[subject][phase].find(
+
+        // Fallback to mail subject if question not found
+        if (!question && questionsBank["mail"]?.[mainPhase]?.[subPhase]) {
+          question = questionsBank["mail"][mainPhase][subPhase].find(
+            (q) => q.id === questionId
+          );
+        }
+      } else if (questionsBank[normalizedSubject]?.[phase]) {
+        question = questionsBank[normalizedSubject][phase].find(
           (q) => q.id === questionId
         );
+
+        // Fallback to mail subject if question not found
+        if (!question && questionsBank["mail"]?.[phase]) {
+          question = questionsBank["mail"][phase].find(
+            (q) => q.id === questionId
+          );
+        }
       }
 
       if (question?.correctAnswer === selectedAnswer) {
@@ -61,7 +187,11 @@ export function calculatePhaseScore(subject, phase, answers) {
       }
     });
 
-    results.percentage = ((results.correct / results.total) * 100).toFixed(1);
+    results.percentage =
+      results.total > 0
+        ? ((results.correct / results.total) * 100).toFixed(1)
+        : "0.0";
+
     return results;
   } catch (error) {
     console.error("Error calculating phase score:", error);

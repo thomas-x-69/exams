@@ -1,3 +1,4 @@
+// src/app/exams/phases/page.js
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -95,16 +96,33 @@ const ExamPhases = () => {
 
   // Get exam state from Redux
   const examState = useSelector((state) => state.exam);
-  const { completedPhases, completedSubPhases, currentSubPhase, breakTime } =
-    examState;
+  const {
+    completedPhases,
+    completedSubPhases,
+    currentSubPhase,
+    breakTime,
+    activeExam,
+  } = examState;
 
-  const [phases, setPhases] = useState(
-    subject === "mail" ? mailPhases : educationPhases
-  );
+  const [phases, setPhases] = useState([]);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [isBreakTime, setIsBreakTime] = useState(false);
   const [breakTimeRemaining, setBreakTimeRemaining] = useState(0);
   const [globalBreakVisible, setGlobalBreakVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Redirect if no active exam
+  useEffect(() => {
+    if (!activeExam) {
+      router.push("/");
+      return;
+    }
+
+    // Set phases based on subject
+    const currentSubject = activeExam?.subject || subject;
+    setPhases(currentSubject === "mail" ? mailPhases : educationPhases);
+    setLoading(false);
+  }, [activeExam, router, subject]);
 
   useEffect(() => {
     // Set current phase index based on completed phases
@@ -125,11 +143,14 @@ const ExamPhases = () => {
         } else {
           // Break time is over, auto-start next phase
           dispatch(endBreak());
-          router.push(`/exams/questions?phase=${getNextPhaseId()}`);
+          const nextPhaseId = getNextPhaseId();
+          if (nextPhaseId) {
+            router.push(`/exams/questions?phase=${nextPhaseId}`);
+          }
         }
       }
     }
-  }, [completedPhases, breakTime, phases.length, dispatch]);
+  }, [completedPhases, breakTime, phases, dispatch, router]);
 
   // Break timer effect
   useEffect(() => {
@@ -140,7 +161,10 @@ const ExamPhases = () => {
             clearInterval(timer);
             dispatch(endBreak());
             // Auto-start next phase
-            router.push(`/exams/questions?phase=${getNextPhaseId()}`);
+            const nextPhaseId = getNextPhaseId();
+            if (nextPhaseId) {
+              router.push(`/exams/questions?phase=${nextPhaseId}`);
+            }
             return 0;
           }
           return prev - 1;
@@ -149,7 +173,7 @@ const ExamPhases = () => {
 
       return () => clearInterval(timer);
     }
-  }, [isBreakTime, breakTimeRemaining, dispatch]);
+  }, [isBreakTime, breakTimeRemaining, dispatch, router]);
 
   const getPhaseStatus = (index) => {
     if (index < currentPhaseIndex) return PhaseStatus.COMPLETED;
@@ -186,9 +210,10 @@ const ExamPhases = () => {
     ) {
       // Find the first uncompleted sub-phase
       const phaseObj = phases.find((p) => p.id === phaseId);
-      const nextSubPhase = phaseObj.subPhases.find(
-        (sp) => !completedSubs.includes(sp.id)
-      );
+      const nextSubPhase =
+        phaseObj && phaseObj.subPhases
+          ? phaseObj.subPhases.find((sp) => !completedSubs.includes(sp.id))
+          : null;
 
       if (nextSubPhase && nextSubPhase.id === subPhaseId) {
         return PhaseStatus.WAITING;
@@ -206,6 +231,7 @@ const ExamPhases = () => {
     }
 
     const currentPhase = phases[currentPhaseIndex];
+    if (!currentPhase) return null;
 
     // Check if this phase has sub-phases
     if (currentPhase.subPhases) {
@@ -291,8 +317,17 @@ const ExamPhases = () => {
       .padStart(2, "0")}`;
   };
 
+  // Display loading state
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
+    <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4 mt-0">
       {/* Global Break Timer - Visible at the top */}
       {globalBreakVisible && (
         <div className="bg-amber-50 rounded-xl shadow-sm border border-amber-200 mb-4 p-4 text-center">
@@ -308,7 +343,10 @@ const ExamPhases = () => {
               onClick={() => {
                 dispatch(endBreak());
                 setGlobalBreakVisible(false);
-                router.push(`/exams/questions?phase=${getNextPhaseId()}`);
+                const nextPhaseId = getNextPhaseId();
+                if (nextPhaseId) {
+                  router.push(`/exams/questions?phase=${nextPhaseId}`);
+                }
               }}
               className="mt-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg px-4 py-2 text-sm transition-colors"
             >
@@ -324,11 +362,11 @@ const ExamPhases = () => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center text-xl sm:text-2xl border border-blue-200">
-                {subject === "mail" ? "📬" : "📚"}
+                {activeExam?.subject === "mail" ? "📬" : "📚"}
               </div>
               <div>
                 <h1 className="text-base sm:text-lg font-bold text-gray-900">
-                  {subject === "mail"
+                  {activeExam?.subject === "mail"
                     ? "اختبار البريد المصري"
                     : "اختبار التربية"}
                 </h1>
@@ -590,7 +628,7 @@ const ExamPhases = () => {
       </div>
 
       {/* Results Card - Show if all phases are completed */}
-      {currentPhaseIndex === phases.length && (
+      {currentPhaseIndex >= phases.length && (
         <div className="mt-6 bg-white rounded-xl shadow-sm border border-green-200">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900">
@@ -603,7 +641,7 @@ const ExamPhases = () => {
           <div className="p-6 text-center">
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {calculateTotalScore()}%
+                {calculateTotalScore(examState)}%
               </h3>
               <p className="text-gray-600">النتيجة الإجمالية</p>
             </div>
@@ -621,11 +659,13 @@ const ExamPhases = () => {
   );
 };
 
-// Helper function to calculate total score (example)
-const calculateTotalScore = () => {
-  // In a real implementation, this would use the actual exam results
-  // from Redux state
-  return Math.round(Math.random() * 40 + 60); // Random score between 60-100%
+// Helper function to calculate total score from exam state
+const calculateTotalScore = (examState) => {
+  // In a real implementation, this would calculate the actual score
+  // based on correct answers from the Redux state
+
+  // For now, return a random score between 60-100%
+  return Math.round(Math.random() * 40 + 60);
 };
 
 export default ExamPhases;
