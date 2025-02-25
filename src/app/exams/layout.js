@@ -9,6 +9,9 @@ export default function ExamLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const activeExam = useSelector((state) => state.exam.activeExam);
+  const examCompleted = useSelector((state) => state.exam.examCompleted);
+  const phases = useSelector((state) => state.exam.phases);
+  const completedPhases = useSelector((state) => state.exam.completedPhases);
 
   // Protect exam routes
   useEffect(() => {
@@ -16,7 +19,8 @@ export default function ExamLayout({ children }) {
     if (
       pathname.startsWith("/exams") &&
       !pathname.includes("/instructions") &&
-      !activeExam
+      !activeExam &&
+      !pathname.includes("/results")
     ) {
       router.push("/");
     }
@@ -27,13 +31,53 @@ export default function ExamLayout({ children }) {
       mainElement.classList.remove("pt-28");
     }
 
+    // Handle browser back button
+    const handlePopState = (event) => {
+      // If in questions page and a phase was completed, prevent going back
+      if (
+        pathname.includes("/questions") &&
+        completedPhases &&
+        completedPhases.length > 0 &&
+        !examCompleted
+      ) {
+        // Prevent default behavior
+        event.preventDefault();
+        // Handle browser backward button press - go to landing page
+        router.push("/");
+        return;
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    // Add beforeunload event handler - but not for instructions page or after exam is completed
+    const handleBeforeUnload = (e) => {
+      if (
+        activeExam &&
+        !pathname.includes("/instructions") &&
+        !examCompleted &&
+        !pathname.includes("/results")
+      ) {
+        // Cancel the event
+        e.preventDefault();
+        // Chrome requires returnValue to be set
+        e.returnValue = "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
+        // Return value for older browsers
+        return "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     // Cleanup when component unmounts
     return () => {
       if (mainElement) {
         mainElement.classList.add("pt-28");
       }
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
     };
-  }, [pathname, activeExam, router]);
+  }, [pathname, activeExam, router, examCompleted, phases, completedPhases]);
 
   return (
     <div className="min-h-screen bg-[#f4f6f8]">
