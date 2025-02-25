@@ -121,6 +121,7 @@ const ExamPhases = () => {
   const [showResultsButton, setShowResultsButton] = useState(false);
   const [phaseInProgress, setPhaseInProgress] = useState(false);
   const [nextPhaseTitle, setNextPhaseTitle] = useState("");
+  const [isLastPhase, setIsLastPhase] = useState(false);
 
   // Redirect if no active exam
   useEffect(() => {
@@ -144,51 +145,60 @@ const ExamPhases = () => {
       // Check if all phases are completed - Show results button if ALL phases are completed
       if (completedPhases.length >= phasesData.length) {
         setShowResultsButton(true);
+        setIsLastPhase(true);
 
-        // If we have completed all phases and there's a break timer, end it
-        if (breakTime) {
+        // If last phase was just completed and we're in break time, we should skip it
+        if (breakTime && isLastPhase) {
           dispatch(endBreak());
         }
       } else {
         setShowResultsButton(false);
 
+        // Check if we're on the last phase
+        setIsLastPhase(completedPhases.length === phasesData.length - 1);
+
         // Check if in break time
         if (breakTime) {
-          const elapsedTime = Math.floor(
-            (Date.now() - breakTime.startTime) / 1000
-          );
-          const timeLeft = Math.max(0, breakTime.duration - elapsedTime);
+          // Don't show break timer if we're on the last phase
+          if (completedPhases.length === phasesData.length) {
+            dispatch(endBreak());
+          } else {
+            const elapsedTime = Math.floor(
+              (Date.now() - breakTime.startTime) / 1000
+            );
+            const timeLeft = Math.max(0, breakTime.duration - elapsedTime);
 
-          if (timeLeft > 0) {
-            setBreakTimeRemaining(timeLeft);
+            if (timeLeft > 0) {
+              setBreakTimeRemaining(timeLeft);
 
-            // Get next phase title for display during break
-            const nextId = getNextPhaseId();
-            if (nextId) {
-              if (nextId.includes("_")) {
-                const [mainId, subId] = nextId.split("_");
-                const mainPhase = phasesData.find((p) => p.id === mainId);
-                const subPhase = mainPhase?.subPhases?.find(
-                  (s) => s.id === subId
-                );
-                if (mainPhase && subPhase) {
-                  setNextPhaseTitle(`${mainPhase.title} - ${subPhase.title}`);
-                }
-              } else {
-                const phase = phasesData.find((p) => p.id === nextId);
-                if (phase) {
-                  setNextPhaseTitle(phase.title);
+              // Get next phase title for display during break
+              const nextId = getNextPhaseId();
+              if (nextId) {
+                if (nextId.includes("_")) {
+                  const [mainId, subId] = nextId.split("_");
+                  const mainPhase = phasesData.find((p) => p.id === mainId);
+                  const subPhase = mainPhase?.subPhases?.find(
+                    (s) => s.id === subId
+                  );
+                  if (mainPhase && subPhase) {
+                    setNextPhaseTitle(`${mainPhase.title} - ${subPhase.title}`);
+                  }
+                } else {
+                  const phase = phasesData.find((p) => p.id === nextId);
+                  if (phase) {
+                    setNextPhaseTitle(phase.title);
+                  }
                 }
               }
+            } else {
+              // Break time is over, clear it
+              dispatch(endBreak());
             }
-          } else {
-            // Break time is over, clear it
-            dispatch(endBreak());
           }
         }
       }
     }
-  }, [completedPhases, breakTime, phasesData, dispatch]);
+  }, [completedPhases, breakTime, phasesData, dispatch, isLastPhase]);
 
   // Calculate remaining time for current active phase (if any)
   useEffect(() => {
@@ -230,7 +240,7 @@ const ExamPhases = () => {
 
   // Break timer effect
   useEffect(() => {
-    if (breakTime && breakTimeRemaining > 0) {
+    if (breakTime && breakTimeRemaining > 0 && !isLastPhase) {
       const timer = setInterval(() => {
         setBreakTimeRemaining((prev) => {
           if (prev <= 1) {
@@ -244,7 +254,7 @@ const ExamPhases = () => {
 
       return () => clearInterval(timer);
     }
-  }, [breakTime, breakTimeRemaining, dispatch]);
+  }, [breakTime, breakTimeRemaining, dispatch, isLastPhase]);
 
   // Handle browser back button
   useEffect(() => {
@@ -437,13 +447,6 @@ const ExamPhases = () => {
     return currentPhase === phaseId && phaseInProgress;
   };
 
-  // Check if current phase is the last phase
-  const isLastPhase = (phaseId) => {
-    return (
-      phasesData.length > 0 && phaseId === phasesData[phasesData.length - 1].id
-    );
-  };
-
   // Display loading state
   if (loading) {
     return (
@@ -453,15 +456,10 @@ const ExamPhases = () => {
     );
   }
 
-  // Check if we've completed the last phase
-  const isCompletedLastPhase =
-    phasesData.length > 0 &&
-    completedPhases.includes(phasesData[phasesData.length - 1].id);
-
   return (
     <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4 mt-0">
       {/* Break Timer - Only shown during break time AND not after the last phase */}
-      {breakTime && !isCompletedLastPhase && (
+      {breakTime && !isLastPhase && (
         <div className="bg-amber-50 rounded-xl shadow-sm border border-amber-200 mb-4 p-4 text-center">
           <div className="flex flex-col items-center">
             <div className="text-amber-800 font-bold mb-2">فترة راحة</div>
