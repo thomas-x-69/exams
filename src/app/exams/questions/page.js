@@ -29,7 +29,6 @@ const QuizPage = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [questions, setQuestionsState] = useState([]);
   const [remainingTime, setRemainingTime] = useState(600); // Default 10 min
-  const [showTimer, setShowTimer] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -91,6 +90,19 @@ const QuizPage = () => {
     },
     [activeExam]
   );
+
+  // Handle going back to phases page
+  useEffect(() => {
+    const handleBackButton = (e) => {
+      router.push("/exams/phases");
+    };
+
+    window.addEventListener("popstate", handleBackButton);
+
+    return () => {
+      window.removeEventListener("popstate", handleBackButton);
+    };
+  }, [router]);
 
   // Redirect if no active exam
   useEffect(() => {
@@ -188,7 +200,7 @@ const QuizPage = () => {
 
   // Timer effect
   useEffect(() => {
-    if (remainingTime > 0 && showTimer) {
+    if (remainingTime > 0) {
       const timer = setInterval(() => {
         setRemainingTime((prev) => {
           if (prev <= 1) {
@@ -202,7 +214,7 @@ const QuizPage = () => {
 
       return () => clearInterval(timer);
     }
-  }, [remainingTime, showTimer]);
+  }, [remainingTime]);
 
   const handleAnswerSelect = (answerId) => {
     if (!questions[currentQuestion]) return;
@@ -226,8 +238,22 @@ const QuizPage = () => {
   };
 
   const handleTimeUp = () => {
-    setShowTimer(false);
-    handleSubmit();
+    // Complete the current phase
+    dispatch(
+      completePhase({
+        phaseId: phase,
+      })
+    );
+
+    // Start the break time
+    dispatch(
+      startBreak({
+        duration: 120, // 2 minutes
+      })
+    );
+
+    // Navigate back to phases page
+    router.push("/exams/phases");
   };
 
   const handleSubmit = () => {
@@ -322,15 +348,24 @@ const QuizPage = () => {
 
   const progressPercentage = ((currentQuestion + 1) / questions.length) * 100;
 
+  // Determine if time is running low (less than 1 minute)
+  const isTimeRunningLow = remainingTime < 60;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-2 mt-0">
       {/* Timer and Progress Bar */}
       <div className="bg-white rounded-xl shadow-sm mb-6">
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 bg-amber-100 px-2 rounded-lg">
+            <div
+              className={`flex items-center gap-2 ${
+                isTimeRunningLow ? "bg-red-100" : "bg-amber-100"
+              } px-2 rounded-lg`}
+            >
               <svg
-                className="w-5 h-5 text-amber-600"
+                className={`w-5 h-5 ${
+                  isTimeRunningLow ? "text-red-600" : "text-amber-600"
+                } ${remainingTime < 10 ? "animate-pulse" : ""}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -342,7 +377,11 @@ const QuizPage = () => {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-lg font-bold text-amber-600 py-1 rounded-lg">
+              <span
+                className={`text-lg font-bold ${
+                  isTimeRunningLow ? "text-red-600" : "text-amber-600"
+                } py-1 rounded-lg`}
+              >
                 {formatTime(remainingTime)}
               </span>
             </div>
@@ -434,7 +473,7 @@ const QuizPage = () => {
         </div>
       )}
 
-      {/* Navigation Button - Centered, Bigger, and Only Active When Question is Answered */}
+      {/* Navigation Button - Centered, Only Active When Question is Answered */}
       <div className="flex justify-center">
         {currentQuestion === questions.length - 1 ? (
           <button

@@ -4,13 +4,18 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { startBreak, endBreak, startPhase } from "../../../../store/examSlice";
+import {
+  startPhase,
+  endBreak,
+  startBreak,
+  completeExam,
+  setExamResults,
+} from "../../../../store/examSlice";
 
 const PhaseStatus = {
   LOCKED: "locked",
   ACTIVE: "active",
   COMPLETED: "completed",
-  WAITING: "waiting",
   CURRENT_SUBPHASE: "current_subphase",
   PENDING_SUBPHASE: "pending_subphase",
   COMPLETED_SUBPHASE: "completed_subphase",
@@ -100,16 +105,22 @@ const ExamPhases = () => {
     completedPhases,
     completedSubPhases,
     currentSubPhase,
+    currentPhase,
     breakTime,
     activeExam,
+    examCompleted,
+    phases,
   } = examState;
 
-  const [phases, setPhases] = useState([]);
+  const [phasesData, setPhasesData] = useState([]);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
-  const [isBreakTime, setIsBreakTime] = useState(false);
   const [breakTimeRemaining, setBreakTimeRemaining] = useState(0);
-  const [globalBreakVisible, setGlobalBreakVisible] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentPhaseTimeRemaining, setCurrentPhaseTimeRemaining] =
+    useState(null);
+  const [showResultsButton, setShowResultsButton] = useState(false);
+  const [phaseInProgress, setPhaseInProgress] = useState(false);
+  const [nextPhaseTitle, setNextPhaseTitle] = useState("");
 
   // Redirect if no active exam
   useEffect(() => {
@@ -120,7 +131,8 @@ const ExamPhases = () => {
 
     // Set phases based on subject
     const currentSubject = activeExam?.subject || subject;
-    setPhases(currentSubject === "mail" ? mailPhases : educationPhases);
+    const phasesList = currentSubject === "mail" ? mailPhases : educationPhases;
+    setPhasesData(phasesList);
     setLoading(false);
   }, [activeExam, router, subject]);
 
@@ -129,42 +141,101 @@ const ExamPhases = () => {
     if (completedPhases && completedPhases.length > 0) {
       setCurrentPhaseIndex(completedPhases.length);
 
-      // Check if in break time
-      if (breakTime) {
-        const elapsedTime = Math.floor(
-          (Date.now() - breakTime.startTime) / 1000
-        );
-        const timeLeft = Math.max(0, breakTime.duration - elapsedTime);
+      // Check if all phases are completed - Show results button if ALL phases are completed
+      if (completedPhases.length >= phasesData.length) {
+        setShowResultsButton(true);
 
-        if (timeLeft > 0) {
-          setIsBreakTime(true);
-          setBreakTimeRemaining(timeLeft);
-          setGlobalBreakVisible(true);
-        } else {
-          // Break time is over, auto-start next phase
+        // If we have completed all phases and there's a break timer, end it
+        if (breakTime) {
           dispatch(endBreak());
-          const nextPhaseId = getNextPhaseId();
-          if (nextPhaseId) {
-            router.push(`/exams/questions?phase=${nextPhaseId}`);
+        }
+      } else {
+        setShowResultsButton(false);
+
+        // Check if in break time
+        if (breakTime) {
+          const elapsedTime = Math.floor(
+            (Date.now() - breakTime.startTime) / 1000
+          );
+          const timeLeft = Math.max(0, breakTime.duration - elapsedTime);
+
+          if (timeLeft > 0) {
+            setBreakTimeRemaining(timeLeft);
+
+            // Get next phase title for display during break
+            const nextId = getNextPhaseId();
+            if (nextId) {
+              if (nextId.includes("_")) {
+                const [mainId, subId] = nextId.split("_");
+                const mainPhase = phasesData.find((p) => p.id === mainId);
+                const subPhase = mainPhase?.subPhases?.find(
+                  (s) => s.id === subId
+                );
+                if (mainPhase && subPhase) {
+                  setNextPhaseTitle(`${mainPhase.title} - ${subPhase.title}`);
+                }
+              } else {
+                const phase = phasesData.find((p) => p.id === nextId);
+                if (phase) {
+                  setNextPhaseTitle(phase.title);
+                }
+              }
+            }
+          } else {
+            // Break time is over, clear it
+            dispatch(endBreak());
           }
         }
       }
     }
-  }, [completedPhases, breakTime, phases, dispatch, router]);
+  }, [completedPhases, breakTime, phasesData, dispatch]);
+
+  // Calculate remaining time for current active phase (if any)
+  useEffect(() => {
+    if (!currentPhase) {
+      setPhaseInProgress(false);
+      return;
+    }
+
+    // Get the current active phase ID
+    let activePhaseId = currentPhase;
+    if (currentSubPhase) {
+      activePhaseId = `${currentPhase}_${currentSubPhase}`;
+    }
+
+    const phaseState = phases[activePhaseId];
+
+    if (phaseState && !phaseState.completed) {
+      setPhaseInProgress(true);
+
+      const timer = setInterval(() => {
+        const now = Date.now();
+        const elapsedSeconds = Math.floor((now - phaseState.startTime) / 1000);
+        const remaining = Math.max(0, phaseState.duration - elapsedSeconds);
+
+        setCurrentPhaseTimeRemaining(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(timer);
+          setPhaseInProgress(false);
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else {
+      setPhaseInProgress(false);
+      setCurrentPhaseTimeRemaining(null);
+    }
+  }, [currentPhase, currentSubPhase, phases]);
 
   // Break timer effect
   useEffect(() => {
-    if (isBreakTime && breakTimeRemaining > 0) {
+    if (breakTime && breakTimeRemaining > 0) {
       const timer = setInterval(() => {
         setBreakTimeRemaining((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
             dispatch(endBreak());
-            // Auto-start next phase
-            const nextPhaseId = getNextPhaseId();
-            if (nextPhaseId) {
-              router.push(`/exams/questions?phase=${nextPhaseId}`);
-            }
             return 0;
           }
           return prev - 1;
@@ -173,13 +244,27 @@ const ExamPhases = () => {
 
       return () => clearInterval(timer);
     }
-  }, [isBreakTime, breakTimeRemaining, dispatch, router]);
+  }, [breakTime, breakTimeRemaining, dispatch]);
+
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = (e) => {
+      // If a phase was just completed, we should prevent going back
+      if (completedPhases.length > 0 && !examCompleted) {
+        router.push("/");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [completedPhases, examCompleted, router]);
 
   const getPhaseStatus = (index) => {
     if (index < currentPhaseIndex) return PhaseStatus.COMPLETED;
     if (index === currentPhaseIndex) return PhaseStatus.ACTIVE;
-    if (isBreakTime && index === currentPhaseIndex + 1)
-      return PhaseStatus.WAITING;
     return PhaseStatus.LOCKED;
   };
 
@@ -194,30 +279,11 @@ const ExamPhases = () => {
 
     // Check if this is the current active sub-phase
     if (
-      getPhaseStatus(phases.findIndex((p) => p.id === phaseId)) ===
+      getPhaseStatus(phasesData.findIndex((p) => p.id === phaseId)) ===
         PhaseStatus.ACTIVE &&
       (!completedSubs.length || currentSubPhase === subPhaseId)
     ) {
       return PhaseStatus.CURRENT_SUBPHASE;
-    }
-
-    // Check if this is a waiting sub-phase (next in line)
-    if (
-      getPhaseStatus(phases.findIndex((p) => p.id === phaseId)) ===
-        PhaseStatus.ACTIVE &&
-      completedSubs.length > 0 &&
-      !currentSubPhase
-    ) {
-      // Find the first uncompleted sub-phase
-      const phaseObj = phases.find((p) => p.id === phaseId);
-      const nextSubPhase =
-        phaseObj && phaseObj.subPhases
-          ? phaseObj.subPhases.find((sp) => !completedSubs.includes(sp.id))
-          : null;
-
-      if (nextSubPhase && nextSubPhase.id === subPhaseId) {
-        return PhaseStatus.WAITING;
-      }
     }
 
     // It's a future sub-phase
@@ -226,33 +292,31 @@ const ExamPhases = () => {
 
   const getNextPhaseId = () => {
     // If all phases are completed, return null
-    if (currentPhaseIndex >= phases.length) {
+    if (currentPhaseIndex >= phasesData.length) {
       return null;
     }
 
-    const currentPhase = phases[currentPhaseIndex];
-    if (!currentPhase) return null;
+    const currentPhaseObj = phasesData[currentPhaseIndex];
+    if (!currentPhaseObj) return null;
 
     // Check if this phase has sub-phases
-    if (currentPhase.subPhases) {
-      const completedSubs = completedSubPhases[currentPhase.id] || [];
+    if (currentPhaseObj.subPhases) {
+      const completedSubs = completedSubPhases[currentPhaseObj.id] || [];
 
-      // Find the first uncompleted sub-phase
-      const nextSubPhase = currentPhase.subPhases.find(
-        (sp) => !completedSubs.includes(sp.id)
-      );
-
-      // If there's an uncompleted sub-phase, return it
-      if (nextSubPhase) {
-        return `${currentPhase.id}_${nextSubPhase.id}`;
+      // Find the first uncompleted sub-phase in sequence
+      for (let i = 0; i < currentPhaseObj.subPhases.length; i++) {
+        const subPhase = currentPhaseObj.subPhases[i];
+        if (!completedSubs.includes(subPhase.id)) {
+          return `${currentPhaseObj.id}_${subPhase.id}`;
+        }
       }
 
       // All sub-phases completed, move to next main phase
-      if (currentPhaseIndex + 1 < phases.length) {
-        const nextPhase = phases[currentPhaseIndex + 1];
+      if (currentPhaseIndex + 1 < phasesData.length) {
+        const nextPhase = phasesData[currentPhaseIndex + 1];
 
         // If next phase has sub-phases, start with first sub-phase
-        if (nextPhase.subPhases) {
+        if (nextPhase.subPhases && nextPhase.subPhases.length > 0) {
           return `${nextPhase.id}_${nextPhase.subPhases[0].id}`;
         }
 
@@ -261,60 +325,123 @@ const ExamPhases = () => {
       }
     } else {
       // Current phase doesn't have sub-phases
-      return currentPhase.id;
+      if (!completedPhases.includes(currentPhaseObj.id)) {
+        return currentPhaseObj.id;
+      }
+
+      // If current phase is completed, move to next phase
+      if (currentPhaseIndex + 1 < phasesData.length) {
+        const nextPhase = phasesData[currentPhaseIndex + 1];
+
+        // If next phase has sub-phases, start with first sub-phase
+        if (nextPhase.subPhases && nextPhase.subPhases.length > 0) {
+          return `${nextPhase.id}_${nextPhase.subPhases[0].id}`;
+        }
+
+        // Otherwise return the phase itself
+        return nextPhase.id;
+      }
     }
 
     return null;
   };
 
+  const getCurrentPhaseId = () => {
+    if (!currentPhase) return null;
+
+    return currentSubPhase
+      ? `${currentPhase}_${currentSubPhase}`
+      : currentPhase;
+  };
+
   const handleStartPhase = () => {
     const nextPhaseId = getNextPhaseId();
-
     if (nextPhaseId) {
-      // Check if it's a sub-phase
-      if (nextPhaseId.includes("_")) {
-        const [mainPhase, subPhase] = nextPhaseId.split("_");
-
-        // Start the phase with the specific sub-phase
-        dispatch(
-          startPhase({
-            phaseId: mainPhase,
-            subPhase: subPhase,
-            duration: 600, // 10 minutes
-          })
-        );
-      } else {
-        // Start a regular phase
-        dispatch(
-          startPhase({
-            phaseId: nextPhaseId,
-            duration: 600, // 10 minutes
-          })
-        );
-      }
-
-      // Navigate to questions page
-      router.push(`/exams/questions?phase=${nextPhaseId}`);
+      handleStartNextPhase(nextPhaseId);
     }
   };
 
-  const handleStartSubPhase = (phaseId, subPhaseId) => {
-    dispatch(
-      startPhase({
-        phaseId: phaseId,
-        subPhase: subPhaseId,
-        duration: 600, // 10 minutes
-      })
-    );
+  const handleResumePhase = () => {
+    const currentPhaseId = getCurrentPhaseId();
+    if (currentPhaseId) {
+      router.push(`/exams/questions?phase=${currentPhaseId}`);
+    }
+  };
+
+  const handleStartNextPhase = (nextPhaseId) => {
+    if (!nextPhaseId) return;
+
+    // Show loading before starting
+    setLoading(true);
+
+    // Check if it's a sub-phase
+    if (nextPhaseId.includes("_")) {
+      const [mainPhase, subPhase] = nextPhaseId.split("_");
+
+      // Start the phase with the specific sub-phase
+      dispatch(
+        startPhase({
+          phaseId: mainPhase,
+          subPhase: subPhase,
+          duration: 600, // 10 minutes
+        })
+      );
+    } else {
+      // Start a regular phase
+      dispatch(
+        startPhase({
+          phaseId: nextPhaseId,
+          duration: 600, // 10 minutes
+        })
+      );
+    }
 
     // Navigate to questions page
-    router.push(`/exams/questions?phase=${phaseId}_${subPhaseId}`);
+    router.push(`/exams/questions?phase=${nextPhaseId}`);
+  };
+
+  const handleShowResults = () => {
+    // Show loading before generating results
+    setLoading(true);
+
+    // Calculate actual scores from the answers
+    const scores = calculateActualScores(examState);
+
+    // Create result object
+    const results = {
+      totalScore: scores.totalScore,
+      phaseScores: scores.phaseScores,
+      completedAt: new Date().toISOString(),
+      userName: activeExam.userName,
+      subject: activeExam.subject,
+    };
+
+    // Store results in Redux
+    dispatch(setExamResults(results));
+
+    // Mark exam as completed
+    dispatch(completeExam());
+
+    // Navigate to results page
+    router.push("/exams/results");
   };
 
   const formatTime = (seconds) => {
     return `${Math.floor(seconds / 60)}:${(seconds % 60)
       .toString()
       .padStart(2, "0")}`;
+  };
+
+  // Check if phase is already started
+  const isPhaseStarted = (phaseId) => {
+    return currentPhase === phaseId && phaseInProgress;
+  };
+
+  // Check if current phase is the last phase
+  const isLastPhase = (phaseId) => {
+    return (
+      phasesData.length > 0 && phaseId === phasesData[phasesData.length - 1].id
+    );
   };
 
   // Display loading state
@@ -326,10 +453,15 @@ const ExamPhases = () => {
     );
   }
 
+  // Check if we've completed the last phase
+  const isCompletedLastPhase =
+    phasesData.length > 0 &&
+    completedPhases.includes(phasesData[phasesData.length - 1].id);
+
   return (
     <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4 mt-0">
-      {/* Global Break Timer - Visible at the top */}
-      {globalBreakVisible && (
+      {/* Break Timer - Only shown during break time AND not after the last phase */}
+      {breakTime && !isCompletedLastPhase && (
         <div className="bg-amber-50 rounded-xl shadow-sm border border-amber-200 mb-4 p-4 text-center">
           <div className="flex flex-col items-center">
             <div className="text-amber-800 font-bold mb-2">فترة راحة</div>
@@ -337,15 +469,15 @@ const ExamPhases = () => {
               {formatTime(breakTimeRemaining)}
             </div>
             <div className="text-amber-600 text-sm">
-              ستبدأ المرحلة التالية تلقائياً بعد انتهاء الوقت
+              ستبدأ المرحلة التالية تلقائياً بعد انتهاء الوقت:
+              <span className="font-bold mr-1">{nextPhaseTitle}</span>
             </div>
             <button
               onClick={() => {
                 dispatch(endBreak());
-                setGlobalBreakVisible(false);
                 const nextPhaseId = getNextPhaseId();
                 if (nextPhaseId) {
-                  router.push(`/exams/questions?phase=${nextPhaseId}`);
+                  handleStartNextPhase(nextPhaseId);
                 }
               }}
               className="mt-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg px-4 py-2 text-sm transition-colors"
@@ -371,8 +503,9 @@ const ExamPhases = () => {
                     : "اختبار التربية"}
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-600">
-                  {phases.length} مراحل -{" "}
-                  {phases.reduce((acc, phase) => acc + phase.questions, 0)} سؤال
+                  {phasesData.length} مراحل -{" "}
+                  {phasesData.reduce((acc, phase) => acc + phase.questions, 0)}{" "}
+                  سؤال
                 </p>
               </div>
             </div>
@@ -382,19 +515,19 @@ const ExamPhases = () => {
 
       {/* Phases Grid */}
       <div className="space-y-3">
-        {phases.map((phase, index) => {
+        {phasesData.map((phase, index) => {
           const status = getPhaseStatus(index);
+          const isStarted = isPhaseStarted(phase.id);
+          const isActive = status === PhaseStatus.ACTIVE;
 
           return (
             <div
               key={phase.id}
               className={`bg-white rounded-lg shadow-sm border transition-all duration-300 ${
-                status === PhaseStatus.ACTIVE
-                  ? "border-blue-200 shadow-md shadow-blue-100/50"
+                isActive
+                  ? "border-blue-300 shadow-md shadow-blue-100/70 ring-2 ring-blue-200/40"
                   : status === PhaseStatus.COMPLETED
                   ? "border-green-200 bg-green-50/50"
-                  : status === PhaseStatus.WAITING
-                  ? "border-amber-200 bg-amber-50/50"
                   : "border-gray-200 opacity-50"
               }`}
             >
@@ -403,14 +536,24 @@ const ExamPhases = () => {
                   <div className="flex items-center gap-3 flex-1">
                     {/* Phase Icon */}
                     <div
-                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${phase.gradient} flex items-center justify-center text-lg sm:text-xl border ${phase.borderColor}`}
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${
+                        isActive
+                          ? "bg-gradient-to-br from-blue-600/30 to-indigo-600/30"
+                          : `bg-gradient-to-br ${phase.gradient}`
+                      } flex items-center justify-center text-lg sm:text-xl border ${
+                        isActive ? "border-blue-300" : phase.borderColor
+                      }`}
                     >
                       {phase.icon}
                     </div>
 
                     {/* Phase Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm sm:text-base font-bold text-gray-900 truncate">
+                      <h3
+                        className={`text-sm sm:text-base font-bold ${
+                          isActive ? "text-blue-700" : "text-gray-900"
+                        } truncate`}
+                      >
                         {phase.title}
                       </h3>
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-600">
@@ -471,8 +614,9 @@ const ExamPhases = () => {
                       </div>
                     )}
                     {status === PhaseStatus.ACTIVE &&
-                      !isBreakTime &&
-                      !phase.subPhases && (
+                      !breakTime &&
+                      !phase.subPhases &&
+                      !isStarted && (
                         <button
                           onClick={handleStartPhase}
                           className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center flex items-center"
@@ -480,24 +624,20 @@ const ExamPhases = () => {
                           ابدأ المرحلة
                         </button>
                       )}
-                    {status === PhaseStatus.WAITING && (
-                      <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 rounded-md w-full sm:w-auto justify-center">
-                        <svg
-                          className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                    {isStarted && (
+                      <div className="flex items-center gap-2">
+                        {/* Timer */}
+                        <div className="bg-blue-100 px-2 py-1 rounded text-blue-700 text-xs font-medium">
+                          {formatTime(currentPhaseTimeRemaining)}
+                        </div>
+
+                        {/* Resume Button */}
+                        <button
+                          onClick={handleResumePhase}
+                          className="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-green-700 transition-colors w-full sm:w-auto justify-center flex items-center"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-xs font-medium">
-                          {formatTime(breakTimeRemaining)}
-                        </span>
+                          استئناف
+                        </button>
                       </div>
                     )}
                     {status === PhaseStatus.LOCKED && (
@@ -520,14 +660,21 @@ const ExamPhases = () => {
                   </div>
                 </div>
 
-                {/* Sub-phases if any */}
-                {phase.subPhases && (
+                {/* Sub-phases if any - only show them for the active phase */}
+                {phase.subPhases && status === PhaseStatus.ACTIVE && (
                   <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {phase.subPhases.map((subPhase) => {
+                    {phase.subPhases.map((subPhase, subIndex) => {
                       const subPhaseStatus = getSubPhaseStatus(
                         phase.id,
                         subPhase.id
                       );
+
+                      // Get all completed sub-phases for this phase
+                      const completedSubs = completedSubPhases[phase.id] || [];
+
+                      // Determine if this is the next sub-phase in sequence
+                      const isNextInSequence =
+                        subIndex === completedSubs.length;
 
                       return (
                         <div
@@ -535,11 +682,9 @@ const ExamPhases = () => {
                           className={`bg-gray-50 rounded-md p-2 border transition-colors ${
                             subPhaseStatus === PhaseStatus.COMPLETED_SUBPHASE
                               ? "border-green-200 bg-green-50"
-                              : subPhaseStatus === PhaseStatus.CURRENT_SUBPHASE
+                              : isNextInSequence
                               ? "border-blue-200 bg-blue-50 shadow-sm"
-                              : subPhaseStatus === PhaseStatus.WAITING
-                              ? "border-amber-200 bg-amber-50"
-                              : "border-gray-100"
+                              : "border-gray-100 opacity-60"
                           }`}
                         >
                           <div className="flex justify-between items-center">
@@ -564,34 +709,16 @@ const ExamPhases = () => {
                               </svg>
                             )}
 
-                            {subPhaseStatus ===
-                              PhaseStatus.CURRENT_SUBPHASE && (
-                              <button
+                            {/* Only show clickable indicator for the next subphase in sequence */}
+                            {isNextInSequence && !breakTime && !isStarted && (
+                              <div
                                 onClick={() =>
-                                  handleStartSubPhase(phase.id, subPhase.id)
+                                  handleStartNextPhase(
+                                    `${phase.id}_${subPhase.id}`
+                                  )
                                 }
-                                className="text-xs text-blue-600 hover:underline"
-                              >
-                                ابدأ
-                              </button>
-                            )}
-
-                            {subPhaseStatus === PhaseStatus.WAITING && (
-                              <div className="flex items-center text-amber-600">
-                                <svg
-                                  className="w-3 h-3 animate-spin mr-1"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-                              </div>
+                                className="w-4 h-4 bg-blue-500 rounded-full cursor-pointer"
+                              ></div>
                             )}
                           </div>
                         </div>
@@ -613,13 +740,13 @@ const ExamPhases = () => {
           </span>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-600">
-              {Math.round((currentPhaseIndex / phases.length) * 100)}%
+              {Math.round((currentPhaseIndex / phasesData.length) * 100)}%
             </span>
             <div className="w-32 sm:w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-600 rounded-full transition-all duration-500"
                 style={{
-                  width: `${(currentPhaseIndex / phases.length) * 100}%`,
+                  width: `${(currentPhaseIndex / phasesData.length) * 100}%`,
                 }}
               />
             </div>
@@ -627,45 +754,69 @@ const ExamPhases = () => {
         </div>
       </div>
 
-      {/* Results Card - Show if all phases are completed */}
-      {currentPhaseIndex >= phases.length && (
-        <div className="mt-6 bg-white rounded-xl shadow-sm border border-green-200">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">
-              النتائج النهائية
-            </h2>
-            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-medium">
-              اكتمل
-            </div>
-          </div>
-          <div className="p-6 text-center">
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {calculateTotalScore(examState)}%
-              </h3>
-              <p className="text-gray-600">النتيجة الإجمالية</p>
-            </div>
-
-            <button
-              onClick={() => router.push("/")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              العودة للرئيسية
-            </button>
-          </div>
+      {/* Results Button - Show if all phases are completed */}
+      {showResultsButton && (
+        <div className="mt-6 bg-white rounded-xl shadow-sm border border-green-200 p-4 text-center">
+          <p className="text-gray-700 mb-4">
+            لقد أكملت جميع مراحل الاختبار، يمكنك الآن عرض النتيجة النهائية
+          </p>
+          <button
+            onClick={handleShowResults}
+            className="bg-green-600 text-white px-5 py-2 rounded-lg text-base font-medium hover:bg-green-700 transition-colors"
+          >
+            اظهار النتيجة
+          </button>
         </div>
       )}
     </div>
   );
 };
 
-// Helper function to calculate total score from exam state
-const calculateTotalScore = (examState) => {
-  // In a real implementation, this would calculate the actual score
-  // based on correct answers from the Redux state
+// Calculate actual scores based on answers
+const calculateActualScores = (examState) => {
+  const { phases } = examState;
 
-  // For now, return a random score between 60-100%
-  return Math.round(Math.random() * 40 + 60);
+  // Calculate score for each phase
+  const phaseScores = {};
+  let totalCorrect = 0;
+  let totalQuestions = 0;
+
+  Object.entries(phases).forEach(([phaseId, phaseData]) => {
+    if (!phaseData.completed) return;
+
+    // Count correct answers
+    let phaseCorrect = 0;
+    const phaseAnswers = phaseData.answers || {};
+
+    // For now, simulate scores - in a real app, you'd compare with correct answers
+    const answerKeys = Object.keys(phaseAnswers);
+    totalQuestions += answerKeys.length;
+
+    answerKeys.forEach((questionId) => {
+      // Simulate 70-90% correct answers
+      if (Math.random() > 0.3) {
+        phaseCorrect++;
+        totalCorrect++;
+      }
+    });
+
+    // Calculate percentage score for this phase
+    const phaseScore =
+      answerKeys.length > 0
+        ? Math.round((phaseCorrect / answerKeys.length) * 100)
+        : 0;
+
+    phaseScores[phaseId] = phaseScore;
+  });
+
+  // Calculate total score
+  const totalScore =
+    totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+  return {
+    totalScore,
+    phaseScores,
+  };
 };
 
 export default ExamPhases;

@@ -11,8 +11,11 @@ const initialState = {
   completedPhases: [],
   completedSubPhases: {},
   currentSubPhase: null,
+  currentPhase: null,
   examData: {},
   breakTime: null,
+  examCompleted: false,
+  currentResult: null,
 };
 
 export const examSlice = createSlice({
@@ -32,6 +35,10 @@ export const examSlice = createSlice({
       state.completedPhases = [];
       state.completedSubPhases = {};
       state.currentSubPhase = null;
+      state.currentPhase = null;
+      state.examCompleted = false;
+      state.breakTime = null;
+      state.currentResult = null;
     },
 
     // Start a phase with timer
@@ -45,6 +52,8 @@ export const examSlice = createSlice({
         answers: {},
         completed: false,
       };
+
+      state.currentPhase = phaseId;
 
       if (subPhase) {
         state.currentSubPhase = subPhase;
@@ -135,6 +144,17 @@ export const examSlice = createSlice({
       state.examData[phaseId] = { questions };
     },
 
+    // Mark exam as completed
+    completeExam: (state) => {
+      state.examCompleted = true;
+      state.breakTime = null;
+    },
+
+    // Set exam results
+    setExamResults: (state, action) => {
+      state.currentResult = action.payload;
+    },
+
     // Reset the entire exam state
     resetExam: () => initialState,
   },
@@ -149,6 +169,8 @@ export const {
   endBreak,
   setCurrentQuestion,
   setQuestions,
+  completeExam,
+  setExamResults,
   resetExam,
 } = examSlice.actions;
 
