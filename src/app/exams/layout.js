@@ -3,7 +3,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function ExamLayout({ children }) {
   const router = useRouter();
@@ -12,17 +12,28 @@ export default function ExamLayout({ children }) {
   const examCompleted = useSelector((state) => state.exam.examCompleted);
   const phases = useSelector((state) => state.exam.phases);
   const completedPhases = useSelector((state) => state.exam.completedPhases);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Protect exam routes
   useEffect(() => {
-    // If accessing exam pages but no active exam (except instructions page)
-    if (
-      pathname.startsWith("/exams") &&
-      !pathname.includes("/instructions") &&
-      !activeExam &&
-      !pathname.includes("/results")
-    ) {
-      router.push("/");
+    // Wait until after hydration to perform redirects
+    if (typeof window === "undefined") return;
+
+    // Set initialized to prevent multiple redirects
+    if (!isInitialized) {
+      setIsInitialized(true);
+
+      // If accessing exam pages but no active exam (except instructions page and results page)
+      if (
+        pathname.startsWith("/exams") &&
+        !pathname.includes("/instructions") &&
+        !pathname.includes("/results") &&
+        !activeExam
+      ) {
+        console.log("No active exam, redirecting to home");
+        router.push("/");
+        return;
+      }
     }
 
     // Remove padding from main element
@@ -44,15 +55,6 @@ export default function ExamLayout({ children }) {
         event.preventDefault();
         // Handle browser backward button press - go to landing page
         router.push("/");
-        return;
-      }
-
-      // If in phases page and exam is active, prevent going back to instructions
-      if (pathname.includes("/phases") && activeExam && !examCompleted) {
-        // Prevent default behavior
-        event.preventDefault();
-        // Keep user on phases page or redirect to landing page
-        router.replace(pathname);
         return;
       }
     };
@@ -78,12 +80,6 @@ export default function ExamLayout({ children }) {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    // Add special handling for navigation from instructions to phases page
-    if (pathname.includes("/phases") && activeExam) {
-      // Modify browser history to prevent going back to instructions
-      window.history.pushState(null, "", pathname);
-    }
-
     // Cleanup when component unmounts
     return () => {
       if (mainElement) {
@@ -92,10 +88,18 @@ export default function ExamLayout({ children }) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [pathname, activeExam, router, examCompleted, phases, completedPhases]);
+  }, [
+    pathname,
+    activeExam,
+    router,
+    examCompleted,
+    phases,
+    completedPhases,
+    isInitialized,
+  ]);
 
   return (
-    <div className="bg-[#f4f6f8]">
+    <div className="min-h-screen bg-[#f4f6f8]">
       {/* Background Base Layer */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Main Gradient */}
