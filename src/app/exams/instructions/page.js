@@ -72,19 +72,19 @@ const ExamInstructions = () => {
         })
       );
 
-      // Navigate to phases page instead of directly to questions
-      router.push(`/exams/phases?subject=${subject}`);
+      // Navigate to phases page with replace:true to prevent back navigation
+      router.replace(`/exams/phases?subject=${subject}`);
     } catch (error) {
       console.error("Error starting exam:", error);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-2 ">
+    <div className="max-w-2xl mx-auto px-4 py-2 h-[calc(100vh-4rem)] flex items-center justify-center">
       {/* Main Card */}
-      <div className="bg-white rounded-2xl shadow-xl shadow-indigo-200/20">
+      <div className="bg-white rounded-2xl shadow-xl shadow-indigo-200/20 max-h-full overflow-hidden flex flex-col">
         {/* Header with Subject Info */}
-        <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100">
+        <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100 flex-shrink-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,rgba(233,238,255,0.5),transparent)]"></div>
           <div className="relative p-6">
             <div className="flex items-center gap-4">
@@ -136,15 +136,11 @@ const ExamInstructions = () => {
           </div>
         </div>
 
-        {/* Content Container */}
-        <div className="p-6">
+        {/* Content Container - Make it scrollable if needed while keeping the page fixed */}
+        <div className="p-6 overflow-y-auto flex-1">
           {/* Instructions Grid */}
-          <div className="grid grid-cols-1 gap-3 mb-6">
+          <div className="grid grid-cols-1 gap-3 mb-5">
             {[
-              {
-                icon: "⏱️",
-                text: "يتكون الاختبار من أربع مراحل، مدة كل مرحلة 10 دقائق",
-              },
               {
                 icon: "🔄",
                 text: "انتقال تلقائي للمرحلة التالية مع فترة راحة دقيقتين",
@@ -199,7 +195,7 @@ const ExamInstructions = () => {
                 readOnly
               />
               <p className="mt-1 text-xs text-gray-500">
-                كود تعريفي يتم إنشاؤه تلقائياً
+                كود تعريفي لمحاكاة الاختبار الحقيقي (يتم إنشاؤه تلقائياً)
               </p>
             </div>
 

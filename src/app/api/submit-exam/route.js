@@ -3,18 +3,38 @@ export async function POST(req) {
   try {
     const data = await req.json();
 
+    // Get the Google Apps Script URL from environment variables
     const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
 
+    // Add browser info for tracking
+    const userAgent = req.headers.get("user-agent") || "";
+    const ipAddress =
+      req.headers.get("x-forwarded-for") ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+
+    // Prepare the data for Google Sheets
+    const examData = {
+      name: data.name,
+      subjectName: data.subjectName,
+      organizationCode: data.organizationCode,
+      totalScore: data.totalScore || 0,
+      behavioralScore: data.phaseScores?.behavioral || 0,
+      languageScore: data.phaseScores?.language_arabic || 0, // Using Arabic score as main language score
+      knowledgeScore: data.phaseScores?.knowledge_iq || 0, // Using IQ score as main knowledge score
+      specializationScore: data.phaseScores?.specialization || 0,
+      subject: data.subject || "mail",
+      ipAddress,
+      userAgent,
+    };
+
+    // Send data to Google Script
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        name: data.name,
-        subjectName: data.subjectName,
-        organizationCode: data.organizationCode,
-      }),
+      body: JSON.stringify(examData),
     });
 
     // Check the response status

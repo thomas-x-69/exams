@@ -14,7 +14,11 @@ const ResultsPage = () => {
   const [loading, setLoading] = useState(true);
   const [animateChart, setAnimateChart] = useState(false);
   const [animateScore, setAnimateScore] = useState(false);
-
+  useEffect(() => {
+    if (!loading && currentResult && activeExam) {
+      submitExamResults();
+    }
+  }, [loading, currentResult, activeExam]);
   useEffect(() => {
     // Redirect if no active exam or not completed
     if (!activeExam || !examCompleted) {
@@ -195,6 +199,35 @@ const ResultsPage = () => {
   };
 
   const categories = organizePhaseScores();
+  const submitExamResults = async () => {
+    if (!activeExam || !currentResult) return;
+
+    try {
+      const response = await fetch("/api/submit-exam", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: activeExam.userName,
+          subjectName:
+            activeExam.subject === "mail" ? "البريد المصري" : "التربية",
+          organizationCode: activeExam.organizationCode,
+          totalScore: currentResult.totalScore,
+          phaseScores: currentResult.phaseScores,
+          subject: activeExam.subject,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.status !== "success") {
+        console.error("Error submitting results:", data.message);
+      }
+    } catch (error) {
+      console.error("Failed to submit exam results:", error);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
