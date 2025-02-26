@@ -46,6 +46,15 @@ export default function ExamLayout({ children }) {
         router.push("/");
         return;
       }
+
+      // If in phases page and exam is active, prevent going back to instructions
+      if (pathname.includes("/phases") && activeExam && !examCompleted) {
+        // Prevent default behavior
+        event.preventDefault();
+        // Keep user on phases page or redirect to landing page
+        router.replace(pathname);
+        return;
+      }
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -69,6 +78,12 @@ export default function ExamLayout({ children }) {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
+    // Add special handling for navigation from instructions to phases page
+    if (pathname.includes("/phases") && activeExam) {
+      // Modify browser history to prevent going back to instructions
+      window.history.pushState(null, "", pathname);
+    }
+
     // Cleanup when component unmounts
     return () => {
       if (mainElement) {
@@ -80,7 +95,7 @@ export default function ExamLayout({ children }) {
   }, [pathname, activeExam, router, examCompleted, phases, completedPhases]);
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8]">
+    <div className="bg-[#f4f6f8]">
       {/* Background Base Layer */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Main Gradient */}
