@@ -91,7 +91,7 @@ export default function Home() {
             {/* Logo & Title with Tooltip */}
             <div className="flex items-center gap-3 px-2">
               <div className="relative group">
-                <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center border border-white/10 overflow-hidden cursor-help">
+                <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center border border-white/10 overflow-hidden cursor-default">
                   <Image
                     src="/logo.png"
                     alt="Logo"
@@ -112,7 +112,7 @@ export default function Home() {
                   منصة الاختبارات المصرية
                 </h1>
                 {/* Tooltip */}
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 top-full right-0 mt-2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 top-full right-0 mt-2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700 ">
                   منصة تدريبية لاختبارات التوظيف المصرية
                 </div>
               </div>
@@ -123,7 +123,7 @@ export default function Home() {
               {/* Stats Pills */}
               <div className="hidden md:flex items-center gap-2">
                 <div className="relative group">
-                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-help">
+                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                     <span className="text-white/90 text-sm">3000 سؤال</span>
                   </div>
@@ -134,7 +134,7 @@ export default function Home() {
                 </div>
 
                 <div className="relative group">
-                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-help">
+                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                     <span className="text-white/90 text-sm whitespace-nowrap">
                       150 اختبار
