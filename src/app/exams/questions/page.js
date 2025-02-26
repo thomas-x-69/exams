@@ -1,7 +1,7 @@
 // src/app/exams/questions/page.js
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -31,6 +31,7 @@ const QuizPage = () => {
   const [remainingTime, setRemainingTime] = useState(600); // Default 10 min
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const timerEndedRef = useRef(false);
 
   // Parse phase and subphase if present
   const [mainPhase, subPhase] = phase ? phase.split("_") : [phase, null];
@@ -111,6 +112,31 @@ const QuizPage = () => {
     }
   }, [activeExam, router]);
 
+  const handleTimeUp = useCallback(() => {
+    if (timerEndedRef.current) return; // Prevent multiple calls
+    timerEndedRef.current = true;
+
+    // Use setTimeout to ensure this doesn't run during render
+    setTimeout(() => {
+      // Complete the current phase
+      dispatch(
+        completePhase({
+          phaseId: phase,
+        })
+      );
+
+      // Start the break time
+      dispatch(
+        startBreak({
+          duration: 120, // 2 minutes
+        })
+      );
+
+      // Navigate back to phases page
+      router.push("/exams/phases");
+    }, 0);
+  }, [dispatch, phase, router]);
+
   // Initialize exam phase
   useEffect(() => {
     if (!phase || !activeExam) return;
@@ -180,9 +206,11 @@ const QuizPage = () => {
         const timeLeft = Math.max(0, phaseState.duration - elapsedTime);
         setRemainingTime(timeLeft);
 
-        // If time is up, end the exam
-        if (timeLeft <= 0) {
-          handleTimeUp();
+        // If time is up, handle it after render using a timeout
+        if (timeLeft <= 0 && !timerEndedRef.current) {
+          setTimeout(() => {
+            handleTimeUp();
+          }, 0);
         }
       }
 
@@ -196,6 +224,8 @@ const QuizPage = () => {
     mainPhase,
     subPhase,
     getPhaseQuestions,
+    handleTimeUp,
+    timerEndedRef,
   ]);
 
   // Timer effect
@@ -214,7 +244,7 @@ const QuizPage = () => {
 
       return () => clearInterval(timer);
     }
-  }, [remainingTime]);
+  }, [remainingTime, handleTimeUp]);
 
   const handleAnswerSelect = (answerId) => {
     if (!questions[currentQuestion]) return;
@@ -235,25 +265,6 @@ const QuizPage = () => {
         answerId,
       })
     );
-  };
-
-  const handleTimeUp = () => {
-    // Complete the current phase
-    dispatch(
-      completePhase({
-        phaseId: phase,
-      })
-    );
-
-    // Start the break time
-    dispatch(
-      startBreak({
-        duration: 120, // 2 minutes
-      })
-    );
-
-    // Navigate back to phases page
-    router.push("/exams/phases");
   };
 
   const handleSubmit = () => {
