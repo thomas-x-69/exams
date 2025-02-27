@@ -11,36 +11,48 @@ const subjectInfo = {
     icon: "📬",
     gradient: "from-blue-500/20 to-indigo-500/20",
     color: "text-blue-600",
+    examTime: 60, // Total time in minutes
+    questionsCount: 40,
   },
   math: {
     name: "الرياضيات",
     icon: "➗",
     gradient: "from-green-500/20 to-emerald-500/20",
     color: "text-emerald-600",
+    examTime: 60, // Total time in minutes
+    questionsCount: 40,
   },
   english: {
     name: "اللغة الإنجليزية",
     icon: "🌎",
     gradient: "from-purple-500/20 to-violet-500/20",
     color: "text-purple-600",
+    examTime: 60, // Total time in minutes
+    questionsCount: 40,
   },
   science: {
     name: "العلوم",
     icon: "🔬",
     gradient: "from-rose-500/20 to-pink-500/20",
     color: "text-rose-600",
+    examTime: 60, // Total time in minutes
+    questionsCount: 40,
   },
   social: {
     name: "الدراسات الاجتماعية",
     icon: "📚",
     gradient: "from-amber-500/20 to-yellow-500/20",
     color: "text-amber-600",
+    examTime: 60, // Total time in minutes
+    questionsCount: 40,
   },
   arabic: {
     name: "اللغة العربية",
     icon: "📖",
     gradient: "from-cyan-500/20 to-sky-500/20",
     color: "text-cyan-600",
+    examTime: 60, // Total time in minutes
+    questionsCount: 40,
   },
 };
 
@@ -112,7 +124,7 @@ const ExamInstructions = () => {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span>٤٠ دقيقة</span>
+                    <span>{currentSubject.examTime} دقيقة</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <svg
@@ -128,7 +140,7 @@ const ExamInstructions = () => {
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                       />
                     </svg>
-                    <span>٤٠ سؤال</span>
+                    <span>{currentSubject.questionsCount} سؤال</span>
                   </div>
                 </div>
               </div>

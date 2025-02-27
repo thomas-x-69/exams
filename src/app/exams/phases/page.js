@@ -29,7 +29,7 @@ const mailPhases = [
     gradient: "from-blue-500/20 to-indigo-500/20",
     borderColor: "border-blue-200",
     questions: 40,
-    time: 1,
+    time: 10, // 10 minutes
   },
   {
     id: "language",
@@ -39,10 +39,10 @@ const mailPhases = [
     borderColor: "border-emerald-200",
     questions: 40,
     subPhases: [
-      { id: "arabic", title: "اللغة العربية", questions: 20 },
-      { id: "english", title: "اللغة الإنجليزية", questions: 20 },
+      { id: "arabic", title: "اللغة العربية", questions: 20, time: 10 }, // 10 minutes
+      { id: "english", title: "اللغة الإنجليزية", questions: 20, time: 10 }, // 10 minutes
     ],
-    time: 10,
+    time: 20, // Total time for both subphases
   },
   {
     id: "knowledge",
@@ -52,11 +52,11 @@ const mailPhases = [
     borderColor: "border-violet-200",
     questions: 40,
     subPhases: [
-      { id: "iq", title: "اختبار الذكاء", questions: 15 },
-      { id: "general", title: "معلومات عامة", questions: 15 },
-      { id: "it", title: "تكنولوجيا المعلومات", questions: 10 },
+      { id: "iq", title: "اختبار الذكاء", questions: 15, time: 5 }, // 5 minutes
+      { id: "general", title: "معلومات عامة", questions: 15, time: 5 }, // 5 minutes
+      { id: "it", title: "تكنولوجيا المعلومات", questions: 10, time: 5 }, // 5 minutes
     ],
-    time: 10,
+    time: 15, // Total time for all subphases
   },
   {
     id: "specialization",
@@ -65,14 +65,47 @@ const mailPhases = [
     gradient: "from-amber-500/20 to-yellow-500/20",
     borderColor: "border-amber-200",
     questions: 30,
-    time: 10,
+    time: 15, // 15 minutes
   },
 ];
 
 const educationPhases = [
-  mailPhases[0],
-  mailPhases[1],
-  mailPhases[2],
+  {
+    id: "behavioral",
+    title: "الكفايات السلوكية والنفسية",
+    icon: "🧠",
+    gradient: "from-blue-500/20 to-indigo-500/20",
+    borderColor: "border-blue-200",
+    questions: 40,
+    time: 10, // 10 minutes
+  },
+  {
+    id: "language",
+    title: "الكفايات اللغوية",
+    icon: "📝",
+    gradient: "from-emerald-500/20 to-green-500/20",
+    borderColor: "border-emerald-200",
+    questions: 40,
+    subPhases: [
+      { id: "arabic", title: "اللغة العربية", questions: 20, time: 10 }, // 10 minutes
+      { id: "english", title: "اللغة الإنجليزية", questions: 20, time: 10 }, // 10 minutes
+    ],
+    time: 20, // Total time for both subphases
+  },
+  {
+    id: "knowledge",
+    title: "الكفايات المعرفية والتكنولوجية",
+    icon: "💡",
+    gradient: "from-violet-500/20 to-purple-500/20",
+    borderColor: "border-violet-200",
+    questions: 40,
+    subPhases: [
+      { id: "iq", title: "اختبار الذكاء", questions: 15, time: 5 }, // 5 minutes
+      { id: "general", title: "معلومات عامة", questions: 15, time: 5 }, // 5 minutes
+      { id: "it", title: "تكنولوجيا المعلومات", questions: 10, time: 5 }, // 5 minutes
+    ],
+    time: 15, // Total time for all subphases
+  },
   {
     id: "education",
     title: "الكفايات التربوية",
@@ -80,7 +113,7 @@ const educationPhases = [
     gradient: "from-rose-500/20 to-pink-500/20",
     borderColor: "border-rose-200",
     questions: 30,
-    time: 10,
+    time: 15, // 15 minutes
   },
   {
     id: "specialization",
@@ -89,7 +122,7 @@ const educationPhases = [
     gradient: "from-cyan-500/20 to-sky-500/20",
     borderColor: "border-cyan-200",
     questions: 30,
-    time: 10,
+    time: 15, // 15 minutes
   },
 ];
 
@@ -359,6 +392,25 @@ const ExamPhases = () => {
       : currentPhase;
   };
 
+  // Function to get the time duration for a phase
+  const getPhaseDuration = (phaseId) => {
+    if (phaseId.includes("_")) {
+      const [mainPhase, subPhase] = phaseId.split("_");
+      const mainPhaseObj = phasesData.find((p) => p.id === mainPhase);
+      const subPhaseObj = mainPhaseObj?.subPhases?.find(
+        (s) => s.id === subPhase
+      );
+
+      // Return the subphase time in minutes, convert to seconds
+      return subPhaseObj && subPhaseObj.time ? subPhaseObj.time * 60 : 600; // Default to 10 minutes if not found
+    } else {
+      const phaseObj = phasesData.find((p) => p.id === phaseId);
+
+      // Return the phase time in minutes, convert to seconds
+      return phaseObj && phaseObj.time ? phaseObj.time * 60 : 600; // Default to 10 minutes if not found
+    }
+  };
+
   const handleStartPhase = () => {
     const nextPhaseId = getNextPhaseId();
     if (nextPhaseId) {
@@ -380,24 +432,27 @@ const ExamPhases = () => {
     setLoading(true);
 
     setTimeout(() => {
+      // Get the duration for this phase in seconds
+      const phaseDuration = getPhaseDuration(nextPhaseId);
+
       // Check if it's a sub-phase
       if (nextPhaseId.includes("_")) {
         const [mainPhase, subPhase] = nextPhaseId.split("_");
 
-        // Start the phase with the specific sub-phase
+        // Start the phase with the specific sub-phase and its duration
         dispatch(
           startPhase({
             phaseId: mainPhase,
             subPhase: subPhase,
-            duration: 60, // 10 minutes
+            duration: phaseDuration, // Use specific phase duration
           })
         );
       } else {
-        // Start a regular phase
+        // Start a regular phase with its duration
         dispatch(
           startPhase({
             phaseId: nextPhaseId,
-            duration: 60, // 10 minutes
+            duration: phaseDuration, // Use specific phase duration
           })
         );
       }
@@ -685,6 +740,11 @@ const ExamPhases = () => {
                           <div className="flex justify-between items-center">
                             <div className="text-xs font-medium text-gray-700">
                               {subPhase.title}
+                              {subPhase.time && (
+                                <span className="ml-1 text-gray-500">
+                                  ({subPhase.time} د)
+                                </span>
+                              )}
                             </div>
 
                             {subPhaseStatus ===
