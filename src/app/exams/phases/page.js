@@ -158,7 +158,7 @@ const ExamPhases = () => {
   // Redirect if no active exam
   useEffect(() => {
     if (!activeExam) {
-      router.push("/");
+      router.replace("/");
       return;
     }
 
@@ -289,7 +289,7 @@ const ExamPhases = () => {
     const handlePopState = (e) => {
       // If a phase was just completed, we should prevent going back
       if (completedPhases.length > 0 && !examCompleted) {
-        router.push("/");
+        router.replace("/");
       }
     };
 
@@ -421,7 +421,7 @@ const ExamPhases = () => {
   const handleResumePhase = () => {
     const currentPhaseId = getCurrentPhaseId();
     if (currentPhaseId) {
-      router.push(`/exams/questions?phase=${currentPhaseId}`);
+      router.replace(`/exams/questions?phase=${currentPhaseId}`);
     }
   };
 
@@ -458,7 +458,7 @@ const ExamPhases = () => {
       }
 
       // Navigate to questions page
-      router.push(`/exams/questions?phase=${nextPhaseId}`);
+      router.replace(`/exams/questions?phase=${nextPhaseId}`);
     }, 0);
   };
 
@@ -485,7 +485,7 @@ const ExamPhases = () => {
     dispatch(completeExam());
 
     // Navigate to results page
-    router.push("/exams/results");
+    router.replace("/exams/results");
   };
 
   const formatTime = (seconds) => {
@@ -511,7 +511,7 @@ const ExamPhases = () => {
   return (
     <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4 mt-0">
       {/* Break Timer - Only shown during break time */}
-      {breakTime && (
+      {breakTime && nextPhaseTitle && (
         <div className="bg-amber-50 rounded-xl shadow-sm border border-amber-200 mb-4 p-4 text-center">
           <div className="flex flex-col items-center">
             <div className="text-amber-800 font-bold mb-2">فترة راحة</div>
