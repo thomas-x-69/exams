@@ -99,7 +99,7 @@ export default function ExamLayout({ children }) {
   ]);
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8]">
+    <div className=" bg-[#f4f6f8]">
       {/* Background Base Layer */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Main Gradient */}

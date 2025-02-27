@@ -1,7 +1,7 @@
 // src/app/exams/questions/page.js
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -25,13 +25,17 @@ const QuizPage = () => {
   const phaseState = phase ? examState.phases[phase] : null;
   const activeExam = examState.activeExam;
 
+  // Refs for safe timer management
+  const timerRef = useRef(null);
+  const navigatingRef = useRef(false);
+
   const [currentQuestion, setCurrentQuestionState] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [questions, setQuestionsState] = useState([]);
   const [remainingTime, setRemainingTime] = useState(600); // Default 10 min
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [isTimeRunningLow, setIsTimeRunningLow] = useState(false);
 
   // Parse phase and subphase if present
   const [mainPhase, subPhase] = phase ? phase.split("_") : [phase, null];
@@ -45,9 +49,15 @@ const QuizPage = () => {
 
   // The shared submit function used by both the button and timer
   const handleSubmit = useCallback(() => {
-    if (isNavigating) return;
+    // Prevent multiple submissions/navigations
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
 
-    setIsNavigating(true);
+    // Clear any running timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
     // Complete the current phase
     dispatch(
@@ -63,9 +73,11 @@ const QuizPage = () => {
       })
     );
 
-    // Navigate back to phases page - SAME for button and timer
-    router.push("/exams/phases");
-  }, [dispatch, phase, router, isNavigating]);
+    // Use setTimeout to ensure state updates complete before navigation
+    setTimeout(() => {
+      router.replace("/exams/phases");
+    }, 50);
+  }, [dispatch, phase, router]);
 
   const getPhaseQuestions = useCallback(
     (phaseId) => {
@@ -126,7 +138,7 @@ const QuizPage = () => {
     if (!phase || !activeExam) return;
 
     // Reset navigation flag when phase changes
-    setIsNavigating(false);
+    navigatingRef.current = false;
 
     // Get questions for the current phase
     const fetchQuestions = () => {
@@ -138,7 +150,6 @@ const QuizPage = () => {
           setQuestionsState(examState.examData[phase].questions);
         } else {
           // If not, get new questions
-          console.log("Fetching questions for phase:", phase);
           const phaseQuestions = getPhaseQuestions(phase);
 
           if (!phaseQuestions || !phaseQuestions.length) {
@@ -192,10 +203,19 @@ const QuizPage = () => {
         );
         const timeLeft = Math.max(0, phaseState.duration - elapsedTime);
         setRemainingTime(timeLeft);
+        setIsTimeRunningLow(timeLeft < 60);
       }
 
       fetchQuestions();
     }
+
+    // Clean up any timer on unmount
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [
     phase,
     dispatch,
@@ -207,35 +227,60 @@ const QuizPage = () => {
     activeExam,
   ]);
 
-  // Timer effect
+  // Timer effect - improved version with ref to prevent memory leaks
   useEffect(() => {
-    if (loading || isNavigating) return;
+    if (loading || navigatingRef.current || remainingTime <= 0) return;
 
-    if (remainingTime > 0) {
-      const timer = setInterval(() => {
-        setRemainingTime((prev) => {
-          const newValue = prev - 1;
-          if (newValue <= 0) {
-            clearInterval(timer);
-            // When timer hits zero, use the exact same code as the button
-            setTimeout(() => {
-              handleSubmit();
-            }, 0);
-            return 0;
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    // Start a new timer
+    timerRef.current = setInterval(() => {
+      setRemainingTime((prev) => {
+        const newTime = prev - 1;
+
+        // Update time running low status
+        if (newTime < 60 && !isTimeRunningLow) {
+          setIsTimeRunningLow(true);
+        }
+
+        // Handle timer completion
+        if (newTime <= 0) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
           }
-          return newValue;
-        });
-      }, 1000);
 
-      return () => clearInterval(timer);
-    } else if (remainingTime <= 0 && !isNavigating) {
-      // Check if time is already up after loading
+          // Only call handleSubmit if we're not already navigating
+          if (!navigatingRef.current) {
+            handleSubmit();
+          }
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [remainingTime, loading, handleSubmit, isTimeRunningLow]);
+
+  // Handle time expiration on initial load
+  useEffect(() => {
+    // If time is already expired after loading
+    if (!loading && remainingTime <= 0 && !navigatingRef.current) {
       handleSubmit();
     }
-  }, [remainingTime, loading, handleSubmit, isNavigating]);
+  }, [loading, remainingTime, handleSubmit]);
 
   const handleAnswerSelect = (answerId) => {
-    if (!questions[currentQuestion]) return;
+    if (!questions[currentQuestion] || navigatingRef.current) return;
 
     const questionId = questions[currentQuestion].id;
     const newAnswers = {
@@ -256,6 +301,8 @@ const QuizPage = () => {
   };
 
   const handleNext = () => {
+    if (navigatingRef.current) return;
+
     if (currentQuestion < questions.length - 1) {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestionState(nextIndex);
@@ -327,9 +374,6 @@ const QuizPage = () => {
     selectedAnswers[questions[currentQuestion].id] !== undefined;
 
   const progressPercentage = ((currentQuestion + 1) / questions.length) * 100;
-
-  // Determine if time is running low (less than 1 minute)
-  const isTimeRunningLow = remainingTime < 60;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-2 mt-0">
@@ -430,7 +474,7 @@ const QuizPage = () => {
                       ? "border-blue-500 bg-blue-50 text-blue-700"
                       : "border-gray-200 hover:border-gray-300 text-gray-700"
                   }`}
-                  disabled={isNavigating}
+                  disabled={navigatingRef.current}
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -459,21 +503,21 @@ const QuizPage = () => {
         {currentQuestion === questions.length - 1 ? (
           <button
             onClick={handleSubmit}
-            disabled={!isCurrentQuestionAnswered || isNavigating}
+            disabled={!isCurrentQuestionAnswered || navigatingRef.current}
             className={`px-8 py-3 text-white rounded-lg text-base font-medium transition-all duration-300 ${
-              isCurrentQuestionAnswered && !isNavigating
+              isCurrentQuestionAnswered && !navigatingRef.current
                 ? "bg-green-600 hover:bg-green-700"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >
-            {isNavigating ? "جاري الإنتهاء..." : "إنهاء"}
+            {navigatingRef.current ? "جاري الإنتهاء..." : "إنهاء"}
           </button>
         ) : (
           <button
             onClick={handleNext}
-            disabled={!isCurrentQuestionAnswered || isNavigating}
+            disabled={!isCurrentQuestionAnswered || navigatingRef.current}
             className={`px-8 py-3 text-white rounded-lg text-base font-medium transition-all duration-300 ${
-              isCurrentQuestionAnswered && !isNavigating
+              isCurrentQuestionAnswered && !navigatingRef.current
                 ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
