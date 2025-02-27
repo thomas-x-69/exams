@@ -1,7 +1,7 @@
 // src/app/components/GlobalTimer.js
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { completePhase, startBreak, endBreak } from "../store/examSlice";
@@ -18,8 +18,13 @@ const GlobalTimer = ({ phase, onTimeUp }) => {
   const [isBreakTime, setIsBreakTime] = useState(false);
   const [breakTimeRemaining, setBreakTimeRemaining] = useState(0);
 
+  // Handle timeup as a callback to avoid render-time dispatch
+  const handleTimeUp = useCallback(() => {
+    if (onTimeUp) onTimeUp();
+  }, [onTimeUp]);
+
+  // Handle break time
   useEffect(() => {
-    // Handle break time
     if (breakTime) {
       setIsBreakTime(true);
       const elapsedBreakTime = Math.floor(
@@ -50,7 +55,10 @@ const GlobalTimer = ({ phase, onTimeUp }) => {
 
       // If time is already up
       if (timeLeft <= 0) {
-        if (onTimeUp) onTimeUp();
+        // Use setTimeout to ensure this doesn't happen during render
+        setTimeout(() => {
+          handleTimeUp();
+        }, 0);
         return;
       }
 
@@ -58,13 +66,13 @@ const GlobalTimer = ({ phase, onTimeUp }) => {
         const remaining = updateRemainingTime();
         if (remaining <= 0) {
           clearInterval(timer);
-          if (onTimeUp) onTimeUp();
+          handleTimeUp();
         }
       }, 1000);
 
       return () => clearInterval(timer);
     }
-  }, [globalTimer, paused, isBreakTime, onTimeUp]);
+  }, [globalTimer, paused, isBreakTime, handleTimeUp]);
 
   // Timer for break
   useEffect(() => {
