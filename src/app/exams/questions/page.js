@@ -93,41 +93,7 @@ const QuizPage = () => {
       } catch (error) {
         console.error("Error in getPhaseQuestions:", error);
         // Provide fallback questions
-        return [
-          {
-            id: "q1",
-            text: "سؤال اختبار رقم 1",
-            options: [
-              "الخيار الأول",
-              "الخيار الثاني",
-              "الخيار الثالث",
-              "الخيار الرابع",
-            ],
-            correctAnswer: 0,
-          },
-          {
-            id: "q2",
-            text: "سؤال اختبار رقم 2",
-            options: [
-              "الخيار الأول",
-              "الخيار الثاني",
-              "الخيار الثالث",
-              "الخيار الرابع",
-            ],
-            correctAnswer: 1,
-          },
-          {
-            id: "q3",
-            text: "سؤال اختبار رقم 3",
-            options: [
-              "الخيار الأول",
-              "الخيار الثاني",
-              "الخيار الثالث",
-              "الخيار الرابع",
-            ],
-            correctAnswer: 2,
-          },
-        ];
+        return [];
       }
     },
     [activeExam]
