@@ -43,7 +43,7 @@ export const examSlice = createSlice({
 
     // Start a phase with timer
     startPhase: (state, action) => {
-      const { phaseId, subPhase = null, duration = 600 } = action.payload;
+      const { phaseId, subPhase = null, duration = 60 } = action.payload;
       const fullPhaseId = subPhase ? `${phaseId}_${subPhase}` : phaseId;
 
       state.phases[fullPhaseId] = {

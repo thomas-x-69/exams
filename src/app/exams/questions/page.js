@@ -31,11 +31,42 @@ const QuizPage = () => {
   const [remainingTime, setRemainingTime] = useState(600); // Default 10 min
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Parse phase and subphase if present
   const [mainPhase, subPhase] = phase ? phase.split("_") : [phase, null];
 
-  // This is a simplified version of getPhaseQuestions
+  // Redirect if no active exam
+  useEffect(() => {
+    if (!activeExam) {
+      router.push("/");
+    }
+  }, [activeExam, router]);
+
+  // The shared submit function used by both the button and timer
+  const handleSubmit = useCallback(() => {
+    if (isNavigating) return;
+
+    setIsNavigating(true);
+
+    // Complete the current phase
+    dispatch(
+      completePhase({
+        phaseId: phase,
+      })
+    );
+
+    // Start the break time
+    dispatch(
+      startBreak({
+        duration: 120, // 2 minutes
+      })
+    );
+
+    // Navigate back to phases page - SAME for button and timer
+    router.push("/exams/phases");
+  }, [dispatch, phase, router, isNavigating]);
+
   const getPhaseQuestions = useCallback(
     (phaseId) => {
       try {
@@ -46,7 +77,6 @@ const QuizPage = () => {
           10 // Number of questions to get
         );
 
-        // The improved function will always return something (at least dummy questions)
         return questionsFromUtils;
       } catch (error) {
         console.error("Error in getPhaseQuestions:", error);
@@ -91,16 +121,12 @@ const QuizPage = () => {
     [activeExam]
   );
 
-  // Redirect if no active exam
-  useEffect(() => {
-    if (!activeExam) {
-      router.push("/");
-    }
-  }, [activeExam, router]);
-
   // Initialize exam phase
   useEffect(() => {
     if (!phase || !activeExam) return;
+
+    // Reset navigation flag when phase changes
+    setIsNavigating(false);
 
     // Get questions for the current phase
     const fetchQuestions = () => {
@@ -166,11 +192,6 @@ const QuizPage = () => {
         );
         const timeLeft = Math.max(0, phaseState.duration - elapsedTime);
         setRemainingTime(timeLeft);
-
-        // If time is up, end the exam
-        if (timeLeft <= 0) {
-          handleTimeUp();
-        }
       }
 
       fetchQuestions();
@@ -183,25 +204,35 @@ const QuizPage = () => {
     mainPhase,
     subPhase,
     getPhaseQuestions,
+    activeExam,
   ]);
 
   // Timer effect
   useEffect(() => {
+    if (loading || isNavigating) return;
+
     if (remainingTime > 0) {
       const timer = setInterval(() => {
         setRemainingTime((prev) => {
-          if (prev <= 1) {
+          const newValue = prev - 1;
+          if (newValue <= 0) {
             clearInterval(timer);
-            handleTimeUp();
+            // When timer hits zero, use the exact same code as the button
+            setTimeout(() => {
+              handleSubmit();
+            }, 0);
             return 0;
           }
-          return prev - 1;
+          return newValue;
         });
       }, 1000);
 
       return () => clearInterval(timer);
+    } else if (remainingTime <= 0 && !isNavigating) {
+      // Check if time is already up after loading
+      handleSubmit();
     }
-  }, [remainingTime]);
+  }, [remainingTime, loading, handleSubmit, isNavigating]);
 
   const handleAnswerSelect = (answerId) => {
     if (!questions[currentQuestion]) return;
@@ -222,44 +253,6 @@ const QuizPage = () => {
         answerId,
       })
     );
-  };
-
-  const handleTimeUp = () => {
-    // Complete the current phase
-    dispatch(
-      completePhase({
-        phaseId: phase,
-      })
-    );
-
-    // Start the break time
-    dispatch(
-      startBreak({
-        duration: 120, // 2 minutes
-      })
-    );
-
-    // Navigate back to phases page
-    router.push("/exams/phases");
-  };
-
-  const handleSubmit = () => {
-    // Complete the current phase
-    dispatch(
-      completePhase({
-        phaseId: phase,
-      })
-    );
-
-    // Start the break time
-    dispatch(
-      startBreak({
-        duration: 120, // 2 minutes
-      })
-    );
-
-    // Navigate back to phases page
-    router.push("/exams/phases");
   };
 
   const handleNext = () => {
@@ -437,6 +430,7 @@ const QuizPage = () => {
                       ? "border-blue-500 bg-blue-50 text-blue-700"
                       : "border-gray-200 hover:border-gray-300 text-gray-700"
                   }`}
+                  disabled={isNavigating}
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -465,21 +459,21 @@ const QuizPage = () => {
         {currentQuestion === questions.length - 1 ? (
           <button
             onClick={handleSubmit}
-            disabled={!isCurrentQuestionAnswered}
+            disabled={!isCurrentQuestionAnswered || isNavigating}
             className={`px-8 py-3 text-white rounded-lg text-base font-medium transition-all duration-300 ${
-              isCurrentQuestionAnswered
+              isCurrentQuestionAnswered && !isNavigating
                 ? "bg-green-600 hover:bg-green-700"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >
-            إنهاء
+            {isNavigating ? "جاري الإنتهاء..." : "إنهاء"}
           </button>
         ) : (
           <button
             onClick={handleNext}
-            disabled={!isCurrentQuestionAnswered}
+            disabled={!isCurrentQuestionAnswered || isNavigating}
             className={`px-8 py-3 text-white rounded-lg text-base font-medium transition-all duration-300 ${
-              isCurrentQuestionAnswered
+              isCurrentQuestionAnswered && !isNavigating
                 ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-gray-400 cursor-not-allowed"
             }`}

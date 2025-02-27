@@ -29,7 +29,7 @@ const mailPhases = [
     gradient: "from-blue-500/20 to-indigo-500/20",
     borderColor: "border-blue-200",
     questions: 40,
-    time: 10,
+    time: 1,
   },
   {
     id: "language",
@@ -146,43 +146,71 @@ const ExamPhases = () => {
       } else {
         setShowResultsButton(false);
       }
+    }
+  }, [completedPhases, phasesData]);
 
-      // Check if in break time
-      if (breakTime) {
-        const elapsedTime = Math.floor(
-          (Date.now() - breakTime.startTime) / 1000
-        );
-        const timeLeft = Math.max(0, breakTime.duration - elapsedTime);
+  // Break timer effect and navigation to next phase
+  useEffect(() => {
+    if (!breakTime) {
+      return;
+    }
 
-        if (timeLeft > 0) {
-          setBreakTimeRemaining(timeLeft);
-
-          // Get next phase title for display during break
-          const nextId = getNextPhaseId();
-          if (nextId) {
-            if (nextId.includes("_")) {
-              const [mainId, subId] = nextId.split("_");
-              const mainPhase = phasesData.find((p) => p.id === mainId);
-              const subPhase = mainPhase?.subPhases?.find(
-                (s) => s.id === subId
-              );
-              if (mainPhase && subPhase) {
-                setNextPhaseTitle(`${mainPhase.title} - ${subPhase.title}`);
-              }
-            } else {
-              const phase = phasesData.find((p) => p.id === nextId);
-              if (phase) {
-                setNextPhaseTitle(phase.title);
-              }
-            }
-          }
-        } else {
-          // Break time is over, clear it
-          dispatch(endBreak());
+    // Set the next phase title first
+    const nextId = getNextPhaseId();
+    if (nextId) {
+      if (nextId.includes("_")) {
+        const [mainId, subId] = nextId.split("_");
+        const mainPhase = phasesData.find((p) => p.id === mainId);
+        const subPhase = mainPhase?.subPhases?.find((s) => s.id === subId);
+        if (mainPhase && subPhase) {
+          setNextPhaseTitle(`${mainPhase.title} - ${subPhase.title}`);
+        }
+      } else {
+        const phase = phasesData.find((p) => p.id === nextId);
+        if (phase) {
+          setNextPhaseTitle(phase.title);
         }
       }
     }
-  }, [completedPhases, breakTime, phasesData, dispatch]);
+
+    // Calculate break time remaining
+    const elapsedTime = Math.floor((Date.now() - breakTime.startTime) / 1000);
+    const timeLeft = Math.max(0, breakTime.duration - elapsedTime);
+    setBreakTimeRemaining(timeLeft);
+
+    // If break is already over, navigate to next phase
+    if (timeLeft <= 0) {
+      setTimeout(() => {
+        dispatch(endBreak());
+        const nextPhaseId = getNextPhaseId();
+        if (nextPhaseId) {
+          handleStartNextPhase(nextPhaseId);
+        }
+      }, 0);
+      return;
+    }
+
+    // Otherwise, start break timer countdown
+    const timer = setInterval(() => {
+      setBreakTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          // End break and start next phase
+          setTimeout(() => {
+            dispatch(endBreak());
+            const nextPhaseId = getNextPhaseId();
+            if (nextPhaseId) {
+              handleStartNextPhase(nextPhaseId);
+            }
+          }, 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [breakTime, dispatch, phasesData]);
 
   // Calculate remaining time for current active phase (if any)
   useEffect(() => {
@@ -212,6 +240,7 @@ const ExamPhases = () => {
         if (remaining <= 0) {
           clearInterval(timer);
           setPhaseInProgress(false);
+          setCurrentPhaseTimeRemaining(0);
         }
       }, 1000);
 
@@ -221,24 +250,6 @@ const ExamPhases = () => {
       setCurrentPhaseTimeRemaining(null);
     }
   }, [currentPhase, currentSubPhase, phases]);
-
-  // Break timer effect
-  useEffect(() => {
-    if (breakTime && breakTimeRemaining > 0) {
-      const timer = setInterval(() => {
-        setBreakTimeRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            dispatch(endBreak());
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [breakTime, breakTimeRemaining, dispatch]);
 
   // Handle browser back button
   useEffect(() => {
@@ -368,30 +379,32 @@ const ExamPhases = () => {
     // Show loading before starting
     setLoading(true);
 
-    // Check if it's a sub-phase
-    if (nextPhaseId.includes("_")) {
-      const [mainPhase, subPhase] = nextPhaseId.split("_");
+    setTimeout(() => {
+      // Check if it's a sub-phase
+      if (nextPhaseId.includes("_")) {
+        const [mainPhase, subPhase] = nextPhaseId.split("_");
 
-      // Start the phase with the specific sub-phase
-      dispatch(
-        startPhase({
-          phaseId: mainPhase,
-          subPhase: subPhase,
-          duration: 600, // 10 minutes
-        })
-      );
-    } else {
-      // Start a regular phase
-      dispatch(
-        startPhase({
-          phaseId: nextPhaseId,
-          duration: 600, // 10 minutes
-        })
-      );
-    }
+        // Start the phase with the specific sub-phase
+        dispatch(
+          startPhase({
+            phaseId: mainPhase,
+            subPhase: subPhase,
+            duration: 60, // 10 minutes
+          })
+        );
+      } else {
+        // Start a regular phase
+        dispatch(
+          startPhase({
+            phaseId: nextPhaseId,
+            duration: 60, // 10 minutes
+          })
+        );
+      }
 
-    // Navigate to questions page
-    router.push(`/exams/questions?phase=${nextPhaseId}`);
+      // Navigate to questions page
+      router.push(`/exams/questions?phase=${nextPhaseId}`);
+    }, 0);
   };
 
   const handleShowResults = () => {
