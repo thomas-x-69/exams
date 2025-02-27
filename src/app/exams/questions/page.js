@@ -14,6 +14,22 @@ import {
 } from "../../../../store/examSlice";
 import { getRandomQuestions } from "../../data/questionsUtils";
 
+// Phase durations in minutes
+const mailPhases = {
+  behavioral: 10,
+  language_arabic: 10,
+  language_english: 10,
+  knowledge_iq: 5,
+  knowledge_general: 5,
+  knowledge_it: 5,
+  specialization: 15,
+};
+
+const educationPhases = {
+  ...mailPhases,
+  education: 15,
+};
+
 const QuizPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,6 +55,18 @@ const QuizPage = () => {
 
   // Parse phase and subphase if present
   const [mainPhase, subPhase] = phase ? phase.split("_") : [phase, null];
+
+  // Function to get phase duration from the phase data
+  const getPhaseDuration = useCallback(
+    (phaseId) => {
+      const phasesData =
+        activeExam?.subject === "mail" ? mailPhases : educationPhases;
+
+      // Return duration in seconds (multiply minutes by 60)
+      return (phasesData[phaseId] || 10) * 60; // Default to 10 minutes if not found
+    },
+    [activeExam]
+  );
 
   // Redirect if no active exam
   useEffect(() => {
@@ -93,7 +121,41 @@ const QuizPage = () => {
       } catch (error) {
         console.error("Error in getPhaseQuestions:", error);
         // Provide fallback questions
-        return [];
+        return [
+          {
+            id: "q1",
+            text: "سؤال اختبار رقم 1",
+            options: [
+              "الخيار الأول",
+              "الخيار الثاني",
+              "الخيار الثالث",
+              "الخيار الرابع",
+            ],
+            correctAnswer: 0,
+          },
+          {
+            id: "q2",
+            text: "سؤال اختبار رقم 2",
+            options: [
+              "الخيار الأول",
+              "الخيار الثاني",
+              "الخيار الثالث",
+              "الخيار الرابع",
+            ],
+            correctAnswer: 1,
+          },
+          {
+            id: "q3",
+            text: "سؤال اختبار رقم 3",
+            options: [
+              "الخيار الأول",
+              "الخيار الثاني",
+              "الخيار الثالث",
+              "الخيار الرابع",
+            ],
+            correctAnswer: 2,
+          },
+        ];
       }
     },
     [activeExam]
@@ -143,12 +205,15 @@ const QuizPage = () => {
 
     // Initialize or resume phase state
     if (!phaseState) {
+      // Calculate the duration for this phase
+      const phaseDuration = getPhaseDuration(phase);
+
       // Start a new phase if not already started
       dispatch(
         startPhase({
           phaseId: mainPhase,
           subPhase: subPhase,
-          duration: 600, // 10 minutes
+          duration: phaseDuration, // Use the specific phase duration
         })
       );
       fetchQuestions();
@@ -191,6 +256,7 @@ const QuizPage = () => {
     subPhase,
     getPhaseQuestions,
     activeExam,
+    getPhaseDuration,
   ]);
 
   // Timer effect - improved version with ref to prevent memory leaks
