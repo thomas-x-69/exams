@@ -99,56 +99,41 @@ const ResultsPage = () => {
   };
 
   // Generate and download PDF
+
+  // Replace your entire downloadPDF function with this
   const downloadPDF = async () => {
     if (!certificateRef.current) return;
 
     try {
       setPdfGenerating(true);
 
-      // Notify user
-
-      const certificateElement = certificateRef.current;
-
-      // Set scale higher for better quality
-      const canvas = await html2canvas(certificateElement, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
+      // Simple capture with maximum quality
+      const canvas = await html2canvas(certificateRef.current, {
+        scale: 4,
         backgroundColor: "#ffffff",
-        onclone: (clonedDoc) => {
-          // Any DOM manipulations to the cloned document before capture can go here
-          const element = clonedDoc.getElementById("certificateContainer");
-          if (element) {
-            element.style.transform = "scale(1)";
-            element.style.width = "100%";
-          }
-        },
       });
 
+      // Get image as data URL
       const imgData = canvas.toDataURL("image/png");
 
-      // Use A4 landscape format
+      // Create PDF with landscape orientation
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "mm",
         format: "a4",
       });
 
-      const imgWidth = 297; // A4 landscape width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // Get PDF dimensions
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      // Add the image to the PDF
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      // Place image on the entire page (with small margins)
+      pdf.addImage(imgData, "PNG", 5, 5, pdfWidth - 10, pdfHeight - 10);
 
-      const userName = activeExam.userName || "المستخدم";
-      const subject =
-        activeExam.subject === "mail" ? "البريد المصري" : "التربية";
-      const fileName = `شهادة_${subject}_${userName.replace(/\s+/g, "_")}.pdf`;
-
-      // Save the PDF
-      pdf.save(fileName);
+      // Save PDF
+      pdf.save(`certificate.pdf`);
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("Error:", error);
     } finally {
       setPdfGenerating(false);
     }
