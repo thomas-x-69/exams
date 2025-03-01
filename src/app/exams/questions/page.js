@@ -13,6 +13,7 @@ import {
   startBreak,
 } from "../../../../store/examSlice";
 import { getRandomQuestions } from "../../data/questionsUtils";
+import ExitConfirmationDialog from "../../../../components/ExitConfirmationDialog";
 
 // Phase durations in minutes
 const mailPhases = {
@@ -34,6 +35,42 @@ const QuizPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phase = searchParams.get("phase");
+
+  // Add mounted state to prevent Redux access before hydration
+  const [mounted, setMounted] = useState(false);
+
+  // First mount effect - without Redux
+  useEffect(() => {
+    // Check for reload - without needing Redux
+    const wasReloaded = localStorage.getItem("_wasReloaded");
+    if (wasReloaded === "true") {
+      // Clear the flag
+      localStorage.removeItem("_wasReloaded");
+      // Redirect immediately to landing page
+      return;
+    }
+
+    // Set mounted state to true
+    setMounted(true);
+  }, []);
+
+  // Render placeholder while waiting for client-side hydration
+  if (!mounted) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-center min-h-[60vh] mt-0">
+        <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // This is a component that only runs after the page is mounted
+  // and Redux is available
+  return <MountedQuizContent phase={phase} />;
+};
+
+// This component only runs after mounting, so Redux is safe to use
+function MountedQuizContent({ phase }) {
+  const router = useRouter();
   const dispatch = useDispatch();
 
   // Get exam state from Redux
@@ -53,6 +90,11 @@ const QuizPage = () => {
   const [error, setError] = useState(null);
   const [isTimeRunningLow, setIsTimeRunningLow] = useState(false);
 
+  // Navigation confirmation dialog
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [exitDestination, setExitDestination] = useState("");
+  const [exitMessage, setExitMessage] = useState("");
+
   // Parse phase and subphase if present
   const [mainPhase, subPhase] = phase ? phase.split("_") : [phase, null];
 
@@ -68,12 +110,102 @@ const QuizPage = () => {
     [activeExam]
   );
 
+  // Handle exit confirmation
+  const handleExit = useCallback(
+    (destination = "/", message) => {
+      if (navigatingRef.current) return;
+
+      // If exam is in progress, show confirmation dialog
+      if (phase && phaseState && !phaseState.completed) {
+        setExitDestination(destination);
+        setExitMessage(
+          message ||
+            "سيتم فقدان تقدمك في هذه المرحلة من الاختبار ولا يمكن استعادته."
+        );
+        setShowExitDialog(true);
+        return;
+      }
+
+      // Otherwise, navigate directly
+      router.push(destination);
+    },
+    [phase, phaseState, router]
+  );
+
+  // Confirm exit
+  const confirmExit = useCallback(() => {
+    setShowExitDialog(false);
+    navigatingRef.current = true;
+
+    // Clear any running timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Navigate to the intended destination
+    router.push(exitDestination || "/");
+  }, [exitDestination, router]);
+
+  // Cancel exit
+  const cancelExit = useCallback(() => {
+    setShowExitDialog(false);
+  }, []);
+
   // Redirect if no active exam
   useEffect(() => {
     if (!activeExam) {
       router.push("/");
     }
   }, [activeExam, router]);
+
+  // Handle browser navigation events
+  useEffect(() => {
+    // Handle popstate (back button, etc.)
+    const handlePopState = (e) => {
+      if (phase && phaseState && !phaseState.completed) {
+        // Prevent default navigation
+        e.preventDefault();
+        window.history.pushState(null, "", window.location.href);
+
+        // Show confirmation dialog
+        handleExit(
+          "/",
+          "سيتم فقدان تقدمك في الاختبار إذا عدت للخلف. هل أنت متأكد؟"
+        );
+        return;
+      }
+    };
+
+    // Handle beforeunload (page refresh, close tab)
+    const handleBeforeUnload = (e) => {
+      if (phase && phaseState && !phaseState.completed) {
+        // Standard browser confirmation for reload/close
+        const message = "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
+        e.preventDefault();
+        e.returnValue = message;
+
+        // Set flag to detect reload - crucial for redirect after reload
+        localStorage.setItem("_wasReloaded", "true");
+
+        return message;
+      }
+    };
+
+    // Prevent navigation through history manipulation
+    if (phase && phaseState && !phaseState.completed) {
+      window.history.pushState(null, "", window.location.href);
+    }
+
+    // Add event listeners
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [phase, phaseState, handleExit]);
 
   // The shared submit function used by both the button and timer
   const handleSubmit = useCallback(() => {
@@ -409,6 +541,14 @@ const QuizPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-2 mt-0">
+      {/* Exit Confirmation Dialog */}
+      <ExitConfirmationDialog
+        isOpen={showExitDialog}
+        onCancel={cancelExit}
+        onConfirm={confirmExit}
+        message={exitMessage}
+      />
+
       {/* Timer and Progress Bar */}
       <div className="bg-white rounded-xl shadow-sm mb-6">
         <div className="p-4 border-b border-gray-100">
@@ -560,6 +700,6 @@ const QuizPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default QuizPage;

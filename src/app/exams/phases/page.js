@@ -1,7 +1,7 @@
 // src/app/exams/phases/page.js
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -11,6 +11,8 @@ import {
   completeExam,
   setExamResults,
 } from "../../../../store/examSlice";
+import { calculatePhaseScore } from "../../data/questionsUtils";
+import ExitConfirmationDialog from "../../../../components/ExitConfirmationDialog";
 
 const PhaseStatus = {
   LOCKED: "locked",
@@ -130,6 +132,44 @@ const ExamPhases = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const subject = searchParams.get("subject");
+
+  // Add mounted state to prevent Redux access before hydration
+  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [phasesData, setPhasesData] = useState([]);
+
+  // First mount effect - without Redux
+  useEffect(() => {
+    // Check for reload - without needing Redux
+    const wasReloaded = localStorage.getItem("_wasReloaded");
+    if (wasReloaded === "true") {
+      // Clear the flag
+      localStorage.removeItem("_wasReloaded");
+      // Redirect immediately to landing page
+      return;
+    }
+
+    // Set mounted state to true
+    setMounted(true);
+  }, []);
+
+  // Render placeholder while waiting for client-side hydration
+  if (!mounted) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-center min-h-[60vh]">
+        <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // This is a component that only runs after the page is mounted
+  // and Redux is available
+  return <MountedPhasesContent subject={subject} />;
+};
+
+// This component only runs after mounting, so Redux is safe to use
+function MountedPhasesContent({ subject }) {
+  const router = useRouter();
   const dispatch = useDispatch();
 
   // Get exam state from Redux
@@ -154,6 +194,46 @@ const ExamPhases = () => {
   const [showResultsButton, setShowResultsButton] = useState(false);
   const [phaseInProgress, setPhaseInProgress] = useState(false);
   const [nextPhaseTitle, setNextPhaseTitle] = useState("");
+
+  // Exit confirmation dialog
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [exitDestination, setExitDestination] = useState("/");
+  const [exitMessage, setExitMessage] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Handle exit confirmation
+  const handleExit = useCallback(
+    (destination = "/", message) => {
+      if (isNavigating) return;
+
+      // If exam is in progress and not completed, show confirmation
+      if (activeExam && !examCompleted && completedPhases.length > 0) {
+        setExitDestination(destination);
+        setExitMessage(
+          message ||
+            "سيتم فقدان تقدمك في الاختبار ولا يمكن استعادته. هل تريد الخروج بالفعل؟"
+        );
+        setShowExitDialog(true);
+        return;
+      }
+
+      // Otherwise navigate directly
+      router.push(destination);
+    },
+    [activeExam, examCompleted, completedPhases, router, isNavigating]
+  );
+
+  // Confirm exit
+  const confirmExit = useCallback(() => {
+    setShowExitDialog(false);
+    setIsNavigating(true);
+    router.push(exitDestination);
+  }, [exitDestination, router]);
+
+  // Cancel exit
+  const cancelExit = useCallback(() => {
+    setShowExitDialog(false);
+  }, []);
 
   // Redirect if no active exam
   useEffect(() => {
@@ -181,6 +261,54 @@ const ExamPhases = () => {
       }
     }
   }, [completedPhases, phasesData]);
+
+  // Handle browser navigation events
+  useEffect(() => {
+    // Handle popstate (back button, etc.)
+    const handlePopState = (e) => {
+      if (activeExam && !examCompleted && completedPhases.length > 0) {
+        // Prevent default navigation
+        e.preventDefault();
+        window.history.pushState(null, "", window.location.href);
+
+        // Show confirmation dialog
+        handleExit(
+          "/",
+          "سيتم فقدان تقدمك في الاختبار إذا عدت للخلف. هل أنت متأكد؟"
+        );
+        return;
+      }
+    };
+
+    // Handle beforeunload (page refresh, close tab)
+    const handleBeforeUnload = (e) => {
+      if (activeExam && !examCompleted && completedPhases.length > 0) {
+        // Standard browser confirmation for reload/close
+        const message = "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
+        e.preventDefault();
+        e.returnValue = message;
+
+        // Set flag to detect reload - crucial for redirect after reload
+        localStorage.setItem("_wasReloaded", "true");
+
+        return message;
+      }
+    };
+
+    // Prevent navigation through history manipulation
+    if (activeExam && !examCompleted && completedPhases.length > 0) {
+      window.history.pushState(null, "", window.location.href);
+    }
+
+    // Add event listeners
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [activeExam, examCompleted, completedPhases, handleExit]);
 
   // Break timer effect and navigation to next phase
   useEffect(() => {
@@ -283,22 +411,6 @@ const ExamPhases = () => {
       setCurrentPhaseTimeRemaining(null);
     }
   }, [currentPhase, currentSubPhase, phases]);
-
-  // Handle browser back button
-  useEffect(() => {
-    const handlePopState = (e) => {
-      // If a phase was just completed, we should prevent going back
-      if (completedPhases.length > 0 && !examCompleted) {
-        router.replace("/");
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [completedPhases, examCompleted, router]);
 
   const getPhaseStatus = (index) => {
     if (index < currentPhaseIndex) return PhaseStatus.COMPLETED;
@@ -510,6 +622,40 @@ const ExamPhases = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4 mt-0">
+      {/* Reload Warning Banner */}
+      <div className="bg-amber-50 border-r-4 border-amber-500 p-4 mb-4 rounded-md shadow-sm">
+        <div className="flex">
+          <div className="flex-shrink-0 ml-3">
+            <svg
+              className="h-5 w-5 text-amber-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm text-amber-800">
+              <strong className="font-medium">تنبيه:</strong> لا تقم بتحديث
+              الصفحة أو الضغط على F5 أثناء الاختبار. سيؤدي ذلك إلى فقدان تقدمك
+              والعودة للصفحة الرئيسية.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Exit Confirmation Dialog */}
+      <ExitConfirmationDialog
+        isOpen={showExitDialog}
+        onCancel={cancelExit}
+        onConfirm={confirmExit}
+        message={exitMessage}
+      />
+
       {/* Break Timer - Only shown during break time */}
       {breakTime && nextPhaseTitle && (
         <div className="bg-amber-50 rounded-xl shadow-sm border border-amber-200 mb-4 p-4 text-center">
@@ -825,7 +971,7 @@ const ExamPhases = () => {
       )}
     </div>
   );
-};
+}
 
 // Calculate actual scores based on answers
 const calculateActualScores = (examState) => {

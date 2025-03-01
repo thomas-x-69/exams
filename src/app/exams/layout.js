@@ -8,30 +8,26 @@ import { useEffect, useState } from "react";
 export default function ExamLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const activeExam = useSelector((state) => state.exam.activeExam);
-  const examCompleted = useSelector((state) => state.exam.examCompleted);
-  const phases = useSelector((state) => state.exam.phases);
-  const completedPhases = useSelector((state) => state.exam.completedPhases);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Protect exam routes
+  // Crucial: Add a mounting state to prevent accessing Redux before hydration
+  const [mounted, setMounted] = useState(false);
+
+  // Only access Redux state after component has mounted
   useEffect(() => {
-    // Wait until after hydration to perform redirects
-    if (typeof window === "undefined") return;
+    setMounted(true);
 
-    // Set initialized to prevent multiple redirects
-    if (!isInitialized) {
-      setIsInitialized(true);
+    // Handle reload detection immediately
+    if (
+      pathname.startsWith("/exams/") &&
+      !pathname.includes("/instructions") &&
+      !pathname.includes("/results")
+    ) {
+      const wasReloaded = localStorage.getItem("_wasReloaded");
 
-      // If accessing exam pages but no active exam (except instructions page and results page)
-      if (
-        pathname.startsWith("/exams") &&
-        !pathname.includes("/instructions") &&
-        !pathname.includes("/results") &&
-        !activeExam
-      ) {
-        console.log("No active exam, redirecting to home");
-        router.push("/");
+      if (wasReloaded === "true") {
+        // Clear the flag and redirect
+        localStorage.removeItem("_wasReloaded");
+        router.replace("/");
         return;
       }
     }
@@ -42,64 +38,89 @@ export default function ExamLayout({ children }) {
       mainElement.classList.remove("pt-28");
     }
 
-    // Handle browser back button
-    const handlePopState = (event) => {
-      // If in questions page and a phase was completed, prevent going back
+    // Set unload flag to detect reloads
+    window.addEventListener("beforeunload", () => {
       if (
-        pathname.includes("/questions") &&
-        completedPhases &&
-        completedPhases.length > 0 &&
-        !examCompleted
-      ) {
-        // Prevent default behavior
-        event.preventDefault();
-        // Handle browser backward button press - go to landing page
-        router.push("/");
-        return;
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    // Add beforeunload event handler - but not for instructions page or after exam is completed
-    const handleBeforeUnload = (e) => {
-      if (
-        activeExam &&
+        pathname.startsWith("/exams/") &&
         !pathname.includes("/instructions") &&
-        !examCompleted &&
         !pathname.includes("/results")
       ) {
-        // Cancel the event
-        e.preventDefault();
-        // Chrome requires returnValue to be set
-        e.returnValue = "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
-        // Return value for older browsers
-        return "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
+        localStorage.setItem("_wasReloaded", "true");
       }
-    };
+    });
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    // Cleanup when component unmounts
     return () => {
       if (mainElement) {
         mainElement.classList.add("pt-28");
       }
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("popstate", handlePopState);
     };
-  }, [
-    pathname,
-    activeExam,
-    router,
-    examCompleted,
-    phases,
-    completedPhases,
-    isInitialized,
-  ]);
+  }, [pathname, router]);
+
+  // Now that we're mounted, we can safely access Redux
+  const ExamProtection = () => {
+    const activeExam = useSelector((state) => state.exam.activeExam);
+    const examCompleted = useSelector((state) => state.exam.examCompleted);
+    const completedPhases = useSelector((state) => state.exam.completedPhases);
+
+    useEffect(() => {
+      if (
+        !activeExam &&
+        pathname.startsWith("/exams") &&
+        !pathname.includes("/instructions") &&
+        !pathname.includes("/results")
+      ) {
+        console.log("No active exam, redirecting to home");
+        router.push("/");
+        return;
+      }
+
+      // Handle browser back button
+      const handlePopState = (event) => {
+        if (
+          pathname.includes("/questions") &&
+          completedPhases &&
+          completedPhases.length > 0 &&
+          !examCompleted
+        ) {
+          event.preventDefault();
+          router.push("/");
+          return;
+        }
+      };
+
+      window.addEventListener("popstate", handlePopState);
+
+      // Add beforeunload event handler for warnings
+      const handleBeforeUnload = (e) => {
+        if (
+          activeExam &&
+          !pathname.includes("/instructions") &&
+          !examCompleted &&
+          !pathname.includes("/results")
+        ) {
+          e.preventDefault();
+          e.returnValue =
+            "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
+          return e.returnValue;
+        }
+      };
+
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
+      return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }, [activeExam, examCompleted, completedPhases, pathname]);
+
+    return null;
+  };
 
   return (
-    <div className=" bg-[#f4f6f8]">
+    <div className="bg-[#f4f6f8]">
+      {/* Only access Redux after mounting */}
+      {mounted && <ExamProtection />}
+
       {/* Background Base Layer */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Main Gradient */}
