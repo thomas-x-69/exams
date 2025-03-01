@@ -304,32 +304,49 @@ const ResultsPage = () => {
     if (!activeExam || !currentResult) return;
 
     try {
+      console.log("Preparing to submit exam results");
+
+      // Create well-formed data object
+      const submitData = {
+        name: activeExam.userName || "Unknown User",
+        subjectName:
+          activeExam.subject === "mail" ? "البريد المصري" : "التربية",
+        totalScore: currentResult.totalScore || 0,
+        phaseScores: {
+          behavioral: currentResult.phaseScores?.behavioral || 0,
+          language_arabic: currentResult.phaseScores?.language_arabic || 0,
+          knowledge_iq: currentResult.phaseScores?.knowledge_iq || 0,
+          specialization: currentResult.phaseScores?.specialization || 0,
+        },
+      };
+
+      console.log("Submitting data:", submitData);
+
+      // Make the API request
       const response = await fetch("/api/submit-exam", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: activeExam.userName,
-          subjectName:
-            activeExam.subject === "mail" ? "البريد المصري" : "التربية",
-          organizationCode: activeExam.organizationCode,
-          totalScore: currentResult.totalScore,
-          phaseScores: currentResult.phaseScores,
-          subject: activeExam.subject,
-        }),
+        body: JSON.stringify(submitData),
       });
 
+      console.log("Response received, status:", response.status);
       const data = await response.json();
+      console.log("Response data:", data);
 
       if (data.status !== "success") {
         console.error("Error submitting results:", data.message);
+        // Optionally show an error notification to the user
+      } else {
+        console.log("Results submitted successfully");
+        // Optionally show a success notification to the user
       }
     } catch (error) {
       console.error("Failed to submit exam results:", error);
+      // Optionally show an error notification to the user
     }
   };
-
   // Toggle detailed section
   const toggleSection = (sectionId) => {
     setExpanded((prev) => ({
@@ -1043,53 +1060,6 @@ const ResultsPage = () => {
               </div>
 
               {/* Percentile Ranking */}
-              <div className="mt-6 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                <h4 className="font-bold text-gray-800 mb-4">
-                  مقارنة مع المتقدمين الآخرين
-                </h4>
-                <div className="relative pt-1">
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium text-gray-700">
-                        المستوى العام
-                      </span>
-                      <span className="text-sm font-bold text-blue-600">
-                        الشريحة {getPercentileRank(totalScore)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-3">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 relative"
-                        style={{ width: `${getPercentileRank(totalScore)}%` }}
-                      >
-                        <div className="absolute -top-8 right-0 transform translate-x-1/2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                          أنت هنا
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>0%</span>
-                    <span>25%</span>
-                    <span>50%</span>
-                    <span>75%</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 text-sm text-gray-600">
-                  <p>
-                    تفوقت على {getPercentileRank(totalScore)}% من المتقدمين في
-                    هذا الاختبار.
-                    {totalScore >= 75
-                      ? " هذا أداء متميز يضعك في المراكز المتقدمة."
-                      : totalScore >= 50
-                      ? " أداؤك أفضل من المتوسط، ويمكن تحسينه أكثر."
-                      : " هناك مجال كبير للتحسن، استمر في التدريب."}
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Buttons */}
