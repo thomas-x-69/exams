@@ -77,6 +77,7 @@ const ResultsPage = () => {
   const handleRestartExam = () => {
     // Generate a new organization code
     const newOrgCode = "A" + Math.random().toString().slice(2, 8);
+    const currentSubject = activeExam?.subject;
 
     // Reset the exam state
     dispatch(resetExam());
@@ -92,7 +93,7 @@ const ResultsPage = () => {
       );
 
       // Navigate back to phases page with the same subject
-      router.push(`/exams/phases?subject=${activeExam.subject}`);
+      router.push(`/exams/phases?subject=${currentSubject}`);
     } else {
       router.push("/");
     }
