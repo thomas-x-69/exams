@@ -1,73 +1,68 @@
-// src/app/api/submit-exam/route.js
 export async function POST(req) {
   try {
     const data = await req.json();
+    console.log("Received data:", data);
 
-    // Get the Google Apps Script URL from environment variables
+    // Get the Google Apps Script URL
     const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
+    console.log("Using Google Script URL:", GOOGLE_SCRIPT_URL);
 
-    // Add browser info for tracking
-    const userAgent = req.headers.get("user-agent") || "";
-    const ipAddress =
-      req.headers.get("x-forwarded-for") ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
+    if (!GOOGLE_SCRIPT_URL) {
+      console.error("Missing Google Script URL");
+      return Response.json(
+        { status: "error", message: "Server configuration error" },
+        { status: 500 }
+      );
+    }
 
-    // Prepare the data for Google Sheets
+    // Format the data exactly as the script expects
     const examData = {
-      name: data.name,
-      subjectName: data.subjectName,
-      organizationCode: data.organizationCode,
+      name: data.name || "",
+      subjectName: data.subjectName || "",
       totalScore: data.totalScore || 0,
       behavioralScore: data.phaseScores?.behavioral || 0,
-      languageScore: data.phaseScores?.language_arabic || 0, // Using Arabic score as main language score
-      knowledgeScore: data.phaseScores?.knowledge_iq || 0, // Using IQ score as main knowledge score
+      languageScore: data.phaseScores?.language_arabic || 0,
+      knowledgeScore: data.phaseScores?.knowledge_iq || 0,
       specializationScore: data.phaseScores?.specialization || 0,
-      subject: data.subject || "mail",
-      ipAddress,
-      userAgent,
     };
 
-    // Send data to Google Script
+    console.log("Sending data to Google Script:", examData);
+
+    // Direct fetch to the Google Apps Script with proper headers
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(examData),
+      // Increase timeout and disable cache
+      cache: "no-store",
+      next: { revalidate: 0 },
     });
 
-    // Check the response status
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    // Parse the response as text first
+    console.log("Response status:", response.status);
     const resultText = await response.text();
+    console.log("Response text:", resultText);
 
-    // Attempt to parse as JSON
+    // Try to parse response as JSON
     let result;
     try {
       result = JSON.parse(resultText);
+      console.log("Parsed response:", result);
     } catch (error) {
-      // Handle non-JSON response
-      console.error("Non-JSON response from server:", resultText);
-      throw new Error("Unexpected response format from server");
+      console.error("Failed to parse response as JSON:", error);
+      return Response.json(
+        { status: "error", message: "Invalid response from server" },
+        { status: 500 }
+      );
     }
 
-    // Check the result status
-    if (result.status === "success") {
-      return Response.json({
-        status: "success",
-        message: "تم حفظ البيانات بنجاح",
-      });
-    } else {
-      throw new Error(result.message || "Unknown error");
-    }
+    // Return the result
+    return Response.json(result);
   } catch (error) {
-    console.error("Error submitting exam data:", error);
+    console.error("Error in submit-exam API route:", error);
     return Response.json(
-      { status: "error", message: "حدث خطأ أثناء حفظ البيانات" },
+      { status: "error", message: "Server error: " + error.message },
       { status: 500 }
     );
   }
