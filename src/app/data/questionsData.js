@@ -112,7 +112,7 @@ const questionsBank = {
             "I am working here since three years",
             "I am working here for three years",
           ],
-          correctAnswer: 1,
+          correctAnswer: 0,
         },
         {
           id: "en2",
@@ -123,7 +123,7 @@ const questionsBank = {
             "If I am rich, I would buy a house",
             "If I were rich, I will buy a house",
           ],
-          correctAnswer: 1,
+          correctAnswer: 0,
         },
         {
           id: "en3",
@@ -134,7 +134,7 @@ const questionsBank = {
             "He is afraid of dogs",
             "He is afraid by dogs",
           ],
-          correctAnswer: 2,
+          correctAnswer: 0,
         },
         {
           id: "en4",
@@ -145,7 +145,7 @@ const questionsBank = {
             "I saw the university",
             "I saw university",
           ],
-          correctAnswer: 1,
+          correctAnswer: 0,
         },
         {
           id: "en5",
@@ -156,7 +156,7 @@ const questionsBank = {
             "I live here since 2010",
             "I was living here since 2010",
           ],
-          correctAnswer: 1,
+          correctAnswer: 0,
         },
       ],
     },
@@ -166,13 +166,13 @@ const questionsBank = {
           id: "iq1",
           text: "أكمل النمط: 2, 4, 8, 16, ...",
           options: ["24", "32", "30", "28"],
-          correctAnswer: 1,
+          correctAnswer: 0,
         },
         {
           id: "iq2",
           text: "إذا كان اليوم الثلاثاء، فما هو اليوم بعد 100 يوم؟",
           options: ["الثلاثاء", "الأربعاء", "الخميس", "الجمعة"],
-          correctAnswer: 2,
+          correctAnswer: 0,
         },
         {
           id: "iq3",
@@ -184,7 +184,7 @@ const questionsBank = {
           id: "iq4",
           text: "اختر الكلمة المختلفة:",
           options: ["تفاح", "برتقال", "خيار", "موز"],
-          correctAnswer: 2,
+          correctAnswer: 0,
         },
         {
           id: "iq5",
@@ -235,7 +235,7 @@ const questionsBank = {
           id: "it1",
           text: "أي من التالي ليس متصفح إنترنت؟",
           options: ["Chrome", "Firefox", "Excel", "Safari"],
-          correctAnswer: 2,
+          correctAnswer: 0,
         },
         {
           id: "it2",
@@ -273,7 +273,7 @@ const questionsBank = {
         id: "sp1",
         text: "ما هو البروتوكول المستخدم في نقل البريد الإلكتروني؟",
         options: ["HTTP", "SMTP", "FTP", "TCP"],
-        correctAnswer: 1,
+        correctAnswer: 0,
       },
       {
         id: "sp2",
