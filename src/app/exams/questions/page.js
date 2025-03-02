@@ -274,7 +274,7 @@ function MountedQuizContent({ phase }) {
               "الخيار الثالث",
               "الخيار الرابع",
             ],
-            correctAnswer: 1,
+            correctAnswer: 0,
           },
           {
             id: "q3",
@@ -285,7 +285,7 @@ function MountedQuizContent({ phase }) {
               "الخيار الثالث",
               "الخيار الرابع",
             ],
-            correctAnswer: 2,
+            correctAnswer: 0,
           },
         ];
       }

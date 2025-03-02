@@ -585,6 +585,7 @@ function MountedPhasesContent({ subject }) {
     const results = {
       totalScore: scores.totalScore,
       phaseScores: scores.phaseScores,
+      details: scores.details,
       completedAt: new Date().toISOString(),
       userName: activeExam.userName,
       subject: activeExam.subject,
@@ -973,9 +974,10 @@ function MountedPhasesContent({ subject }) {
   );
 }
 
-// Calculate actual scores based on answers
+// Calculate actual scores based on answers by comparing with correct answers
 const calculateActualScores = (examState) => {
-  const { phases } = examState;
+  const { phases, activeExam } = examState;
+  const subject = activeExam?.subject || "mail";
 
   // Calculate score for each phase
   const phaseScores = {};
@@ -985,29 +987,21 @@ const calculateActualScores = (examState) => {
   Object.entries(phases).forEach(([phaseId, phaseData]) => {
     if (!phaseData.completed) return;
 
-    // Count correct answers
-    let phaseCorrect = 0;
+    // Get the answers for this phase
     const phaseAnswers = phaseData.answers || {};
 
-    // For now, simulate scores - in a real app, you'd compare with correct answers
-    const answerKeys = Object.keys(phaseAnswers);
-    totalQuestions += answerKeys.length;
+    // Skip if no answers
+    if (Object.keys(phaseAnswers).length === 0) return;
 
-    answerKeys.forEach((questionId) => {
-      // Simulate 70-90% correct answers
-      if (Math.random() > 0.3) {
-        phaseCorrect++;
-        totalCorrect++;
-      }
-    });
+    // Use the utility function to calculate the correct score
+    const scoreResult = calculatePhaseScore(subject, phaseId, phaseAnswers);
 
-    // Calculate percentage score for this phase
-    const phaseScore =
-      answerKeys.length > 0
-        ? Math.round((phaseCorrect / answerKeys.length) * 100)
-        : 0;
+    // Add to totals
+    totalCorrect += scoreResult.correct;
+    totalQuestions += scoreResult.total;
 
-    phaseScores[phaseId] = phaseScore;
+    // Store the percentage score
+    phaseScores[phaseId] = parseFloat(scoreResult.percentage);
   });
 
   // Calculate total score
@@ -1017,6 +1011,10 @@ const calculateActualScores = (examState) => {
   return {
     totalScore,
     phaseScores,
+    details: {
+      totalCorrect,
+      totalQuestions,
+    },
   };
 };
 
