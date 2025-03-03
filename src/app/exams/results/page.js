@@ -102,44 +102,57 @@ const ResultsPage = () => {
   // Generate and download PDF
 
   // Replace your entire downloadPDF function with this
-  const downloadPDF = async () => {
+  // Direct Print Approach - Simple and reliable
+  const printCertificate = () => {
     if (!certificateRef.current) return;
 
     try {
       setPdfGenerating(true);
 
-      // Simple capture with maximum quality
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 4,
-        backgroundColor: "#ffffff",
-      });
+      // Create a print-specific stylesheet
+      const style = document.createElement("style");
+      style.innerHTML = `
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #certificateContainer, #certificateContainer * {
+          visibility: visible;
+        }
+        #certificateContainer {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+      }
+    `;
+      document.head.appendChild(style);
 
-      // Get image as data URL
-      const imgData = canvas.toDataURL("image/png");
+      // Add an ID to the certificate container for the print stylesheet
+      certificateRef.current.id = "certificateContainer";
 
-      // Create PDF with landscape orientation
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "a4",
-      });
+      // Show a brief instruction alert
+      alert(
+        "سيتم فتح نافذة الطباعة. اختر 'حفظ كـ PDF' من قائمة الطابعات لحفظ الشهادة."
+      );
 
-      // Get PDF dimensions
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      // Trigger print
+      window.print();
 
-      // Place image on the entire page (with small margins)
-      pdf.addImage(imgData, "PNG", 5, 5, pdfWidth - 10, pdfHeight - 10);
-
-      // Save PDF
-      pdf.save(`certificate.pdf`);
+      // Clean up
+      document.head.removeChild(style);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error printing certificate:", error);
+      alert("حدث خطأ أثناء طباعة الشهادة. يرجى المحاولة مرة أخرى.");
     } finally {
       setPdfGenerating(false);
     }
   };
 
+  // Alias functions for backward compatibility
+  const downloadCertificate = printCertificate;
+  const downloadPDF = printCertificate;
   // Share results
   const shareResults = async (platform) => {
     const text = `لقد حصلت على ${currentResult.totalScore}% في اختبار ${
@@ -386,12 +399,12 @@ const ResultsPage = () => {
 
       {viewMode === "certificate" ? (
         /* Certificate View - Horizontal Professional Design */
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-full h-fit ">
           <div
             id="certificateContainer"
             ref={certificateRef}
             className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-blue-200 mb-8 p-10"
-            style={{ aspectRatio: "1.414" }}
+            style={{ aspectRatio: "1.6" }}
           >
             {/* Certificate Header with Logo */}
             <div className="flex items-center justify-between border-b border-gray-200 pb-6 mb-8">
@@ -542,25 +555,6 @@ const ResultsPage = () => {
                   <div className="text-sm text-blue-600 font-bold">
                     www.egyptian-exams.com
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Certificate Footer */}
-            <div className="flex justify-between items-center pt-4 border-t border-gray-100 text-sm text-gray-500 mt-auto">
-              <div>تاريخ الإصدار: {formatDate(currentResult.completedAt)}</div>
-
-              {/* Official Stamp */}
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full border-2 border-blue-600 flex items-center justify-center opacity-70">
-                  <div className="w-14 h-14 rounded-full border-2 border-blue-600 flex items-center justify-center">
-                    <div className="text-blue-800 text-xs font-bold">
-                      ختم رسمي
-                    </div>
-                  </div>
-                </div>
-                <div className="border-b-2 border-gray-400 w-32 h-8">
-                  <div className="text-right text-xs">مدير المنصة</div>
                 </div>
               </div>
             </div>
