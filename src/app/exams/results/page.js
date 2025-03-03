@@ -404,7 +404,7 @@ const ResultsPage = () => {
             id="certificateContainer"
             ref={certificateRef}
             className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-blue-200 mb-8 p-10"
-            style={{ aspectRatio: "1.6" }}
+            style={{ aspectRatio: "1.5" }}
           >
             {/* Certificate Header with Logo */}
             <div className="flex items-center justify-between border-b border-gray-200 pb-6 mb-8">
