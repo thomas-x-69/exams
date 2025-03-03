@@ -1,5 +1,5 @@
 // src/app/data/questionsUtils.js
-import questionsBank from "./questionsData.js";
+import questionsBank from "./index";
 
 export function getRandomQuestions(subject, phase, count) {
   try {
@@ -25,7 +25,25 @@ export function getRandomQuestions(subject, phase, count) {
         }
       }
     }
-    // Handle direct categories (behavioral, specialization, education)
+    // Handle educational subjects (math, english, science, social, arabic)
+    else if (
+      ["math", "english", "science", "social", "arabic"].includes(
+        normalizedSubject
+      ) &&
+      phase === "education"
+    ) {
+      questions = questionsBank[normalizedSubject].education;
+    }
+    // Handle specialization for educational subjects
+    else if (
+      ["math", "english", "science", "social", "arabic"].includes(
+        normalizedSubject
+      ) &&
+      phase === "specialization"
+    ) {
+      questions = questionsBank[normalizedSubject].specialization;
+    }
+    // Handle direct categories (behavioral, specialization)
     else if (questionsBank[normalizedSubject]?.[phase]) {
       questions = questionsBank[normalizedSubject][phase];
     } else {
@@ -169,6 +187,28 @@ export function calculatePhaseScore(subject, phase, answers) {
             (q) => q.id === questionId
           );
         }
+      }
+      // Handle educational subjects
+      else if (
+        ["math", "english", "science", "social", "arabic"].includes(
+          normalizedSubject
+        ) &&
+        phase === "education"
+      ) {
+        question = questionsBank[normalizedSubject].education.find(
+          (q) => q.id === questionId
+        );
+      }
+      // Handle specialization for educational subjects
+      else if (
+        ["math", "english", "science", "social", "arabic"].includes(
+          normalizedSubject
+        ) &&
+        phase === "specialization"
+      ) {
+        question = questionsBank[normalizedSubject].specialization.find(
+          (q) => q.id === questionId
+        );
       } else if (questionsBank[normalizedSubject]?.[phase]) {
         question = questionsBank[normalizedSubject][phase].find(
           (q) => q.id === questionId
