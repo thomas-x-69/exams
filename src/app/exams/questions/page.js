@@ -17,7 +17,7 @@ import ExitConfirmationDialog from "../../../../components/ExitConfirmationDialo
 
 // Phase durations in minutes
 const mailPhases = {
-  behavioral: 10,
+  behavioral: 25,
   language_arabic: 10,
   language_english: 10,
   knowledge_iq: 5,
