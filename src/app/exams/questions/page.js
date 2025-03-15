@@ -15,20 +15,20 @@ import {
 import { getRandomQuestions } from "../../data/questionsUtils";
 import ExitConfirmationDialog from "../../../../components/ExitConfirmationDialog";
 
-// Phase durations in minutes
+// Phase durations in minutes and question counts
 const mailPhases = {
-  behavioral: 25,
-  language_arabic: 10,
-  language_english: 10,
-  knowledge_iq: 5,
-  knowledge_general: 5,
-  knowledge_it: 5,
-  specialization: 15,
+  behavioral: { time: 25, questionsCount: 150 },
+  language_arabic: { time: 10, questionsCount: 20 },
+  language_english: { time: 10, questionsCount: 20 },
+  knowledge_iq: { time: 5, questionsCount: 15 },
+  knowledge_general: { time: 5, questionsCount: 15 },
+  knowledge_it: { time: 5, questionsCount: 10 },
+  specialization: { time: 15, questionsCount: 30 },
 };
 
 const educationPhases = {
   ...mailPhases,
-  education: 15,
+  education: { time: 15, questionsCount: 30 },
 };
 
 const QuizPage = () => {
@@ -105,8 +105,19 @@ function MountedQuizContent({ phase }) {
         activeExam?.subject === "mail" ? mailPhases : educationPhases;
 
       // Return duration in seconds (multiply minutes by 60)
+      return (phasesData[phaseId]?.time || 10) * 60; // Default to 10 minutes if not found
+    },
+    [activeExam]
+  );
 
-      return (phasesData[phaseId] || 10) * 60; // Default to 10 minutes if not found
+  // Function to get questions count for a phase
+  const getPhaseQuestionCount = useCallback(
+    (phaseId) => {
+      const phasesData =
+        activeExam?.subject === "mail" ? mailPhases : educationPhases;
+
+      // Return question count (default to 20 if not found)
+      return phasesData[phaseId]?.questionsCount || 20;
     },
     [activeExam]
   );
@@ -243,41 +254,15 @@ function MountedQuizContent({ phase }) {
   const getPhaseQuestions = useCallback(
     (phaseId) => {
       try {
-        // Get the correct phase data to find questionsCount
-        let questionsCount = 20; // Default fallback
+        // Get the question count for this phase
+        const questionsCount = getPhaseQuestionCount(phaseId);
 
         // Get the subject
         const currentSubject = activeExam?.subject || "mail";
 
-        // Get phases data based on subject
-        const phasesData =
-          currentSubject === "mail" ? mailPhases : educationPhases;
-
-        // Determine the question count from the phase configuration
-        if (phaseId.includes("_")) {
-          // Handle subphases like "language_arabic"
-          const [mainPhase, subPhase] = phaseId.split("_");
-          const mainPhaseData = phasesData[mainPhase];
-
-          // Check if subphases have their own count
-          if (mainPhaseData && mainPhaseData.subPhases) {
-            const subPhaseData = mainPhaseData.subPhases.find(
-              (sp) => sp.id === subPhase
-            );
-            if (subPhaseData && subPhaseData.questionsCount) {
-              questionsCount = subPhaseData.questionsCount;
-            }
-          }
-        } else {
-          // Handle main phases
-          if (phasesData[phaseId] && phasesData[phaseId].questionsCount) {
-            questionsCount = phasesData[phaseId].questionsCount;
-          }
-        }
-
         // Use the improved getRandomQuestions from questionsUtils
         const questionsFromUtils = getRandomQuestions(
-          activeExam?.subject || "mail",
+          currentSubject,
           phaseId,
           questionsCount // Use dynamic count from configuration
         );
@@ -289,7 +274,7 @@ function MountedQuizContent({ phase }) {
         return; // Your fallback code
       }
     },
-    [activeExam]
+    [activeExam, getPhaseQuestionCount]
   );
 
   // Initialize exam phase
