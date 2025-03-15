@@ -12,7 +12,7 @@ const initialState = {
   completedSubPhases: {},
   currentSubPhase: null,
   currentPhase: null,
-  examData: {},
+  examData: {}, // Only for current session, no persistence
   breakTime: null,
   examCompleted: false,
   currentResult: null,
@@ -39,6 +39,7 @@ export const examSlice = createSlice({
       state.examCompleted = false;
       state.breakTime = null;
       state.currentResult = null;
+      state.examData = {}; // Clear all question data
     },
 
     // Start a phase with timer
@@ -138,16 +139,21 @@ export const examSlice = createSlice({
       }
     },
 
-    // Store questions for a phase
+    // Store questions for a phase - only for current session, no persistence
     setQuestions: (state, action) => {
       const { phaseId, questions } = action.payload;
-      state.examData[phaseId] = { questions };
+      state.examData[phaseId] = {
+        questions,
+        timestamp: Date.now(),
+      };
     },
 
     // Mark exam as completed
     completeExam: (state) => {
       state.examCompleted = true;
       state.breakTime = null;
+      // Clear stored questions when exam is completed
+      state.examData = {};
     },
 
     // Set exam results
@@ -157,6 +163,19 @@ export const examSlice = createSlice({
 
     // Reset the entire exam state
     resetExam: () => initialState,
+
+    // Clear questions for a specific phase
+    clearPhaseQuestions: (state, action) => {
+      const { phaseId } = action.payload;
+      if (state.examData[phaseId]) {
+        delete state.examData[phaseId];
+      }
+    },
+
+    // Clear all questions
+    clearAllQuestions: (state) => {
+      state.examData = {};
+    },
   },
 });
 
@@ -172,6 +191,8 @@ export const {
   completeExam,
   setExamResults,
   resetExam,
+  clearPhaseQuestions,
+  clearAllQuestions,
 } = examSlice.actions;
 
 export default examSlice.reducer;
