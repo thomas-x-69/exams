@@ -30,8 +30,8 @@ const mailPhases = [
     icon: "🧠",
     gradient: "from-blue-500/20 to-indigo-500/20",
     borderColor: "border-blue-200",
-    questions: 40,
-    time: 10, // 10 minutes
+    questions: 150,
+    time: 25, // 10 minutes
   },
   {
     id: "language",
@@ -78,8 +78,8 @@ const educationPhases = [
     icon: "🧠",
     gradient: "from-blue-500/20 to-indigo-500/20",
     borderColor: "border-blue-200",
-    questions: 40,
-    time: 10, // 10 minutes
+    questions: 150,
+    time: 25, // 10 minutes
   },
   {
     id: "language",
