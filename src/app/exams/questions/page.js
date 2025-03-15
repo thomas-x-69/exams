@@ -105,6 +105,7 @@ function MountedQuizContent({ phase }) {
         activeExam?.subject === "mail" ? mailPhases : educationPhases;
 
       // Return duration in seconds (multiply minutes by 60)
+
       return (phasesData[phaseId] || 10) * 60; // Default to 10 minutes if not found
     },
     [activeExam]
@@ -242,52 +243,50 @@ function MountedQuizContent({ phase }) {
   const getPhaseQuestions = useCallback(
     (phaseId) => {
       try {
+        // Get the correct phase data to find questionsCount
+        let questionsCount = 20; // Default fallback
+
+        // Get the subject
+        const currentSubject = activeExam?.subject || "mail";
+
+        // Get phases data based on subject
+        const phasesData =
+          currentSubject === "mail" ? mailPhases : educationPhases;
+
+        // Determine the question count from the phase configuration
+        if (phaseId.includes("_")) {
+          // Handle subphases like "language_arabic"
+          const [mainPhase, subPhase] = phaseId.split("_");
+          const mainPhaseData = phasesData[mainPhase];
+
+          // Check if subphases have their own count
+          if (mainPhaseData && mainPhaseData.subPhases) {
+            const subPhaseData = mainPhaseData.subPhases.find(
+              (sp) => sp.id === subPhase
+            );
+            if (subPhaseData && subPhaseData.questionsCount) {
+              questionsCount = subPhaseData.questionsCount;
+            }
+          }
+        } else {
+          // Handle main phases
+          if (phasesData[phaseId] && phasesData[phaseId].questionsCount) {
+            questionsCount = phasesData[phaseId].questionsCount;
+          }
+        }
+
         // Use the improved getRandomQuestions from questionsUtils
         const questionsFromUtils = getRandomQuestions(
           activeExam?.subject || "mail",
           phaseId,
-          10 // Number of questions to get
+          questionsCount // Use dynamic count from configuration
         );
 
         return questionsFromUtils;
       } catch (error) {
         console.error("Error in getPhaseQuestions:", error);
         // Provide fallback questions
-        return [
-          {
-            id: "q1",
-            text: "سؤال اختبار رقم 1",
-            options: [
-              "الخيار الأول",
-              "الخيار الثاني",
-              "الخيار الثالث",
-              "الخيار الرابع",
-            ],
-            correctAnswer: 0,
-          },
-          {
-            id: "q2",
-            text: "سؤال اختبار رقم 2",
-            options: [
-              "الخيار الأول",
-              "الخيار الثاني",
-              "الخيار الثالث",
-              "الخيار الرابع",
-            ],
-            correctAnswer: 0,
-          },
-          {
-            id: "q3",
-            text: "سؤال اختبار رقم 3",
-            options: [
-              "الخيار الأول",
-              "الخيار الثاني",
-              "الخيار الثالث",
-              "الخيار الرابع",
-            ],
-            correctAnswer: 0,
-          },
-        ];
+        return; // Your fallback code
       }
     },
     [activeExam]
