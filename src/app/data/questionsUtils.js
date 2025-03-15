@@ -1,5 +1,7 @@
 // src/app/data/questionsUtils.js
 import questionsBank from "./index";
+import { analyzeBehavioralResults } from "./behavioralAnalysis";
+import { calculatePhaseScore } from "./calculatePhaseScore";
 
 /**
  * Advanced Fisher-Yates shuffle with seed support for consistent randomization when needed
@@ -485,104 +487,8 @@ export function getRandomQuestions(subject, phase, count) {
   }
 }
 
-/**
- * Calculate the score for a phase based on user answers
- */
-export function calculatePhaseScore(subject, phase, answers) {
-  try {
-    const results = {
-      total: Object.keys(answers).length,
-      correct: 0,
-      percentage: 0,
-    };
+// Export the enhanced calculatePhaseScore function
+export { calculatePhaseScore };
 
-    // Skip calculation if no answers
-    if (results.total === 0) {
-      return results;
-    }
-
-    // Normalize subject - default to 'mail' if not found
-    const normalizedSubject =
-      subject && questionsBank[subject] ? subject : "mail";
-
-    Object.entries(answers).forEach(([questionId, selectedAnswer]) => {
-      let question;
-
-      // Handle fallback and dummy questions
-      if (questionId.startsWith("dummy") || questionId.startsWith("fallback")) {
-        // For dummy questions, compare with stored correct answer
-        const correctAnswer =
-          parseInt(questionId.charAt(questionId.length - 1)) % 3;
-        if (selectedAnswer === correctAnswer) {
-          results.correct += 1;
-        }
-        return;
-      }
-
-      // Look for the question in the questions bank
-      if (phase.includes("_")) {
-        const [mainPhase, subPhase] = phase.split("_");
-        if (questionsBank[normalizedSubject]?.[mainPhase]?.[subPhase]) {
-          question = questionsBank[normalizedSubject][mainPhase][subPhase].find(
-            (q) => q.id === questionId
-          );
-        }
-
-        // Fallback to mail subject if question not found
-        if (!question && questionsBank["mail"]?.[mainPhase]?.[subPhase]) {
-          question = questionsBank["mail"][mainPhase][subPhase].find(
-            (q) => q.id === questionId
-          );
-        }
-      }
-      // Handle educational subjects
-      else if (
-        ["math", "english", "science", "social", "arabic"].includes(
-          normalizedSubject
-        ) &&
-        phase === "education"
-      ) {
-        question = questionsBank[normalizedSubject].education.find(
-          (q) => q.id === questionId
-        );
-      }
-      // Handle specialization for educational subjects
-      else if (
-        ["math", "english", "science", "social", "arabic"].includes(
-          normalizedSubject
-        ) &&
-        phase === "specialization"
-      ) {
-        question = questionsBank[normalizedSubject].specialization.find(
-          (q) => q.id === questionId
-        );
-      } else if (questionsBank[normalizedSubject]?.[phase]) {
-        question = questionsBank[normalizedSubject][phase].find(
-          (q) => q.id === questionId
-        );
-
-        // Fallback to mail subject if question not found
-        if (!question && questionsBank["mail"]?.[phase]) {
-          question = questionsBank["mail"][phase].find(
-            (q) => q.id === questionId
-          );
-        }
-      }
-
-      // If randomized questions were used, the correct answer may be stored in the Redux store
-      if (question?.correctAnswer === selectedAnswer) {
-        results.correct += 1;
-      }
-    });
-
-    results.percentage =
-      results.total > 0
-        ? ((results.correct / results.total) * 100).toFixed(1)
-        : "0.0";
-
-    return results;
-  } catch (error) {
-    console.error("Error calculating phase score:", error);
-    return { total: 0, correct: 0, percentage: 0 };
-  }
-}
+// Export the behavioral analysis function
+export { analyzeBehavioralResults };

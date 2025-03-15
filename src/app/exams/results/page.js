@@ -3,20 +3,23 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { resetExam, initExam } from "../../../../store/examSlice";
 import Image from "next/image";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { calculatePhaseScore } from "@/app/data/questionsUtils";
 import LOGO from "../../../../public/logo.png";
+import BehavioralAnalysis from "../../../../components/BehavioralAnalysis";
 
 const ResultsPage = () => {
+  // Always call hooks at the top level, in the same order
   const router = useRouter();
   const dispatch = useDispatch();
-  const examState = useSelector((state) => state.exam);
-  const { activeExam, currentResult, examCompleted } = examState;
+  const examState = useSelector((state) => state.exam || {});
 
+  // Add mounting state ref
+  const [mounted, setMounted] = useState(false);
   const certificateRef = useRef(null);
   const resultsRef = useRef(null);
 
@@ -28,13 +31,27 @@ const ResultsPage = () => {
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [viewMode, setViewMode] = useState("summary"); // 'summary' or 'certificate'
 
+  // Set mounted state after component mounts
   useEffect(() => {
-    if (!loading && currentResult && activeExam) {
-      submitExamResults();
-    }
-  }, [loading, currentResult, activeExam]);
+    setMounted(true);
+  }, []);
+
+  // Safe access to examState properties only when mounted
+  const activeExam = mounted ? examState.activeExam : null;
+  const currentResult = mounted ? examState.currentResult : null;
+  const examCompleted = mounted ? examState.completedPhases : null;
+  const completedPhases = mounted ? examState.completedPhases : [];
 
   useEffect(() => {
+    if (mounted && !loading && currentResult && activeExam) {
+      submitExamResults();
+    }
+  }, [mounted, loading, currentResult, activeExam]);
+
+  useEffect(() => {
+    // Only run this effect when mounted
+    if (!mounted) return;
+
     // Redirect if no active exam or not completed
     if (!activeExam || !examCompleted) {
       router.push("/");
@@ -57,7 +74,7 @@ const ResultsPage = () => {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [activeExam, examCompleted, router]);
+  }, [activeExam, examCompleted, router, mounted]);
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -75,6 +92,8 @@ const ResultsPage = () => {
 
   // Handle restart exam
   const handleRestartExam = () => {
+    if (!mounted) return;
+
     // Generate a new organization code
     const newOrgCode = "A" + Math.random().toString().slice(2, 8);
     const currentSubject = activeExam?.subject;
@@ -99,9 +118,6 @@ const ResultsPage = () => {
     }
   };
 
-  // Generate and download PDF
-
-  // Replace your entire downloadPDF function with this
   // Direct Print Approach - Simple and reliable
   const printCertificate = () => {
     if (!certificateRef.current) return;
@@ -153,8 +169,11 @@ const ResultsPage = () => {
   // Alias functions for backward compatibility
   const downloadCertificate = printCertificate;
   const downloadPDF = printCertificate;
+
   // Share results
   const shareResults = async (platform) => {
+    if (!mounted || !currentResult || !activeExam) return;
+
     const text = `لقد حصلت على ${currentResult.totalScore}% في اختبار ${
       activeExam.subject === "mail" ? "البريد المصري" : "التربية"
     }. جرب الاختبار الآن!`;
@@ -197,7 +216,64 @@ const ResultsPage = () => {
     setShowShareOptions(false);
   };
 
-  if (loading || !currentResult || !activeExam) {
+  const submitExamResults = async () => {
+    if (!activeExam || !currentResult) return;
+
+    try {
+      console.log("Preparing to submit exam results");
+
+      // Create well-formed data object
+      const submitData = {
+        name: activeExam.userName || "Unknown User",
+        subjectName:
+          activeExam.subject === "mail" ? "البريد المصري" : "التربية",
+        totalScore: currentResult.totalScore || 0,
+        phaseScores: {
+          behavioral: currentResult.phaseScores?.behavioral || 0,
+          language_arabic: currentResult.phaseScores?.language_arabic || 0,
+          knowledge_iq: currentResult.phaseScores?.knowledge_iq || 0,
+          specialization: currentResult.phaseScores?.specialization || 0,
+        },
+      };
+
+      console.log("Submitting data:", submitData);
+
+      // Make the API request
+      const response = await fetch("/api/submit-exam", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submitData),
+      });
+
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (data.status !== "success") {
+        console.error("Error submitting results:", data.message);
+        // Optionally show an error notification to the user
+      } else {
+        console.log("Results submitted successfully");
+        // Optionally show a success notification to the user
+      }
+    } catch (error) {
+      console.error("Failed to submit exam results:", error);
+      // Optionally show an error notification to the user
+    }
+  };
+
+  // Toggle detailed section
+  const toggleSection = (sectionId) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+  // If not mounted or still loading data, show loading UI
+  if (!mounted || loading || !currentResult || !activeExam) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[60vh]">
         <div className="relative w-24 h-24">
@@ -313,61 +389,6 @@ const ResultsPage = () => {
   };
 
   const categories = organizePhaseScores();
-
-  const submitExamResults = async () => {
-    if (!activeExam || !currentResult) return;
-
-    try {
-      console.log("Preparing to submit exam results");
-
-      // Create well-formed data object
-      const submitData = {
-        name: activeExam.userName || "Unknown User",
-        subjectName:
-          activeExam.subject === "mail" ? "البريد المصري" : "التربية",
-        totalScore: currentResult.totalScore || 0,
-        phaseScores: {
-          behavioral: currentResult.phaseScores?.behavioral || 0,
-          language_arabic: currentResult.phaseScores?.language_arabic || 0,
-          knowledge_iq: currentResult.phaseScores?.knowledge_iq || 0,
-          specialization: currentResult.phaseScores?.specialization || 0,
-        },
-      };
-
-      console.log("Submitting data:", submitData);
-
-      // Make the API request
-      const response = await fetch("/api/submit-exam", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submitData),
-      });
-
-      console.log("Response received, status:", response.status);
-      const data = await response.json();
-      console.log("Response data:", data);
-
-      if (data.status !== "success") {
-        console.error("Error submitting results:", data.message);
-        // Optionally show an error notification to the user
-      } else {
-        console.log("Results submitted successfully");
-        // Optionally show a success notification to the user
-      }
-    } catch (error) {
-      console.error("Failed to submit exam results:", error);
-      // Optionally show an error notification to the user
-    }
-  };
-  // Toggle detailed section
-  const toggleSection = (sectionId) => {
-    setExpanded((prev) => ({
-      ...prev,
-      [sectionId]: !prev[sectionId],
-    }));
-  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
@@ -1053,8 +1074,6 @@ const ResultsPage = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Percentile Ranking */}
             </div>
 
             {/* Buttons */}
@@ -1100,6 +1119,12 @@ const ResultsPage = () => {
               </button>
             </div>
           </div>
+
+          {/* Behavioral Analysis - Only shown if behavioral phase was completed */}
+          {examState.completedPhases &&
+            examState.completedPhases.includes("behavioral") && (
+              <BehavioralAnalysis examState={examState} />
+            )}
 
           {/* Recommendations Section */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
