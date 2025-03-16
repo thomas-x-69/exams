@@ -1,12 +1,200 @@
 // src/app/page.js
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import PhonePopup from "../../components/PhonePopup";
 import Head from "next/head";
+
+// Memoized subject card component to prevent unnecessary re-renders
+const SubjectCard = memo(({ subject, onClick }) => (
+  <Link
+    href={`/exams/instructions?subject=${subject.id}`}
+    className="block group"
+    onClick={onClick}
+    aria-label={`اختبار ${subject.title}`}
+  >
+    <div
+      className={`relative rounded-xl p-4 transition-all duration-300 bg-gradient-to-br ${subject.gradient} border border-white/20 hover:border-white/30 hover:scale-[1.02] group overflow-hidden h-full`}
+    >
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+
+      {/* Content */}
+      <div className="relative">
+        {/* Icon & Title */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <span className="text-2xl" aria-hidden="true">
+              {subject.icon}
+            </span>
+          </div>
+          <div className="flex-1 pt-1">
+            <h3 className="text-lg font-bold text-white mb-1">
+              {subject.title}
+            </h3>
+            <p className="text-white/70 text-xs leading-relaxed">
+              {subject.desc}
+            </p>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="mt-3 pt-3 border-t border-white/10">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <svg
+                  className="w-3 h-3 text-white/60"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span className="text-white/70">{subject.questions} سؤال</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <svg
+                  className="w-3 h-3 text-white/60"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-white/70">{subject.time} د</span>
+              </div>
+            </div>
+            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <svg
+                className="w-3 h-3 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Link>
+));
+
+// Memoized subjects modal for better performance
+const SubjectsModal = memo(({ isOpen, subjects, currentDate, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-auto">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+        onClick={onClose}
+      ></div>
+
+      {/* Modal Content */}
+      <div className="relative w-full max-w-4xl my-2">
+        <div className="glass-card bg-slate-900/80 border border-white/20 overflow-hidden max-h-[90vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="flex justify-between items-center p-4 border-b border-white/10 bg-gradient-to-r from-slate-900/50 to-slate-800/50 sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">اختر المادة</h2>
+                <p className="text-white/60 text-xs sm:text-sm">
+                  اختر المادة التي تريد اختبارها
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-2 text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
+              aria-label="إغلاق"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Subjects Grid - Scrollable */}
+          <div className="p-4 overflow-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {subjects.map((subject) => (
+                <SubjectCard
+                  key={subject.id}
+                  subject={subject}
+                  onClick={onClose}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Modal Footer with Date - Sticky */}
+          <div className="p-4 border-t border-white/10 mt-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-white/60">
+              <span>جميع الاختبارات تحت إشراف خبراء متخصصين</span>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                <span>محدث بتاريخ {currentDate}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 // Since this is a client component, we can't export metadata directly
 // Instead we'll handle SEO using Head component
@@ -115,6 +303,7 @@ export default function Home() {
                       height={40}
                       className="w-full h-full object-contain p-1"
                       priority
+                      quality={90}
                     />
                   </div>
                 </Link>
@@ -313,187 +502,13 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Enhanced Subjects Modal with Date in Footer */}
-        {showSubjects && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-auto">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
-              onClick={() => setShowSubjects(false)}
-            ></div>
-
-            {/* Modal Content */}
-            <div className="relative w-full max-w-4xl my-2">
-              <div className="glass-card bg-slate-900/80 border border-white/20 overflow-hidden max-h-[90vh] flex flex-col">
-                {/* Modal Header */}
-                <div className="flex justify-between items-center p-4 border-b border-white/10 bg-gradient-to-r from-slate-900/50 to-slate-800/50 sticky top-0 z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">
-                        اختر المادة
-                      </h2>
-                      <p className="text-white/60 text-xs sm:text-sm">
-                        اختر المادة التي تريد اختبارها
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowSubjects(false)}
-                    className="p-2 text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
-                    aria-label="إغلاق"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Subjects Grid - Scrollable */}
-                <div className="p-4 overflow-auto">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {subjects.map((subject) => (
-                      <Link
-                        key={subject.id}
-                        href={`/exams/instructions?subject=${subject.id}`}
-                        className="block group"
-                        onClick={() => setShowSubjects(false)}
-                        aria-label={`اختبار ${subject.title}`}
-                      >
-                        <div
-                          className={`relative rounded-xl p-4 transition-all duration-300 bg-gradient-to-br ${subject.gradient} border border-white/20 hover:border-white/30 hover:scale-[1.02] group overflow-hidden h-full`}
-                        >
-                          {/* Shimmer Effect */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-
-                          {/* Content */}
-                          <div className="relative">
-                            {/* Icon & Title */}
-                            <div className="flex items-start gap-3 mb-3">
-                              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <span className="text-2xl" aria-hidden="true">
-                                  {subject.icon}
-                                </span>
-                              </div>
-                              <div className="flex-1 pt-1">
-                                <h3 className="text-lg font-bold text-white mb-1">
-                                  {subject.title}
-                                </h3>
-                                <p className="text-white/70 text-xs leading-relaxed">
-                                  {subject.desc}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Stats */}
-                            <div className="mt-3 pt-3 border-t border-white/10">
-                              <div className="flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex items-center gap-1">
-                                    <svg
-                                      className="w-3 h-3 text-white/60"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                      aria-hidden="true"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                      />
-                                    </svg>
-                                    <span className="text-white/70">
-                                      {subject.questions} سؤال
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <svg
-                                      className="w-3 h-3 text-white/60"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                      aria-hidden="true"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                      />
-                                    </svg>
-                                    <span className="text-white/70">
-                                      {subject.time} د
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                  <svg
-                                    className="w-3 h-3 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    aria-hidden="true"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M9 5l7 7-7 7"
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Modal Footer with Date - Sticky */}
-                <div className="p-4 border-t border-white/10 mt-auto">
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-white/60">
-                    <span>جميع الاختبارات تحت إشراف خبراء متخصصين</span>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                      <span>محدث بتاريخ {currentDate}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Enhanced Subjects Modal with Date in Footer - Now a separate memoized component */}
+        <SubjectsModal
+          isOpen={showSubjects}
+          subjects={subjects}
+          currentDate={currentDate}
+          onClose={() => setShowSubjects(false)}
+        />
       </div>
 
       {/* Footer - directly in page */}
