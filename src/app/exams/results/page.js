@@ -355,6 +355,7 @@ const Certificate = memo(
     totalScore,
     categories,
     certificateRef,
+    currentResult,
   }) => (
     <div
       id="certificateContainer"
@@ -414,7 +415,7 @@ const Certificate = memo(
             <p className="text-lg text-gray-700">
               قد أكمل بنجاح اختبار {currentSubject}
               <br />
-              بتاريخ {formatDate(currentResult.completedAt)}
+              بتاريخ {formatDate(currentResult?.completedAt)}
             </p>
           </div>
 
@@ -547,8 +548,41 @@ const ResultsPage = () => {
   // Safe access to examState properties only when mounted
   const activeExam = mounted ? examState.activeExam : null;
   const currentResult = mounted ? examState.currentResult : null;
-  const examCompleted = mounted ? examState.completedPhases : null;
+  const examCompleted = mounted ? examState.examCompleted : null;
   const completedPhases = mounted ? examState.completedPhases : [];
+
+  // IMPORTANT: Create safe versions of all variables we need, using default values
+  const totalScore = currentResult?.totalScore || 0;
+  const phaseScores = currentResult?.phaseScores || {};
+
+  // ALL useMemo hooks must be here at the top level
+  // Consistently called on EVERY render, before any conditionals
+  const resultLevel = useMemo(() => getResultLevel(totalScore), [totalScore]);
+  const categories = useMemo(
+    () => organizePhaseScores(phaseScores),
+    [phaseScores]
+  );
+  const currentSubject = useMemo(
+    () => (activeExam?.subject === "mail" ? "البريد المصري" : "التربية"),
+    [activeExam?.subject]
+  );
+  const learningResources = useMemo(
+    () => generateLearningResources(categories, activeExam?.subject || ""),
+    [categories, activeExam?.subject]
+  );
+  // Format date for display
+  const formatDate = useCallback((dateString) => {
+    if (!dateString) return "غير محدد";
+
+    const date = new Date(dateString);
+    return date.toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
 
   // Submit results to backend - memoized to prevent unnecessary re-creations
   const submitExamResults = useCallback(async () => {
@@ -635,27 +669,13 @@ const ResultsPage = () => {
     return () => clearTimeout(timer);
   }, [activeExam, examCompleted, router, mounted]);
 
-  // Format date for display
-  const formatDate = useCallback((dateString) => {
-    if (!dateString) return "غير محدد";
-
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ar-EG", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }, []);
-
   // Handle restart exam
   const handleRestartExam = useCallback(() => {
     if (!mounted) return;
 
     // Generate a new organization code
     const newOrgCode = "A" + Math.random().toString().slice(2, 8);
-    const currentSubject = activeExam?.subject;
+    const currentSubjectValue = activeExam?.subject;
 
     // Reset the exam state
     dispatch(resetExam());
@@ -671,7 +691,7 @@ const ResultsPage = () => {
       );
 
       // Navigate back to phases page with the same subject
-      router.push(`/exams/phases?subject=${currentSubject}`);
+      router.push(`/exams/phases?subject=${currentSubjectValue}`);
     } else {
       router.push("/");
     }
@@ -726,8 +746,11 @@ const ResultsPage = () => {
   }, []);
 
   // Alias functions for backward compatibility
-  const downloadCertificate = printCertificate;
-  const downloadPDF = printCertificate;
+  const downloadCertificate = useCallback(
+    () => printCertificate(),
+    [printCertificate]
+  );
+  const downloadPDF = useCallback(() => printCertificate(), [printCertificate]);
 
   // Share results
   const shareResults = useCallback(
@@ -786,8 +809,6 @@ const ResultsPage = () => {
     }));
   }, []);
 
-  // Memoize result level calculation to prevent recalculation
-
   // If not mounted or still loading data, show loading UI
   if (!mounted || loading || !currentResult || !activeExam) {
     return (
@@ -805,20 +826,6 @@ const ResultsPage = () => {
       </div>
     );
   }
-  const resultLevel = useMemo(() => getResultLevel(totalScore), [totalScore]);
-  let { totalScore, phaseScores = {} } = currentResult;
-
-  // Memoize category organization
-  const categories = useMemo(
-    () => organizePhaseScores(phaseScores),
-    [phaseScores]
-  );
-
-  // Memoize the current subject name for display
-  const currentSubject = useMemo(
-    () => (activeExam.subject === "mail" ? "البريد المصري" : "التربية"),
-    [activeExam.subject]
-  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
@@ -859,6 +866,7 @@ const ResultsPage = () => {
             totalScore={totalScore}
             categories={categories}
             certificateRef={certificateRef}
+            currentResult={currentResult}
           />
 
           {/* Download Button - Outside Certificate */}
@@ -1248,46 +1256,40 @@ const ResultsPage = () => {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {useMemo(
-                () =>
-                  generateLearningResources(categories, activeExam.subject).map(
-                    (resource, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-indigo-50 rounded-lg p-4 border border-indigo-100"
+              {learningResources.map((resource, idx) => (
+                <div
+                  key={idx}
+                  className="bg-indigo-50 rounded-lg p-4 border border-indigo-100"
+                >
+                  <h4 className="font-bold text-gray-800 mb-2">
+                    {resource.title}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {resource.description}
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => router.push("/pdfs")}
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs flex items-center gap-1.5 transition-colors"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
-                        <h4 className="font-bold text-gray-800 mb-2">
-                          {resource.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 mb-3">
-                          {resource.description}
-                        </p>
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() => router.push("/pdfs")}
-                            className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs flex items-center gap-1.5 transition-colors"
-                          >
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <span>تصفح</span>
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  ),
-                [categories, activeExam.subject, router]
-              )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span>تصفح</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
