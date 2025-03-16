@@ -1,9 +1,10 @@
-# https://www.robotstxt.org/robotstxt.html
+# *
 User-agent: *
 Allow: /
 
-# Sitemap location
-Sitemap: https://egyptianexams.com/sitemap.xml
+# Host
+Host: https://egyptianexams.com
 
-# Block specific directories that shouldn't be indexed
-Disallow: /api/
+# Sitemaps
+Sitemap: https://egyptianexams.com/sitemap.xml
+Sitemap: https://egyptianexams.com/server-sitemap.xml
