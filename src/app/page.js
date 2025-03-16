@@ -4,7 +4,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import PhonePopup from "../../components/PhonePopup";
+import Head from "next/head";
+
+// Since this is a client component, we can't export metadata directly
+// Instead we'll handle SEO using Head component
 
 const subjects = [
   {
@@ -64,6 +69,7 @@ const subjects = [
 ];
 
 export default function Home() {
+  const pathname = usePathname();
   const [showSubjects, setShowSubjects] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
 
@@ -81,26 +87,37 @@ export default function Home() {
 
   return (
     <>
+      {/* Add essential meta tags directly in the page for SEO */}
+      <Head>
+        <title>منصة الاختبارات المصرية | تدرب على امتحانات التوظيف</title>
+        <meta
+          name="description"
+          content="منصة تدريبية متكاملة لاختبارات التوظيف المصرية. تدرب على امتحانات البريد المصري والتربية بمختلف تخصصاتها في بيئة محاكية للاختبارات الحقيقية"
+        />
+      </Head>
+
       {/* Phone Popup Component - Handled independently */}
       <PhonePopup />
 
-      {/* Custom Header with Tooltips */}
-      <header className="absolute top-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4">
+      {/* Header - directly in page instead of layout */}
+      <header className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
         <div className="glass-effect rounded-2xl border border-white/10 p-3">
           <div className="flex items-center justify-between">
             {/* Logo & Title with Tooltip */}
             <div className="flex items-center gap-3 px-2">
               <div className="relative group">
-                <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center border border-white/10 overflow-hidden cursor-default">
-                  <Image
-                    src="/logo.png"
-                    alt="Logo"
-                    width={60}
-                    height={40}
-                    className="w-full h-full object-contain p-1"
-                    priority
-                  />
-                </div>
+                <Link href="/">
+                  <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center border border-white/10 overflow-hidden cursor-pointer">
+                    <Image
+                      src="/logo.png"
+                      alt="شعار منصة الاختبارات المصرية"
+                      width={60}
+                      height={40}
+                      className="w-full h-full object-contain p-1"
+                      priority
+                    />
+                  </div>
+                </Link>
                 {/* Tooltip */}
                 <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
                   منصة غير رسمية
@@ -108,9 +125,11 @@ export default function Home() {
               </div>
 
               <div className="relative group">
-                <h1 className="text-lg font-bold text-white hidden sm:block">
-                  منصة الاختبارات المصرية
-                </h1>
+                <Link href="/">
+                  <h1 className="text-lg font-bold text-white hidden sm:block">
+                    منصة الاختبارات المصرية
+                  </h1>
+                </Link>
                 {/* Tooltip */}
                 <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 top-full right-0 mt-2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700 ">
                   منصة تدريبية لاختبارات التوظيف المصرية
@@ -147,11 +166,12 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Start Button with Tooltip */}
+              {/* Start Button with Tooltip - Direct approach to open modal */}
               <div className="relative group">
                 <button
                   onClick={() => setShowSubjects(true)}
                   className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
+                  aria-label="ابدأ الاختبار الآن"
                 >
                   <span>ابدأ الآن</span>
                   <svg
@@ -159,6 +179,7 @@ export default function Home() {
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -178,7 +199,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="flex flex-col items-center justify-center min-h-[75vh] gap-12">
+      <div className="flex flex-col items-center justify-center min-h-[75vh] gap-12 pt-28">
         {/* Hero Section */}
         <div className="text-center space-y-6 max-w-3xl">
           <h1 className="text-5xl font-bold text-white leading-tight">
@@ -194,6 +215,7 @@ export default function Home() {
           <Link
             href="/pdfs"
             className="glass-card p-6 hover:bg-white/5 transition-all duration-300 group"
+            aria-label="تحميل امتحانات واسئلة"
           >
             <div className="flex items-center gap-6">
               <div className="rounded-xl p-4 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 border border-white/10">
@@ -202,6 +224,7 @@ export default function Home() {
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -212,9 +235,9 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
                   تحميل امتحانات واسئلة
-                </h3>
+                </h2>
                 <p className="text-white/70 group-hover:text-white/80">
                   حمل مجموعة شاملة من الامتحانات السابقة للتدريب
                 </p>
@@ -225,6 +248,7 @@ export default function Home() {
           <button
             onClick={() => setShowSubjects(true)}
             className="glass-card p-6 hover:bg-white/5 transition-all duration-300 w-full text-right group"
+            aria-label="ابدأ الاختبار الآن"
           >
             <div className="flex items-center gap-6">
               <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-600/20 to-green-600/20 border border-white/10">
@@ -233,6 +257,7 @@ export default function Home() {
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -243,9 +268,9 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
                   ابدأ الاختبار الآن
-                </h3>
+                </h2>
                 <p className="text-white/70 group-hover:text-white/80">
                   خوض تجربة اختبار تحاكي الامتحان الحقيقي
                 </p>
@@ -262,6 +287,7 @@ export default function Home() {
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -272,9 +298,9 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-white/90 mb-2">
+                  <h2 className="text-2xl font-bold text-white/90 mb-2">
                     امتحانات مع اسئلة حقيقية
-                  </h3>
+                  </h2>
                   <p className="text-white/60">
                     تدرب على أسئلة من امتحانات حقيقية سابقة
                   </p>
@@ -308,6 +334,7 @@ export default function Home() {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"
@@ -330,12 +357,14 @@ export default function Home() {
                   <button
                     onClick={() => setShowSubjects(false)}
                     className="p-2 text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
+                    aria-label="إغلاق"
                   >
                     <svg
                       className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -356,6 +385,7 @@ export default function Home() {
                         href={`/exams/instructions?subject=${subject.id}`}
                         className="block group"
                         onClick={() => setShowSubjects(false)}
+                        aria-label={`اختبار ${subject.title}`}
                       >
                         <div
                           className={`relative rounded-xl p-4 transition-all duration-300 bg-gradient-to-br ${subject.gradient} border border-white/20 hover:border-white/30 hover:scale-[1.02] group overflow-hidden h-full`}
@@ -368,7 +398,9 @@ export default function Home() {
                             {/* Icon & Title */}
                             <div className="flex items-start gap-3 mb-3">
                               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <span className="text-2xl">{subject.icon}</span>
+                                <span className="text-2xl" aria-hidden="true">
+                                  {subject.icon}
+                                </span>
                               </div>
                               <div className="flex-1 pt-1">
                                 <h3 className="text-lg font-bold text-white mb-1">
@@ -390,6 +422,7 @@ export default function Home() {
                                       fill="none"
                                       stroke="currentColor"
                                       viewBox="0 0 24 24"
+                                      aria-hidden="true"
                                     >
                                       <path
                                         strokeLinecap="round"
@@ -408,6 +441,7 @@ export default function Home() {
                                       fill="none"
                                       stroke="currentColor"
                                       viewBox="0 0 24 24"
+                                      aria-hidden="true"
                                     >
                                       <path
                                         strokeLinecap="round"
@@ -427,6 +461,7 @@ export default function Home() {
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
+                                    aria-hidden="true"
                                   >
                                     <path
                                       strokeLinecap="round"
@@ -460,6 +495,45 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Footer - directly in page */}
+      <footer className="relative z-10 bg-slate-900/60 border-t border-white/10 py-4 mt-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center text-white/50 text-sm">
+            <p>
+              © {new Date().getFullYear()} منصة الاختبارات المصرية - جميع الحقوق
+              محفوظة
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Schema for the exam platform */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LearningResource",
+            name: "منصة الاختبارات المصرية",
+            description:
+              "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
+            provider: {
+              "@type": "Organization",
+              name: "منصة الاختبارات المصرية",
+            },
+            audience: {
+              "@type": "Audience",
+              audienceType: "طلاب التوظيف المصريين",
+            },
+            educationalLevel: "متقدم",
+            keywords:
+              "اختبارات مصرية, امتحان البريد المصري, امتحانات التربية, تدريب على الاختبارات",
+            teaches: "التحضير للاختبارات المصرية",
+            learningResourceType: "امتحانات تدريبية تفاعلية",
+          }),
+        }}
+      />
     </>
   );
 }

@@ -6,11 +6,74 @@ import "./globals.css";
 
 const cairo = Cairo({ subsets: ["arabic"] });
 
+// Properly export metadata for Next.js
 export const metadata = {
-  title: "منصة الاختبارات المصرية",
-  description: "منصة تعليمية للتحضير للاختبارات المصرية",
+  title: {
+    default: "منصة الاختبارات المصرية | تدرب على الامتحانات بكفاءة",
+    template: "%s | منصة الاختبارات المصرية",
+  },
+  description:
+    "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة. تدرب على نماذج امتحانات البريد المصري والتربية وغيرها",
+  keywords: [
+    "اختبارات مصرية",
+    "امتحان البريد المصري",
+    "امتحانات التربية",
+    "نماذج امتحانات",
+    "تدريب على الاختبارات",
+    "امتحانات الكترونية",
+  ],
+  authors: [{ name: "منصة الاختبارات المصرية" }],
+  creator: "منصة الاختبارات المصرية",
+  publisher: "منصة الاختبارات المصرية",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "منصة الاختبارات المصرية | تدرب على الامتحانات بكفاءة",
+    description:
+      "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
+    url: "https://egyptian-exams.com",
+    siteName: "منصة الاختبارات المصرية",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "منصة الاختبارات المصرية",
+      },
+    ],
+    locale: "ar_EG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "منصة الاختبارات المصرية | تدرب على الامتحانات بكفاءة",
+    description: "منصة تعليمية متكاملة للتحضير للاختبارات المصرية",
+    images: ["/twitter-image.jpg"],
+    creator: "@EgyptianExams",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://egyptian-exams.com",
+    languages: {
+      ar: "https://egyptian-exams.com",
+    },
+  },
 };
 
+// Regular layout component without client directive - metadata won't work with "use client"
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
@@ -23,6 +86,23 @@ export default function RootLayout({ children }) {
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbrowser.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
           strategy="lazyOnload"
+        />
+
+        {/* Schema.org markup for educational organization */}
+        <Script
+          id="schema-organization"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "EducationalOrganization",
+              name: "منصة الاختبارات المصرية",
+              description:
+                "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
+              url: "https://egyptian-exams.com",
+              logo: "https://egyptian-exams.com/logo.png",
+            }),
+          }}
         />
 
         <Providers>
@@ -44,12 +124,8 @@ export default function RootLayout({ children }) {
               ></div>
             </div>
 
-            {/* Main Content - Header component is now inside the page.js */}
-            <main className="pt-28 relative z-10">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 py-8">
-                {children}
-              </div>
-            </main>
+            {/* Main Content with children */}
+            <main className="relative z-10">{children}</main>
           </div>
         </Providers>
       </body>
