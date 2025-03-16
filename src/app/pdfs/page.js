@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, memo } from "react";
 
 const categories = [
   { id: "all", name: "الكل" },
@@ -71,18 +71,130 @@ const pdfFiles = [
   },
 ];
 
+// Memoized category button component to prevent unnecessary re-renders
+const CategoryButton = memo(({ category, isSelected, onClick }) => (
+  <button
+    onClick={() => onClick(category.id)}
+    className={`px-4 py-2 rounded-xl border transition-all duration-300 ${
+      isSelected
+        ? "bg-white/10 border-white/20 text-white"
+        : "border-white/5 text-white/70 hover:border-white/10 hover:text-white"
+    }`}
+  >
+    {category.name}
+  </button>
+));
+
+// Memoized PDF card component to prevent unnecessary re-renders
+const PDFCard = memo(({ pdf }) => (
+  <div className="glass-card group hover:bg-white/5">
+    <div className="p-6">
+      <div className="flex items-start gap-4">
+        {/* PDF Icon */}
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600/20 to-pink-600/20 flex items-center justify-center border border-white/10">
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-white mb-2">{pdf.title}</h3>
+          <div className="flex flex-wrap gap-3 text-sm text-white/60">
+            <span className="flex items-center gap-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              {pdf.date}
+            </span>
+            {pdf.downloads && (
+              <span className="flex items-center gap-1">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+                {pdf.downloads}
+              </span>
+            )}
+            <span>{pdf.size}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Download Button */}
+      <a
+        href={pdf.path}
+        download
+        className="mt-6 w-full py-2 px-4 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-all duration-300"
+      >
+        <span>تحميل الملف</span>
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
+        </svg>
+      </a>
+    </div>
+  </div>
+));
+
 export default function PDFsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredPDFs = pdfFiles.filter((pdf) => {
-    const matchesCategory =
-      selectedCategory === "all" || pdf.category === selectedCategory;
-    const matchesSearch = pdf.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Memoize the filtered PDFs to prevent unnecessary filtering on every render
+  const filteredPDFs = useMemo(() => {
+    return pdfFiles.filter((pdf) => {
+      const matchesCategory =
+        selectedCategory === "all" || pdf.category === selectedCategory;
+      const matchesSearch = pdf.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [selectedCategory, searchQuery]);
+
+  // Handler for category button clicks
+  const handleCategoryClick = (categoryId) => {
+    setSelectedCategory(categoryId);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -126,17 +238,12 @@ export default function PDFsPage() {
           {/* Categories */}
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
-              <button
+              <CategoryButton
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-xl border transition-all duration-300 ${
-                  selectedCategory === category.id
-                    ? "bg-white/10 border-white/20 text-white"
-                    : "border-white/5 text-white/70 hover:border-white/10 hover:text-white"
-                }`}
-              >
-                {category.name}
-              </button>
+                category={category}
+                isSelected={selectedCategory === category.id}
+                onClick={handleCategoryClick}
+              />
             ))}
           </div>
         </div>
@@ -145,92 +252,7 @@ export default function PDFsPage() {
       {/* PDF Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPDFs.map((pdf) => (
-          <div key={pdf.id} className="glass-card group hover:bg-white/5">
-            <div className="p-6">
-              <div className="flex items-start gap-4">
-                {/* PDF Icon */}
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600/20 to-pink-600/20 flex items-center justify-center border border-white/10">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {pdf.title}
-                  </h3>
-                  <div className="flex flex-wrap gap-3 text-sm text-white/60">
-                    <span className="flex items-center gap-1">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      {pdf.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        />
-                      </svg>
-                      {pdf.downloads}
-                    </span>
-                    <span>{pdf.size}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Download Button */}
-              <a
-                href={pdf.path}
-                download
-                className="mt-6 w-full py-2 px-4 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-all duration-300"
-              >
-                <span>تحميل الملف</span>
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-              </a>
-            </div>
-          </div>
+          <PDFCard key={pdf.id} pdf={pdf} />
         ))}
       </div>
     </div>

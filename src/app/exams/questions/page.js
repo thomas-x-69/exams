@@ -1,7 +1,14 @@
 // src/app/exams/questions/page.js
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  memo,
+  useMemo,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -15,22 +22,98 @@ import {
 import { getRandomQuestions } from "../../data/questionsUtils";
 import ExitConfirmationDialog from "../../../../components/ExitConfirmationDialog";
 
-// Phase durations in minutes and question counts
-const mailPhases = {
-  behavioral: { time: 25, questionsCount: 150 },
-  language_arabic: { time: 10, questionsCount: 20 },
-  language_english: { time: 10, questionsCount: 20 },
-  knowledge_iq: { time: 5, questionsCount: 15 },
-  knowledge_general: { time: 5, questionsCount: 15 },
-  knowledge_it: { time: 5, questionsCount: 10 },
-  specialization: { time: 15, questionsCount: 30 },
+// Memoized configuration for phase durations and question counts
+const phaseConfigs = {
+  mail: {
+    behavioral: { time: 25, questionsCount: 1 },
+    language_arabic: { time: 10, questionsCount: 20 },
+    language_english: { time: 10, questionsCount: 20 },
+    knowledge_iq: { time: 5, questionsCount: 15 },
+    knowledge_general: { time: 5, questionsCount: 15 },
+    knowledge_it: { time: 5, questionsCount: 10 },
+    specialization: { time: 15, questionsCount: 30 },
+  },
+  education: {
+    behavioral: { time: 25, questionsCount: 1 },
+    language_arabic: { time: 10, questionsCount: 20 },
+    language_english: { time: 10, questionsCount: 20 },
+    knowledge_iq: { time: 5, questionsCount: 15 },
+    knowledge_general: { time: 5, questionsCount: 15 },
+    knowledge_it: { time: 5, questionsCount: 10 },
+    education: { time: 15, questionsCount: 30 },
+    specialization: { time: 15, questionsCount: 30 },
+  },
 };
 
-const educationPhases = {
-  ...mailPhases,
-  education: { time: 15, questionsCount: 30 },
+// Memoized timer component
+const ExamTimer = memo(({ remainingTime, isTimeRunningLow }) => (
+  <div
+    className={`flex items-center gap-2 ${
+      isTimeRunningLow ? "bg-red-100" : "bg-amber-100"
+    } px-2 rounded-lg`}
+  >
+    <svg
+      className={`w-5 h-5 ${
+        isTimeRunningLow ? "text-red-600" : "text-amber-600"
+      } ${remainingTime < 10 ? "animate-pulse" : ""}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+    <span
+      className={`text-lg font-bold ${
+        isTimeRunningLow ? "text-red-600" : "text-amber-600"
+      } py-1 rounded-lg`}
+    >
+      {formatTime(remainingTime)}
+    </span>
+  </div>
+));
+
+// Memoized question option component
+const QuestionOption = memo(
+  ({ option, index, isSelected, onSelect, disabled }) => (
+    <button
+      onClick={() => onSelect(index)}
+      className={`w-full p-4 rounded-lg border text-right transition-all duration-200 ${
+        isSelected
+          ? "border-blue-500 bg-blue-50 text-blue-700"
+          : "border-gray-200 hover:border-gray-300 text-gray-700"
+      }`}
+      disabled={disabled}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+            isSelected ? "border-blue-500" : "border-gray-300"
+          }`}
+        >
+          {isSelected && <div className="w-3 h-3 bg-blue-500 rounded-full" />}
+        </div>
+        <span className="text-sm">{option}</span>
+      </div>
+    </button>
+  )
+);
+
+// Helper function for formatting time
+const formatTime = (seconds) => {
+  if (seconds === undefined || seconds === null) return "00:00";
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes.toString().padStart(2, "0")}:${secs
+    .toString()
+    .padStart(2, "0")}`;
 };
 
+// Main component
 const QuizPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,12 +130,13 @@ const QuizPage = () => {
       // Clear the flag
       localStorage.removeItem("_wasReloaded");
       // Redirect immediately to landing page
+      router.replace("/");
       return;
     }
 
     // Set mounted state to true
     setMounted(true);
-  }, []);
+  }, [router]);
 
   // Render placeholder while waiting for client-side hydration
   if (!mounted) {
@@ -68,7 +152,7 @@ const QuizPage = () => {
   return <MountedQuizContent phase={phase} />;
 };
 
-// This component only runs after mounting, so Redux is safe to use
+// Component that renders after mounting - allows safe Redux access
 function MountedQuizContent({ phase }) {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -96,13 +180,17 @@ function MountedQuizContent({ phase }) {
   const [exitMessage, setExitMessage] = useState("");
 
   // Parse phase and subphase if present
-  const [mainPhase, subPhase] = phase ? phase.split("_") : [phase, null];
+  const [mainPhase, subPhase] = useMemo(
+    () => (phase ? phase.split("_") : [phase, null]),
+    [phase]
+  );
 
-  // Function to get phase duration from the phase data
+  // Function to get phase duration from the phase data - memoized
   const getPhaseDuration = useCallback(
     (phaseId) => {
+      const subject = activeExam?.subject || "mail";
       const phasesData =
-        activeExam?.subject === "mail" ? mailPhases : educationPhases;
+        phaseConfigs[subject === "mail" ? "mail" : "education"];
 
       // Return duration in seconds (multiply minutes by 60)
       return (phasesData[phaseId]?.time || 10) * 60; // Default to 10 minutes if not found
@@ -110,11 +198,12 @@ function MountedQuizContent({ phase }) {
     [activeExam]
   );
 
-  // Function to get questions count for a phase
+  // Function to get questions count for a phase - memoized
   const getPhaseQuestionCount = useCallback(
     (phaseId) => {
+      const subject = activeExam?.subject || "mail";
       const phasesData =
-        activeExam?.subject === "mail" ? mailPhases : educationPhases;
+        phaseConfigs[subject === "mail" ? "mail" : "education"];
 
       // Return question count (default to 20 if not found)
       return phasesData[phaseId]?.questionsCount || 20;
@@ -122,7 +211,7 @@ function MountedQuizContent({ phase }) {
     [activeExam]
   );
 
-  // Handle exit confirmation
+  // Handle exit confirmation - memoized
   const handleExit = useCallback(
     (destination = "/", message) => {
       if (navigatingRef.current) return;
@@ -144,7 +233,7 @@ function MountedQuizContent({ phase }) {
     [phase, phaseState, router]
   );
 
-  // Confirm exit
+  // Confirm exit - memoized
   const confirmExit = useCallback(() => {
     setShowExitDialog(false);
     navigatingRef.current = true;
@@ -159,7 +248,7 @@ function MountedQuizContent({ phase }) {
     router.push(exitDestination || "/");
   }, [exitDestination, router]);
 
-  // Cancel exit
+  // Cancel exit - memoized
   const cancelExit = useCallback(() => {
     setShowExitDialog(false);
   }, []);
@@ -219,7 +308,33 @@ function MountedQuizContent({ phase }) {
     };
   }, [phase, phaseState, handleExit]);
 
-  // The shared submit function used by both the button and timer
+  // Function to get phase questions - memoized
+  const getPhaseQuestions = useCallback(
+    (phaseId) => {
+      try {
+        // Get the question count for this phase
+        const questionsCount = getPhaseQuestionCount(phaseId);
+
+        // Get the subject
+        const currentSubject = activeExam?.subject || "mail";
+
+        // Use the improved getRandomQuestions from questionsUtils
+        const questionsFromUtils = getRandomQuestions(
+          currentSubject,
+          phaseId,
+          questionsCount // Use dynamic count from configuration
+        );
+
+        return questionsFromUtils;
+      } catch (error) {
+        console.error("Error in getPhaseQuestions:", error);
+        return []; // Return empty array on error
+      }
+    },
+    [activeExam, getPhaseQuestionCount]
+  );
+
+  // The shared submit function used by both the button and timer - memoized
   const handleSubmit = useCallback(() => {
     // Prevent multiple submissions/navigations
     if (navigatingRef.current) return;
@@ -250,32 +365,6 @@ function MountedQuizContent({ phase }) {
       router.replace("/exams/phases");
     }, 50);
   }, [dispatch, phase, router]);
-
-  const getPhaseQuestions = useCallback(
-    (phaseId) => {
-      try {
-        // Get the question count for this phase
-        const questionsCount = getPhaseQuestionCount(phaseId);
-
-        // Get the subject
-        const currentSubject = activeExam?.subject || "mail";
-
-        // Use the improved getRandomQuestions from questionsUtils
-        const questionsFromUtils = getRandomQuestions(
-          currentSubject,
-          phaseId,
-          questionsCount // Use dynamic count from configuration
-        );
-
-        return questionsFromUtils;
-      } catch (error) {
-        console.error("Error in getPhaseQuestions:", error);
-        // Provide fallback questions
-        return; // Your fallback code
-      }
-    },
-    [activeExam, getPhaseQuestionCount]
-  );
 
   // Initialize exam phase
   useEffect(() => {
@@ -427,28 +516,40 @@ function MountedQuizContent({ phase }) {
     }
   }, [loading, remainingTime, handleSubmit]);
 
-  const handleAnswerSelect = (answerId) => {
-    if (!questions[currentQuestion] || navigatingRef.current) return;
+  // Handle answer selection - memoized
+  const handleAnswerSelect = useCallback(
+    (answerId) => {
+      if (!questions[currentQuestion] || navigatingRef.current) return;
 
-    const questionId = questions[currentQuestion].id;
-    const newAnswers = {
-      ...selectedAnswers,
-      [questionId]: answerId,
-    };
+      const questionId = questions[currentQuestion].id;
+      const newAnswers = {
+        ...selectedAnswers,
+        [questionId]: answerId,
+      };
 
-    setSelectedAnswers(newAnswers);
+      setSelectedAnswers(newAnswers);
 
-    // Save to Redux store
-    dispatch(
-      saveAnswers({
-        phaseId: phase,
-        questionId,
-        answerId,
-      })
-    );
-  };
+      // Save to Redux store
+      dispatch(
+        saveAnswers({
+          phaseId: phase,
+          questionId,
+          answerId,
+        })
+      );
+    },
+    [
+      questions,
+      currentQuestion,
+      selectedAnswers,
+      dispatch,
+      phase,
+      navigatingRef,
+    ]
+  );
 
-  const handleNext = () => {
+  // Handle next question - memoized
+  const handleNext = useCallback(() => {
     if (navigatingRef.current) return;
 
     if (currentQuestion < questions.length - 1) {
@@ -465,15 +566,7 @@ function MountedQuizContent({ phase }) {
     } else {
       handleSubmit();
     }
-  };
-
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
+  }, [currentQuestion, questions.length, dispatch, phase, handleSubmit]);
 
   // Display a loading state while fetching questions
   if (loading) {
@@ -521,6 +614,7 @@ function MountedQuizContent({ phase }) {
     questions[currentQuestion] &&
     selectedAnswers[questions[currentQuestion].id] !== undefined;
 
+  // Calculate progress percentage
   const progressPercentage = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
@@ -537,34 +631,10 @@ function MountedQuizContent({ phase }) {
       <div className="bg-white rounded-xl shadow-sm mb-6">
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <div
-              className={`flex items-center gap-2 ${
-                isTimeRunningLow ? "bg-red-100" : "bg-amber-100"
-              } px-2 rounded-lg`}
-            >
-              <svg
-                className={`w-5 h-5 ${
-                  isTimeRunningLow ? "text-red-600" : "text-amber-600"
-                } ${remainingTime < 10 ? "animate-pulse" : ""}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span
-                className={`text-lg font-bold ${
-                  isTimeRunningLow ? "text-red-600" : "text-amber-600"
-                } py-1 rounded-lg`}
-              >
-                {formatTime(remainingTime)}
-              </span>
-            </div>
+            <ExamTimer
+              remainingTime={remainingTime}
+              isTimeRunningLow={isTimeRunningLow}
+            />
             <div className="flex items-center gap-2">
               <span className="text-sm bg-gray-200 text-gray-600 px-3 py-1 rounded-lg">
                 سؤال {currentQuestion + 1} من {questions.length}
@@ -622,32 +692,16 @@ function MountedQuizContent({ phase }) {
             {/* Options */}
             <div className="space-y-3">
               {questions[currentQuestion].options.map((option, index) => (
-                <button
+                <QuestionOption
                   key={index}
-                  onClick={() => handleAnswerSelect(index)}
-                  className={`w-full p-4 rounded-lg border text-right transition-all duration-200 ${
+                  option={option}
+                  index={index}
+                  isSelected={
                     selectedAnswers[questions[currentQuestion].id] === index
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 hover:border-gray-300 text-gray-700"
-                  }`}
+                  }
+                  onSelect={handleAnswerSelect}
                   disabled={navigatingRef.current}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        selectedAnswers[questions[currentQuestion].id] === index
-                          ? "border-blue-500"
-                          : "border-gray-300"
-                      }`}
-                    >
-                      {selectedAnswers[questions[currentQuestion].id] ===
-                        index && (
-                        <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                      )}
-                    </div>
-                    <span className="text-sm">{option}</span>
-                  </div>
-                </button>
+                />
               ))}
             </div>
           </div>

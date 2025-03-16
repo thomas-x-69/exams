@@ -4,7 +4,12 @@ import Script from "next/script";
 import { Providers } from "../../store/provider";
 import "./globals.css";
 
-const cairo = Cairo({ subsets: ["arabic"] });
+// Optimize font loading with display swap
+const cairo = Cairo({
+  subsets: ["arabic"],
+  display: "swap", // Add display strategy for better performance
+  preload: true, // Ensure font is preloaded
+});
 
 // Properly export metadata for Next.js
 export const metadata = {
@@ -77,15 +82,42 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        {/* Resource Hints - Preconnect to external domains */}
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://www.googletagmanager.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://pagead2.googlesyndication.com"
+          crossOrigin="anonymous"
+        />
+
+        {/* Preload critical assets */}
+        <link rel="preload" href="/logo.png" as="image" type="image/png" />
+      </head>
       <body
         className={`${cairo.className} antialiased`}
         suppressHydrationWarning
       >
-        {/* Google AdSense Script */}
+        {/* Google AdSense Script - Using strategy lazyOnload */}
         <Script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbrowser.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
           strategy="lazyOnload"
+          id="google-adsense"
         />
 
         {/* Schema.org markup for educational organization */}
@@ -110,9 +142,9 @@ export default function RootLayout({ children }) {
             {/* Background Elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
               <div className="absolute inset-0 pattern-dots opacity-30"></div>
-              <div className="absolute top-0 -right-1/2 w-[1000px] h-[1000px] bg-indigo-600/5 rounded-full blur-3xl floating"></div>
+              <div className="absolute top-0 -right-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-3xl floating"></div>
               <div
-                className="absolute bottom-0 -left-1/2 w-[1000px] h-[1000px] bg-blue-600/5 rounded-full blur-3xl floating"
+                className="absolute bottom-0 -left-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-3xl floating"
                 style={{ animationDelay: "-4s" }}
               ></div>
               <div

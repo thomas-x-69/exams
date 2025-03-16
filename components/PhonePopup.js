@@ -68,16 +68,16 @@ export default function PhonePopup() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center ">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
 
       {/* Popup Content */}
-      <div className="relative w-full max-w-md">
-        <div className="glass-card bg-slate-900/80 border border-white/20 overflow-hidden">
+      <div className="relative w-full max-w-md ">
+        <div className="glass-card bg-slate-900/80 border border-white/20 overflow-hidden ">
           {/* Header */}
           <div className="p-5 border-b border-white/10 bg-gradient-to-r from-slate-900/50 to-slate-800/50">
-            <div className="flex items-center gap-3 ">
+            <div className="flex items-center gap-3 p-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-xl border border-blue-300">
                 📱
               </div>
@@ -91,7 +91,7 @@ export default function PhonePopup() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-5">
+          <form onSubmit={handleSubmit} className="p-4">
             <div className="mb-4">
               <label
                 htmlFor="phone"

@@ -1,10 +1,13 @@
+// src/app/exams/instructions/page.js
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
+import Image from "next/image";
 import { initExam } from "../../../../store/examSlice";
 
+// Memoized subject information to prevent recalculation
 const subjectInfo = {
   mail: {
     name: "البريد المصري",
@@ -56,6 +59,16 @@ const subjectInfo = {
   },
 };
 
+// Memoized instruction item component
+const InstructionItem = memo(({ icon, text }) => (
+  <div className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
+    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-xl shadow-sm">
+      {icon}
+    </div>
+    <p className="text-gray-700 text-sm pt-1.5">{text}</p>
+  </div>
+));
+
 const ExamInstructions = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,8 +76,37 @@ const ExamInstructions = () => {
   const dispatch = useDispatch();
 
   const [name, setName] = useState("");
-  const organizationCode = "A" + Math.random().toString().slice(2, 8);
-  const currentSubject = subjectInfo[subject] || subjectInfo.mail;
+
+  // Generate organization code once when component mounts
+  const organizationCode = useMemo(
+    () => "A" + Math.random().toString().slice(2, 8),
+    []
+  );
+
+  // Memoize the current subject info to prevent recalculation on every render
+  const currentSubject = useMemo(
+    () => subjectInfo[subject] || subjectInfo.mail,
+    [subject]
+  );
+
+  // Memoize the instructions to prevent recreating the array on every render
+  const instructions = useMemo(
+    () => [
+      {
+        icon: "🔄",
+        text: "انتقال تلقائي للمرحلة التالية مع فترة راحة دقيقتين",
+      },
+      {
+        icon: "⚠️",
+        text: "لا يمكن العودة للمرحلة السابقة بعد انتهاء وقتها",
+      },
+      {
+        icon: "✅",
+        text: "يجب الإجابة على جميع الأسئلة للحصول على الدرجة الكاملة",
+      },
+    ],
+    []
+  );
 
   const handleStartExam = async (e) => {
     e.preventDefault();
@@ -152,29 +194,8 @@ const ExamInstructions = () => {
         <div className="p-6 overflow-y-auto flex-1">
           {/* Instructions Grid */}
           <div className="grid grid-cols-1 gap-3 mb-5">
-            {[
-              {
-                icon: "🔄",
-                text: "انتقال تلقائي للمرحلة التالية مع فترة راحة دقيقتين",
-              },
-              {
-                icon: "⚠️",
-                text: "لا يمكن العودة للمرحلة السابقة بعد انتهاء وقتها",
-              },
-              {
-                icon: "✅",
-                text: "يجب الإجابة على جميع الأسئلة للحصول على الدرجة الكاملة",
-              },
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-3 bg-gray-50 rounded-xl p-3"
-              >
-                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-xl shadow-sm">
-                  {item.icon}
-                </div>
-                <p className="text-gray-700 text-sm pt-1.5">{item.text}</p>
-              </div>
+            {instructions.map((item, index) => (
+              <InstructionItem key={index} icon={item.icon} text={item.text} />
             ))}
           </div>
 

@@ -1,7 +1,13 @@
 // src/app/exams/phases/page.js
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,6 +29,7 @@ const PhaseStatus = {
   COMPLETED_SUBPHASE: "completed_subphase",
 };
 
+// Memoized phase configuration data
 const mailPhases = [
   {
     id: "behavioral",
@@ -185,6 +192,10 @@ function MountedPhasesContent({ subject }) {
     phases,
   } = examState;
 
+  // Use refs to avoid stale closures in event handlers and timers
+  const timerRef = useRef(null);
+  const navigatingRef = useRef(false);
+
   const [phasesData, setPhasesData] = useState([]);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [breakTimeRemaining, setBreakTimeRemaining] = useState(0);
@@ -201,10 +212,133 @@ function MountedPhasesContent({ subject }) {
   const [exitMessage, setExitMessage] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Handle exit confirmation
+  // Memoized functions for optimal performance
+  const getPhaseStatus = useCallback(
+    (index) => {
+      if (index < currentPhaseIndex) return PhaseStatus.COMPLETED;
+      if (index === currentPhaseIndex) return PhaseStatus.ACTIVE;
+      return PhaseStatus.LOCKED;
+    },
+    [currentPhaseIndex]
+  );
+
+  // Memoize subphase status calculation to prevent unnecessary recalculations
+  const getSubPhaseStatus = useCallback(
+    (phaseId, subPhaseId) => {
+      // Get completed sub-phases for this phase
+      const completedSubs = completedSubPhases[phaseId] || [];
+
+      // Check if sub-phase is completed
+      if (completedSubs.includes(subPhaseId)) {
+        return PhaseStatus.COMPLETED_SUBPHASE;
+      }
+
+      // Check if this is the current active sub-phase
+      if (
+        getPhaseStatus(phasesData.findIndex((p) => p.id === phaseId)) ===
+          PhaseStatus.ACTIVE &&
+        (!completedSubs.length || currentSubPhase === subPhaseId)
+      ) {
+        return PhaseStatus.CURRENT_SUBPHASE;
+      }
+
+      // It's a future sub-phase
+      return PhaseStatus.PENDING_SUBPHASE;
+    },
+    [completedSubPhases, currentSubPhase, getPhaseStatus, phasesData]
+  );
+
+  // Memoize getNextPhaseId to avoid recalculation on every render
+  const getNextPhaseId = useCallback(() => {
+    // If all phases are completed, return null
+    if (currentPhaseIndex >= phasesData.length) {
+      return null;
+    }
+
+    const currentPhaseObj = phasesData[currentPhaseIndex];
+    if (!currentPhaseObj) return null;
+
+    // Check if this phase has sub-phases
+    if (currentPhaseObj.subPhases) {
+      const completedSubs = completedSubPhases[currentPhaseObj.id] || [];
+
+      // Find the first uncompleted sub-phase in sequence
+      for (let i = 0; i < currentPhaseObj.subPhases.length; i++) {
+        const subPhase = currentPhaseObj.subPhases[i];
+        if (!completedSubs.includes(subPhase.id)) {
+          return `${currentPhaseObj.id}_${subPhase.id}`;
+        }
+      }
+
+      // All sub-phases completed, move to next main phase
+      if (currentPhaseIndex + 1 < phasesData.length) {
+        const nextPhase = phasesData[currentPhaseIndex + 1];
+
+        // If next phase has sub-phases, start with first sub-phase
+        if (nextPhase.subPhases && nextPhase.subPhases.length > 0) {
+          return `${nextPhase.id}_${nextPhase.subPhases[0].id}`;
+        }
+
+        // Otherwise return the phase itself
+        return nextPhase.id;
+      }
+    } else {
+      // Current phase doesn't have sub-phases
+      if (!completedPhases.includes(currentPhaseObj.id)) {
+        return currentPhaseObj.id;
+      }
+
+      // If current phase is completed, move to next phase
+      if (currentPhaseIndex + 1 < phasesData.length) {
+        const nextPhase = phasesData[currentPhaseIndex + 1];
+
+        // If next phase has sub-phases, start with first sub-phase
+        if (nextPhase.subPhases && nextPhase.subPhases.length > 0) {
+          return `${nextPhase.id}_${nextPhase.subPhases[0].id}`;
+        }
+
+        // Otherwise return the phase itself
+        return nextPhase.id;
+      }
+    }
+
+    return null;
+  }, [currentPhaseIndex, completedPhases, completedSubPhases, phasesData]);
+
+  const getCurrentPhaseId = useCallback(() => {
+    if (!currentPhase) return null;
+
+    return currentSubPhase
+      ? `${currentPhase}_${currentSubPhase}`
+      : currentPhase;
+  }, [currentPhase, currentSubPhase]);
+
+  // Function to get the time duration for a phase
+  const getPhaseDuration = useCallback(
+    (phaseId) => {
+      if (phaseId.includes("_")) {
+        const [mainPhase, subPhase] = phaseId.split("_");
+        const mainPhaseObj = phasesData.find((p) => p.id === mainPhase);
+        const subPhaseObj = mainPhaseObj?.subPhases?.find(
+          (s) => s.id === subPhase
+        );
+
+        // Return the subphase time in minutes, convert to seconds
+        return subPhaseObj && subPhaseObj.time ? subPhaseObj.time * 60 : 600; // Default to 10 minutes if not found
+      } else {
+        const phaseObj = phasesData.find((p) => p.id === phaseId);
+
+        // Return the phase time in minutes, convert to seconds
+        return phaseObj && phaseObj.time ? phaseObj.time * 60 : 600; // Default to 10 minutes if not found
+      }
+    },
+    [phasesData]
+  );
+
+  // Handle exit confirmation - memoized to prevent recreating on every render
   const handleExit = useCallback(
     (destination = "/", message) => {
-      if (isNavigating) return;
+      if (navigatingRef.current) return;
 
       // If exam is in progress and not completed, show confirmation
       if (activeExam && !examCompleted && completedPhases.length > 0) {
@@ -220,13 +354,13 @@ function MountedPhasesContent({ subject }) {
       // Otherwise navigate directly
       router.push(destination);
     },
-    [activeExam, examCompleted, completedPhases, router, isNavigating]
+    [activeExam, examCompleted, completedPhases, router]
   );
 
   // Confirm exit
   const confirmExit = useCallback(() => {
     setShowExitDialog(false);
-    setIsNavigating(true);
+    navigatingRef.current = true;
     router.push(exitDestination);
   }, [exitDestination, router]);
 
@@ -352,10 +486,18 @@ function MountedPhasesContent({ subject }) {
     }
 
     // Otherwise, start break timer countdown
-    const timer = setInterval(() => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    timerRef.current = setInterval(() => {
       setBreakTimeRemaining((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           // End break and start next phase
           setTimeout(() => {
             dispatch(endBreak());
@@ -370,8 +512,13 @@ function MountedPhasesContent({ subject }) {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [breakTime, dispatch, phasesData]);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [breakTime, dispatch, phasesData, getNextPhaseId]);
 
   // Calculate remaining time for current active phase (if any)
   useEffect(() => {
@@ -391,7 +538,12 @@ function MountedPhasesContent({ subject }) {
     if (phaseState && !phaseState.completed) {
       setPhaseInProgress(true);
 
-      const timer = setInterval(() => {
+      // Clear any existing timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      timerRef.current = setInterval(() => {
         const now = Date.now();
         const elapsedSeconds = Math.floor((now - phaseState.startTime) / 1000);
         const remaining = Math.max(0, phaseState.duration - elapsedSeconds);
@@ -399,129 +551,26 @@ function MountedPhasesContent({ subject }) {
         setCurrentPhaseTimeRemaining(remaining);
 
         if (remaining <= 0) {
-          clearInterval(timer);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           setPhaseInProgress(false);
           setCurrentPhaseTimeRemaining(0);
         }
       }, 1000);
 
-      return () => clearInterval(timer);
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      };
     } else {
       setPhaseInProgress(false);
       setCurrentPhaseTimeRemaining(null);
     }
   }, [currentPhase, currentSubPhase, phases]);
-
-  const getPhaseStatus = (index) => {
-    if (index < currentPhaseIndex) return PhaseStatus.COMPLETED;
-    if (index === currentPhaseIndex) return PhaseStatus.ACTIVE;
-    return PhaseStatus.LOCKED;
-  };
-
-  const getSubPhaseStatus = (phaseId, subPhaseId) => {
-    // Get completed sub-phases for this phase
-    const completedSubs = completedSubPhases[phaseId] || [];
-
-    // Check if sub-phase is completed
-    if (completedSubs.includes(subPhaseId)) {
-      return PhaseStatus.COMPLETED_SUBPHASE;
-    }
-
-    // Check if this is the current active sub-phase
-    if (
-      getPhaseStatus(phasesData.findIndex((p) => p.id === phaseId)) ===
-        PhaseStatus.ACTIVE &&
-      (!completedSubs.length || currentSubPhase === subPhaseId)
-    ) {
-      return PhaseStatus.CURRENT_SUBPHASE;
-    }
-
-    // It's a future sub-phase
-    return PhaseStatus.PENDING_SUBPHASE;
-  };
-
-  const getNextPhaseId = () => {
-    // If all phases are completed, return null
-    if (currentPhaseIndex >= phasesData.length) {
-      return null;
-    }
-
-    const currentPhaseObj = phasesData[currentPhaseIndex];
-    if (!currentPhaseObj) return null;
-
-    // Check if this phase has sub-phases
-    if (currentPhaseObj.subPhases) {
-      const completedSubs = completedSubPhases[currentPhaseObj.id] || [];
-
-      // Find the first uncompleted sub-phase in sequence
-      for (let i = 0; i < currentPhaseObj.subPhases.length; i++) {
-        const subPhase = currentPhaseObj.subPhases[i];
-        if (!completedSubs.includes(subPhase.id)) {
-          return `${currentPhaseObj.id}_${subPhase.id}`;
-        }
-      }
-
-      // All sub-phases completed, move to next main phase
-      if (currentPhaseIndex + 1 < phasesData.length) {
-        const nextPhase = phasesData[currentPhaseIndex + 1];
-
-        // If next phase has sub-phases, start with first sub-phase
-        if (nextPhase.subPhases && nextPhase.subPhases.length > 0) {
-          return `${nextPhase.id}_${nextPhase.subPhases[0].id}`;
-        }
-
-        // Otherwise return the phase itself
-        return nextPhase.id;
-      }
-    } else {
-      // Current phase doesn't have sub-phases
-      if (!completedPhases.includes(currentPhaseObj.id)) {
-        return currentPhaseObj.id;
-      }
-
-      // If current phase is completed, move to next phase
-      if (currentPhaseIndex + 1 < phasesData.length) {
-        const nextPhase = phasesData[currentPhaseIndex + 1];
-
-        // If next phase has sub-phases, start with first sub-phase
-        if (nextPhase.subPhases && nextPhase.subPhases.length > 0) {
-          return `${nextPhase.id}_${nextPhase.subPhases[0].id}`;
-        }
-
-        // Otherwise return the phase itself
-        return nextPhase.id;
-      }
-    }
-
-    return null;
-  };
-
-  const getCurrentPhaseId = () => {
-    if (!currentPhase) return null;
-
-    return currentSubPhase
-      ? `${currentPhase}_${currentSubPhase}`
-      : currentPhase;
-  };
-
-  // Function to get the time duration for a phase
-  const getPhaseDuration = (phaseId) => {
-    if (phaseId.includes("_")) {
-      const [mainPhase, subPhase] = phaseId.split("_");
-      const mainPhaseObj = phasesData.find((p) => p.id === mainPhase);
-      const subPhaseObj = mainPhaseObj?.subPhases?.find(
-        (s) => s.id === subPhase
-      );
-
-      // Return the subphase time in minutes, convert to seconds
-      return subPhaseObj && subPhaseObj.time ? subPhaseObj.time * 60 : 600; // Default to 10 minutes if not found
-    } else {
-      const phaseObj = phasesData.find((p) => p.id === phaseId);
-
-      // Return the phase time in minutes, convert to seconds
-      return phaseObj && phaseObj.time ? phaseObj.time * 60 : 600; // Default to 10 minutes if not found
-    }
-  };
 
   const handleStartPhase = () => {
     const nextPhaseId = getNextPhaseId();
@@ -537,44 +586,79 @@ function MountedPhasesContent({ subject }) {
     }
   };
 
-  const handleStartNextPhase = (nextPhaseId) => {
-    if (!nextPhaseId) return;
+  // The shared submit function used by both the button and timer
+  const handleSubmit = useCallback(() => {
+    // Prevent multiple submissions/navigations
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
 
-    // Show loading before starting
-    setLoading(true);
+    // Clear any running timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
+    // Complete the current phase
+    dispatch(
+      completePhase({
+        phaseId: getCurrentPhaseId(),
+      })
+    );
+
+    // Start the break time
+    dispatch(
+      startBreak({
+        duration: 120, // 2 minutes
+      })
+    );
+
+    // Use setTimeout to ensure state updates complete before navigation
     setTimeout(() => {
-      // Get the duration for this phase in seconds
-      const phaseDuration = getPhaseDuration(nextPhaseId);
+      router.replace("/exams/phases");
+    }, 50);
+  }, [dispatch, getCurrentPhaseId, router]);
 
-      // Check if it's a sub-phase
-      if (nextPhaseId.includes("_")) {
-        const [mainPhase, subPhase] = nextPhaseId.split("_");
+  const handleStartNextPhase = useCallback(
+    (nextPhaseId) => {
+      if (!nextPhaseId) return;
 
-        // Start the phase with the specific sub-phase and its duration
-        dispatch(
-          startPhase({
-            phaseId: mainPhase,
-            subPhase: subPhase,
-            duration: phaseDuration, // Use specific phase duration
-          })
-        );
-      } else {
-        // Start a regular phase with its duration
-        dispatch(
-          startPhase({
-            phaseId: nextPhaseId,
-            duration: phaseDuration, // Use specific phase duration
-          })
-        );
-      }
+      // Show loading before starting
+      setLoading(true);
 
-      // Navigate to questions page
-      router.replace(`/exams/questions?phase=${nextPhaseId}`);
-    }, 0);
-  };
+      setTimeout(() => {
+        // Get the duration for this phase in seconds
+        const phaseDuration = getPhaseDuration(nextPhaseId);
 
-  const handleShowResults = () => {
+        // Check if it's a sub-phase
+        if (nextPhaseId.includes("_")) {
+          const [mainPhase, subPhase] = nextPhaseId.split("_");
+
+          // Start the phase with the specific sub-phase and its duration
+          dispatch(
+            startPhase({
+              phaseId: mainPhase,
+              subPhase: subPhase,
+              duration: phaseDuration, // Use specific phase duration
+            })
+          );
+        } else {
+          // Start a regular phase with its duration
+          dispatch(
+            startPhase({
+              phaseId: nextPhaseId,
+              duration: phaseDuration, // Use specific phase duration
+            })
+          );
+        }
+
+        // Navigate to questions page
+        router.replace(`/exams/questions?phase=${nextPhaseId}`);
+      }, 0);
+    },
+    [dispatch, getPhaseDuration, router]
+  );
+
+  const handleShowResults = useCallback(() => {
     // Show loading before generating results
     setLoading(true);
 
@@ -599,18 +683,24 @@ function MountedPhasesContent({ subject }) {
 
     // Navigate to results page
     router.replace("/exams/results");
-  };
+  }, [activeExam, dispatch, examState, router]);
 
-  const formatTime = (seconds) => {
-    return `${Math.floor(seconds / 60)}:${(seconds % 60)
+  // Memoized formatting function
+  const formatTime = useCallback((seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${secs
       .toString()
       .padStart(2, "0")}`;
-  };
+  }, []);
 
   // Check if phase is already started
-  const isPhaseStarted = (phaseId) => {
-    return currentPhase === phaseId && phaseInProgress;
-  };
+  const isPhaseStarted = useCallback(
+    (phaseId) => {
+      return currentPhase === phaseId && phaseInProgress;
+    },
+    [currentPhase, phaseInProgress]
+  );
 
   // Display loading state
   if (loading) {
@@ -975,6 +1065,7 @@ function MountedPhasesContent({ subject }) {
 }
 
 // Calculate actual scores based on answers by comparing with correct answers
+// Memoize this function to improve performance when calculating scores
 const calculateActualScores = (examState) => {
   const { phases, activeExam } = examState;
   const subject = activeExam?.subject || "mail";
