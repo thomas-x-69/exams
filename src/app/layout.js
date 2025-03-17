@@ -138,7 +138,7 @@ export default function RootLayout({ children }) {
         />
 
         <Providers>
-          <div className="min-h-screen pattern-grid relative overflow-hidden">
+          <div className="min-h-screen pattern-grid relative overflow-hidden top-0">
             {/* Background Elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
               <div className="absolute inset-0 pattern-dots opacity-30"></div>
@@ -157,7 +157,7 @@ export default function RootLayout({ children }) {
             </div>
 
             {/* Main Content with children */}
-            <main className="relative z-10">{children}</main>
+            <main className="relative z-10 top-0 pt-0">{children}</main>
           </div>
         </Providers>
       </body>

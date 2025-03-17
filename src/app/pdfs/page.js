@@ -3,6 +3,8 @@
 "use client";
 
 import React, { useState, useMemo, memo } from "react";
+import Footer from "../../../components/Footer";
+import Header from "../../../components/Header";
 
 const categories = [
   { id: "all", name: "الكل" },
@@ -197,64 +199,68 @@ export default function PDFsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-white mb-4">
-          مكتبة الامتحانات والأسئلة
-        </h1>
-        <p className="text-xl text-white/70">
-          تصفح وحمل نماذج الامتحانات السابقة للتدريب
-        </p>
-      </div>
+    <>
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-28">
+        {/* Header */}
+        <Header />
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-white mb-4">
+            مكتبة الامتحانات والأسئلة
+          </h1>
+          <p className="text-xl text-white/70">
+            تصفح وحمل نماذج الامتحانات السابقة للتدريب
+          </p>
+        </div>
 
-      {/* Filters */}
-      <div className="glass-card p-6 mb-8">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          {/* Search */}
-          <div className="relative w-full md:w-96">
-            <input
-              type="text"
-              placeholder="ابحث عن ملف..."
-              className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:border-white/20"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        {/* Filters */}
+        <div className="glass-card p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            {/* Search */}
+            <div className="relative w-full md:w-96">
+              <input
+                type="text"
+                placeholder="ابحث عن ملف..."
+                className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:border-white/20"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </svg>
-          </div>
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
 
-          {/* Categories */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <CategoryButton
-                key={category.id}
-                category={category}
-                isSelected={selectedCategory === category.id}
-                onClick={handleCategoryClick}
-              />
-            ))}
+            {/* Categories */}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <CategoryButton
+                  key={category.id}
+                  category={category}
+                  isSelected={selectedCategory === category.id}
+                  onClick={handleCategoryClick}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* PDF Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPDFs.map((pdf) => (
-          <PDFCard key={pdf.id} pdf={pdf} />
-        ))}
+        {/* PDF Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredPDFs.map((pdf) => (
+            <PDFCard key={pdf.id} pdf={pdf} />
+          ))}
+        </div>
       </div>
-    </div>
+      <Footer className="bottom-0" />
+    </>
   );
 }
