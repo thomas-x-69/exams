@@ -1065,13 +1065,18 @@ function MountedPhasesContent({ subject }) {
 }
 
 // Calculate actual scores based on answers by comparing with correct answers
-// Memoize this function to improve performance when calculating scores
 const calculateActualScores = (examState) => {
   const { phases, activeExam } = examState;
   const subject = activeExam?.subject || "mail";
 
   // Calculate score for each phase
   const phaseScores = {};
+
+  // For weighted average calculation
+  let totalWeightedScore = 0;
+  let totalWeight = 0;
+
+  // For backward compatibility
   let totalCorrect = 0;
   let totalQuestions = 0;
 
@@ -1082,25 +1087,34 @@ const calculateActualScores = (examState) => {
     const phaseAnswers = phaseData.answers || {};
 
     // Skip if no answers
-    if (Object.keys(phaseAnswers).length === 0) return;
+    const questionCount = Object.keys(phaseAnswers).length;
+    if (questionCount === 0) return;
 
     // Use the utility function to calculate the correct score
     const scoreResult = calculatePhaseScore(subject, phaseId, phaseAnswers);
 
-    // Add to totals
+    // Keep tracking these for backward compatibility
     totalCorrect += scoreResult.correct;
     totalQuestions += scoreResult.total;
 
+    // Get the percentage as a number (not a string)
+    const percentage = parseFloat(scoreResult.percentage);
+
     // Store the percentage score
-    phaseScores[phaseId] = parseFloat(scoreResult.percentage);
+    phaseScores[phaseId] = percentage;
+
+    // Add to weighted average calculation
+    totalWeightedScore += percentage * questionCount;
+    totalWeight += questionCount;
   });
 
-  // Calculate total score
-  const totalScore =
-    totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  // Calculate weighted average for final score
+  // This properly accounts for points-based behavioral questions
+  const finalScore =
+    totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
 
   return {
-    totalScore,
+    totalScore: finalScore,
     phaseScores,
     details: {
       totalCorrect,

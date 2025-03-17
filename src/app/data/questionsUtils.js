@@ -154,55 +154,11 @@ function selectQuestionsWithMinimalRepetition(availableQuestions, count) {
 }
 
 /**
- * Randomizes options based on question type and difficulty
- * @param {Object} question - Question object
- * @returns {Object} - Question with randomized options
- */
-function randomizeOptions(question) {
-  // Create a copy of the question with original data preserved
-  const randomizedQuestion = {
-    ...question,
-    originalOptions: [...question.options],
-    originalCorrectAnswer: question.correctAnswer,
-  };
-
-  // Store the original correct answer text
-  const correctOptionText = question.options[question.correctAnswer];
-
-  // For true/false questions (with 2 options), decide whether to randomize
-  if (question.options.length === 2) {
-    // 50% chance to keep original order for true/false questions
-    if (Math.random() > 0.5) {
-      return randomizedQuestion;
-    }
-  }
-
-  // Shuffle the options using the advanced shuffle function
-  randomizedQuestion.options = advancedShuffle(question.options);
-
-  // Find the new index of the correct answer after shuffling
-  randomizedQuestion.correctAnswer = randomizedQuestion.options.findIndex(
-    (option) => option === correctOptionText
-  );
-
-  // Error check: if we somehow lost the correct answer, revert to original
-  if (randomizedQuestion.correctAnswer === -1) {
-    console.error(
-      `Failed to track correct answer for question ID: ${question.id}`
-    );
-    randomizedQuestion.options = [...question.originalOptions];
-    randomizedQuestion.correctAnswer = question.originalCorrectAnswer;
-  }
-
-  return randomizedQuestion;
-}
-
-/**
- * Selects a random subset of questions with option randomization and category balancing
+ * Selects a random subset of questions with category balancing
  * @param {Array} questions - All available questions
  * @param {number} count - Number of questions to select
  * @param {Object} options - Additional options for question selection
- * @returns {Array} - Selected questions with randomized options
+ * @returns {Array} - Selected questions
  */
 export function getRandomizedQuestions(questions, count, options = {}) {
   if (!questions || !questions.length) {
@@ -300,8 +256,8 @@ export function getRandomizedQuestions(questions, count, options = {}) {
   // Track the question IDs for history
   updateQuestionHistory(finalSelection.map((q) => q.id));
 
-  // Randomize the options for each question
-  return finalSelection.map((question) => randomizeOptions(question));
+  // Return the questions without randomizing options
+  return finalSelection;
 }
 
 /**
@@ -435,7 +391,7 @@ export function getRandomQuestions(subject, phase, count) {
       });
     }
 
-    // Return a random selection of questions with randomized options
+    // Return a random selection of questions without randomizing options
     return getRandomizedQuestions(questions, count, {
       balanceCategories: true,
     });
