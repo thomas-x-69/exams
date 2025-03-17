@@ -345,7 +345,7 @@ const ShareOptions = memo(({ isVisible, onShare, onClose }) => {
   );
 });
 
-// Memoized Certificate component
+// Certificate component that preserves desktop layout but improves mobile display
 const Certificate = memo(
   ({
     currentSubject,
@@ -360,14 +360,13 @@ const Certificate = memo(
     <div
       id="certificateContainer"
       ref={certificateRef}
-      className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-blue-200 mb-8 p-10"
-      style={{ aspectRatio: "1.5" }}
+      className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-blue-200 mb-8 p-4 md:p-10"
     >
       {/* Certificate Header with Logo */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-6 mb-8">
+      <div className="flex items-center justify-between border-b border-gray-200 pb-4 md:pb-6 mb-4 md:mb-8">
         {/* Logo & Title */}
-        <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold border-4 border-blue-100 shadow-lg">
+        <div className="flex items-center gap-3 md:gap-6">
+          <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold border-4 border-blue-100 shadow-lg">
             <Image
               src={LOGO}
               alt="logo"
@@ -379,53 +378,57 @@ const Certificate = memo(
             />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
+            <h1 className="text-lg md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
               منصة الاختبارات المصرية
             </h1>
-            <p className="text-gray-500 text-sm mt-1">شهادة رسمية معتمدة</p>
+            <p className="text-xs md:text-sm text-gray-500 mt-1">
+              شهادة رسمية معتمدة
+            </p>
           </div>
         </div>
 
         {/* Certificate Type & ID */}
         <div className="text-left">
           <h2
-            className={`font-bold py-1 px-4 rounded-full inline-block ${resultLevel.bg} ${resultLevel.color} border ${resultLevel.borderColor}`}
+            className={`text-xs md:text-base font-bold py-1 px-2 md:px-4 rounded-full inline-block ${resultLevel.bg} ${resultLevel.color} border ${resultLevel.borderColor}`}
           >
             {getCertificateType(totalScore)}
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
             رقم: {activeExam.organizationCode}
           </p>
         </div>
       </div>
 
-      {/* Certificate Body - Horizontal Layout */}
-      <div className="flex gap-10 mb-10">
+      {/* Certificate Body - Horizontal Layout on Desktop, Vertical on Mobile */}
+      <div className="flex flex-col md:flex-row md:gap-10 mb-6 md:mb-10">
         {/* Left Side - User Info */}
-        <div className="flex-1 text-right border-l border-gray-100 pl-10">
-          <div className="mb-8">
-            <p className="text-lg text-gray-700 mb-2">
+        <div className="flex-1 text-right md:border-l border-gray-100 md:pl-10 mb-6 md:mb-0">
+          <div className="mb-6 md:mb-8">
+            <p className="text-base md:text-lg text-gray-700 mb-2">
               تشهد منصة الاختبارات المصرية أن
             </p>
 
-            <h3 className="text-3xl font-bold text-gray-900 mb-3">
+            <h3 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">
               {activeExam.userName}
             </h3>
 
-            <p className="text-lg text-gray-700">
+            <p className="text-base md:text-lg text-gray-700">
               قد أكمل بنجاح اختبار {currentSubject}
               <br />
               بتاريخ {formatDate(currentResult?.completedAt)}
             </p>
           </div>
 
-          <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
-            <h4 className="font-bold text-gray-800 mb-3">الكفايات المقيمة:</h4>
-            <ul className="space-y-2 text-gray-700">
+          <div className="p-4 md:p-6 bg-gray-50 rounded-xl border border-gray-100">
+            <h4 className="font-bold text-gray-800 mb-3 text-sm md:text-base">
+              الكفايات المقيمة:
+            </h4>
+            <ul className="space-y-1 md:space-y-2 text-gray-700 text-xs md:text-sm">
               {categories.map((category, idx) => (
                 <li key={idx} className="flex items-center gap-2">
                   <svg
-                    className="w-4 h-4 text-blue-600"
+                    className="w-3 h-3 md:w-4 md:h-4 text-blue-600 flex-shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -447,7 +450,7 @@ const Certificate = memo(
         {/* Right Side - Score Display */}
         <div className="flex-1 flex flex-col items-center justify-center">
           {/* Score Circle */}
-          <div className="relative w-52 h-52">
+          <div className="relative w-36 h-36 md:w-52 md:h-52">
             <div className="absolute inset-0 rounded-full border-8 border-gray-100 shadow-inner"></div>
             <svg
               className="absolute inset-0 w-full h-full"
@@ -493,24 +496,24 @@ const Certificate = memo(
               </defs>
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-5xl font-bold text-gray-800">
+              <div className="text-3xl md:text-5xl font-bold text-gray-800">
                 {totalScore}%
               </div>
             </div>
 
             {/* Level Badge */}
             <div
-              className={`absolute -top-2 left-1/2 transform -translate-x-1/2 px-6 py-1 rounded-full text-lg font-bold ${resultLevel.bg} ${resultLevel.color} border ${resultLevel.borderColor} shadow-md`}
+              className={`absolute -top-2 left-1/2 transform -translate-x-1/2 px-3 md:px-6 py-1 rounded-full text-sm md:text-lg font-bold ${resultLevel.bg} ${resultLevel.color} border ${resultLevel.borderColor} shadow-md`}
             >
               {resultLevel.text}
             </div>
           </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-gray-600 mb-2">
+          <div className="mt-4 md:mt-8 text-center">
+            <p className="text-xs md:text-sm text-gray-600 mb-2">
               نتمنى لك التوفيق الدائم والنجاح في مسيرتك المهنية
             </p>
-            <div className="text-sm text-blue-600 font-bold">
+            <div className="text-xs md:text-sm text-blue-600 font-bold">
               https://egyptianexams.vercel.app/
             </div>
           </div>
@@ -870,23 +873,24 @@ const ResultsPage = () => {
           />
 
           {/* Download Button - Outside Certificate */}
-          <div className="flex justify-center mb-10">
+          {/* Download Button - Outside Certificate */}
+          <div className="flex justify-center mb-6 md:mb-10 px-4">
             <button
               onClick={downloadPDF}
               disabled={pdfGenerating}
-              className={`px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-teal-700 transition-all duration-300 shadow-md flex items-center justify-center gap-2 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-teal-700 transition-all duration-300 shadow-md flex items-center justify-center gap-2 text-sm sm:text-base ${
                 pdfGenerating ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
               {pdfGenerating ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 sm:w-5 h-4 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>جاري تحميل الشهادة...</span>
                 </>
               ) : (
                 <>
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 sm:w-5 h-4 sm:h-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
