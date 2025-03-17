@@ -103,34 +103,27 @@ export const examSlice = createSlice({
       try {
         const { phaseId } = action.payload;
 
-        if (!phaseId) return; // Guard against undefined phaseId
+        if (!phaseId) return;
 
-        // Ensure phases object exists
+        // Log for debugging
+        console.log(`Completing phase: ${phaseId}`);
+
+        // Make sure phases object exists
         if (!state.phases) {
           state.phases = {};
-        }
-
-        // Ensure completedPhases array exists
-        if (!state.completedPhases) {
-          state.completedPhases = [];
-        }
-
-        // Ensure completedSubPhases object exists
-        if (!state.completedSubPhases) {
-          state.completedSubPhases = {};
-        }
-
-        // Ensure subPhases exists
-        if (!state.subPhases) {
-          state.subPhases = {
-            language: ["arabic", "english"],
-            knowledge: ["iq", "general", "it"],
-          };
         }
 
         if (state.phases[phaseId]) {
           state.phases[phaseId].completed = true;
           state.phases[phaseId].endTime = Date.now();
+
+          // Add logging for behavioral phase
+          if (phaseId === "behavioral") {
+            console.log(
+              "Behavioral phase completion data:",
+              state.phases[phaseId]
+            );
+          }
 
           // Handle main phase vs sub-phase completion
           if (phaseId && phaseId.includes("_")) {
@@ -235,9 +228,23 @@ export const examSlice = createSlice({
 
     // Set exam results
     setExamResults: (state, action) => {
-      state.currentResult = action.payload;
-    },
+      // Convert any string percentage values to numbers
+      const results = action.payload;
 
+      if (results.totalScore && typeof results.totalScore === "string") {
+        results.totalScore = Number(results.totalScore);
+      }
+
+      if (results.phaseScores) {
+        Object.keys(results.phaseScores).forEach((key) => {
+          if (typeof results.phaseScores[key] === "string") {
+            results.phaseScores[key] = Number(results.phaseScores[key]);
+          }
+        });
+      }
+
+      state.currentResult = results;
+    },
     // Reset the entire exam state
     resetExam: () => initialState,
 

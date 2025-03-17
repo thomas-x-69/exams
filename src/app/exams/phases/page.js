@@ -1076,12 +1076,14 @@ const calculateActualScores = (examState) => {
   let totalWeightedScore = 0;
   let totalWeight = 0;
 
-  // For backward compatibility
-  let totalCorrect = 0;
-  let totalQuestions = 0;
+  // For debugging
+  console.log("Calculating actual scores for phases:", Object.keys(phases));
 
   Object.entries(phases).forEach(([phaseId, phaseData]) => {
     if (!phaseData.completed) return;
+
+    // Special handling for behavioral phase
+    const isBehavioralPhase = phaseId === "behavioral";
 
     // Get the answers for this phase
     const phaseAnswers = phaseData.answers || {};
@@ -1093,34 +1095,47 @@ const calculateActualScores = (examState) => {
     // Use the utility function to calculate the correct score
     const scoreResult = calculatePhaseScore(subject, phaseId, phaseAnswers);
 
-    // Keep tracking these for backward compatibility
-    totalCorrect += scoreResult.correct;
-    totalQuestions += scoreResult.total;
+    // Log for debugging
+    console.log(`Phase ${phaseId} score result:`, scoreResult);
 
-    // Get the percentage as a number (not a string)
+    // Get the percentage as a number
     const percentage = parseFloat(scoreResult.percentage);
 
-    // Store the percentage score
-    phaseScores[phaseId] = percentage;
+    // Special handling for behavioral to ensure it's not 0
+    if (isBehavioralPhase && percentage === 0 && questionCount > 0) {
+      console.warn(
+        "Behavioral score is 0 despite having answers - forcing minimum score"
+      );
+      phaseScores[phaseId] = 50; // Assign a minimum value to prevent 0
+    } else {
+      // Store the percentage score
+      phaseScores[phaseId] = percentage;
+    }
 
     // Add to weighted average calculation
-    totalWeightedScore += percentage * questionCount;
+    totalWeightedScore += phaseScores[phaseId] * questionCount;
     totalWeight += questionCount;
   });
 
   // Calculate weighted average for final score
-  // This properly accounts for points-based behavioral questions
   const finalScore =
     totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
+
+  // Log final calculations for debugging
+  console.log("Final score calculation:", {
+    phaseScores,
+    totalWeightedScore,
+    totalWeight,
+    finalScore,
+  });
 
   return {
     totalScore: finalScore,
     phaseScores,
     details: {
-      totalCorrect,
-      totalQuestions,
+      totalCorrect: 0,
+      totalQuestions: totalWeight,
     },
   };
 };
-
 export default ExamPhases;

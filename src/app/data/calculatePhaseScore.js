@@ -31,10 +31,12 @@ export function calculatePhaseScore(subject, phase, answers) {
       let question;
 
       // Handle fallback and dummy questions
+      // Handle fallback and dummy questions
       if (questionId.startsWith("dummy") || questionId.startsWith("fallback")) {
-        // For dummy questions, compare with stored correct answer
-        const correctAnswer =
-          parseInt(questionId.charAt(questionId.length - 1)) % 3;
+        // Extract the numeric part and use it to get the correct answer
+        const lastDigit = parseInt(questionId.slice(-1));
+        const correctAnswer = lastDigit - 1;
+
         if (selectedAnswer === correctAnswer) {
           results.correct += 1;
         }
@@ -92,14 +94,33 @@ export function calculatePhaseScore(subject, phase, answers) {
       }
 
       // For behavioral questions, use points-based scoring
+      // More robust points handling for behavioral questions
       if (isBehavioralPhase && question && question.points) {
-        // Add the points for the selected answer
-        const pointsForAnswer = question.points[selectedAnswer] || 0;
-        results.totalPoints += pointsForAnswer;
+        // Make sure we have valid points data
+        if (Array.isArray(question.points)) {
+          // Make sure selectedAnswer is within bounds
+          if (selectedAnswer >= 0 && selectedAnswer < question.points.length) {
+            const pointValue = question.points[selectedAnswer];
+            // Make sure the point value is a number
+            results.totalPoints +=
+              typeof pointValue === "number" ? pointValue : 0;
+          }
 
-        // Find the maximum possible points for this question
-        const maxPoints = Math.max(...question.points);
-        results.maxPossiblePoints += maxPoints;
+          // Calculate max points correctly
+          try {
+            const validPoints = question.points.filter(
+              (p) => typeof p === "number"
+            );
+            results.maxPossiblePoints +=
+              validPoints.length > 0 ? Math.max(...validPoints) : 0;
+          } catch (err) {
+            console.error(
+              "Error calculating max points:",
+              err,
+              question.points
+            );
+          }
+        }
 
         // For backward compatibility, also count as "correct" if selecting the best answer
         if (selectedAnswer === question.correctAnswer) {
@@ -113,18 +134,16 @@ export function calculatePhaseScore(subject, phase, answers) {
     });
 
     // Calculate percentage based on the scoring method used
+    // FIXED VERSION - Ensure percentage is a number:
     if (isBehavioralPhase && results.maxPossiblePoints > 0) {
-      // For behavioral questions, use points-based percentage
-      results.percentage = (
-        (results.totalPoints / results.maxPossiblePoints) *
-        100
-      ).toFixed(1);
+      results.percentage = Number(
+        ((results.totalPoints / results.maxPossiblePoints) * 100).toFixed(1)
+      );
     } else {
-      // For other questions, use the traditional correct/total calculation
       results.percentage =
         results.total > 0
-          ? ((results.correct / results.total) * 100).toFixed(1)
-          : "0.0";
+          ? Number(((results.correct / results.total) * 100).toFixed(1))
+          : 0;
     }
 
     return results;

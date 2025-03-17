@@ -7,6 +7,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import PhonePopup from "../../components/PhonePopup";
 import Head from "next/head";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 
 // Memoized subject card component to prevent unnecessary re-renders
 const SubjectCard = memo(({ subject, onClick }) => (
@@ -196,9 +198,6 @@ const SubjectsModal = memo(({ isOpen, subjects, currentDate, onClose }) => {
   );
 });
 
-// Since this is a client component, we can't export metadata directly
-// Instead we'll handle SEO using Head component
-
 const subjects = [
   {
     id: "mail",
@@ -287,192 +286,32 @@ export default function Home() {
       {/* Phone Popup Component - Handled independently */}
       <PhonePopup />
 
-      {/* Header - directly in page instead of layout */}
-      <header className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
-        <div className="glass-effect rounded-2xl border border-white/10 p-3">
-          <div className="flex items-center justify-between">
-            {/* Logo & Title with Tooltip */}
-            <div className="flex items-center gap-3 px-2">
-              <div className="relative group">
-                <Link href="/">
-                  <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center border border-white/10 overflow-hidden cursor-pointer">
-                    <Image
-                      src="/logo.png"
-                      alt="شعار منصة الاختبارات المصرية"
-                      width={60}
-                      height={40}
-                      className="w-full h-full object-contain p-1"
-                      priority
-                      quality={90}
-                    />
-                  </div>
-                </Link>
-                {/* Tooltip */}
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                  منصة غير رسمية
-                </div>
-              </div>
+      {/* Header - Now using the  component */}
+      <Header showSubjects={showSubjects} setShowSubjects={setShowSubjects} />
 
-              <div className="relative group">
-                <Link href="/">
-                  <h1 className="text-lg font-bold text-white hidden sm:block">
-                    منصة الاختبارات المصرية
-                  </h1>
-                </Link>
-                {/* Tooltip */}
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 top-full right-0 mt-2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700 ">
-                  منصة تدريبية لاختبارات التوظيف المصرية
-                </div>
-              </div>
-            </div>
-
-            {/* Stats & Actions with Tooltips */}
-            <div className="flex items-center gap-3">
-              {/* Stats Pills */}
-              <div className="hidden md:flex items-center gap-2">
-                <div className="relative group">
-                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span className="text-white/90 text-sm">3000 سؤال</span>
-                  </div>
-                  {/* Tooltip */}
-                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                    عدد الأسئلة المتاحة بالمنصة
-                  </div>
-                </div>
-
-                <div className="relative group">
-                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span className="text-white/90 text-sm whitespace-nowrap">
-                      150 اختبار
-                    </span>
-                  </div>
-                  {/* Tooltip */}
-                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                    عدد الاختبارات المتاحة بالمنصة
-                  </div>
-                </div>
-              </div>
-
-              {/* Start Button with Tooltip - Direct approach to open modal */}
-              <div className="relative group">
-                <button
-                  onClick={() => setShowSubjects(true)}
-                  className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
-                  aria-label="ابدأ الاختبار الآن"
-                >
-                  <span>ابدأ الآن</span>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-                {/* Tooltip */}
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                  ابدأ الاختبار الآن
-                </div>
-              </div>
-            </div>
+      <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col items-center justify-center min-h-[75vh] gap-12 pt-28">
+          {/* Hero Section */}
+          <div className="text-center space-y-6 max-w-3xl">
+            <h1 className="text-5xl font-bold text-white leading-tight">
+              منصة الاختبارات المصرية
+            </h1>
+            <p className="text-xl text-white/80">
+              نقدم لك تجربة تعليمية متكاملة للتحضير للاختبارات بكل سهولة وكفاءة
+            </p>
           </div>
-        </div>
-      </header>
 
-      <div className="flex flex-col items-center justify-center min-h-[75vh] gap-12 pt-28">
-        {/* Hero Section */}
-        <div className="text-center space-y-6 max-w-3xl">
-          <h1 className="text-5xl font-bold text-white leading-tight">
-            منصة الاختبارات المصرية
-          </h1>
-          <p className="text-xl text-white/80">
-            نقدم لك تجربة تعليمية متكاملة للتحضير للاختبارات بكل سهولة وكفاءة
-          </p>
-        </div>
-
-        {/* Main Options */}
-        <div className="grid gap-6 w-full max-w-2xl">
-          <Link
-            href="/pdfs"
-            className="glass-card p-6 hover:bg-white/5 transition-all duration-300 group"
-            aria-label="تحميل امتحانات واسئلة"
-          >
-            <div className="flex items-center gap-6">
-              <div className="rounded-xl p-4 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 border border-white/10">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
-                  تحميل امتحانات واسئلة
-                </h2>
-                <p className="text-white/70 group-hover:text-white/80">
-                  حمل مجموعة شاملة من الامتحانات السابقة للتدريب
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          <button
-            onClick={() => setShowSubjects(true)}
-            className="glass-card p-6 hover:bg-white/5 transition-all duration-300 w-full text-right group"
-            aria-label="ابدأ الاختبار الآن"
-          >
-            <div className="flex items-center gap-6">
-              <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-600/20 to-green-600/20 border border-white/10">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
-                  ابدأ الاختبار الآن
-                </h2>
-                <p className="text-white/70 group-hover:text-white/80">
-                  خوض تجربة اختبار تحاكي الامتحان الحقيقي
-                </p>
-              </div>
-            </div>
-          </button>
-
-          <div className="relative">
-            <div className="glass-card p-6 opacity-75">
+          {/* Main Options */}
+          <div className="grid gap-6 w-full max-w-2xl">
+            <Link
+              href="/pdfs"
+              className="glass-card p-6 hover:bg-white/5 transition-all duration-300 group"
+              aria-label="تحميل امتحانات واسئلة"
+            >
               <div className="flex items-center gap-6">
-                <div className="rounded-xl p-4 bg-gradient-to-br from-purple-600/20 to-violet-600/20 border border-white/10">
+                <div className="rounded-xl p-4 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 border border-white/10">
                   <svg
-                    className="w-8 h-8 text-white/70"
+                    className="w-8 h-8 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -482,46 +321,101 @@ export default function Home() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                     />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white/90 mb-2">
-                    امتحانات مع اسئلة حقيقية
+                  <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                    تحميل امتحانات واسئلة
                   </h2>
-                  <p className="text-white/60">
-                    تدرب على أسئلة من امتحانات حقيقية سابقة
+                  <p className="text-white/70 group-hover:text-white/80">
+                    حمل مجموعة شاملة من الامتحانات السابقة للتدريب
                   </p>
                 </div>
               </div>
+            </Link>
+
+            <button
+              onClick={() => setShowSubjects(true)}
+              className="glass-card p-6 hover:bg-white/5 transition-all duration-300 w-full text-right group"
+              aria-label="ابدأ الاختبار الآن"
+            >
+              <div className="flex items-center gap-6">
+                <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-600/20 to-green-600/20 border border-white/10">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                    ابدأ الاختبار الآن
+                  </h2>
+                  <p className="text-white/70 group-hover:text-white/80">
+                    خوض تجربة اختبار تحاكي الامتحان الحقيقي
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <div className="relative">
+              <div className="glass-card p-6 opacity-75">
+                <div className="flex items-center gap-6">
+                  <div className="rounded-xl p-4 bg-gradient-to-br from-purple-600/20 to-violet-600/20 border border-white/10">
+                    <svg
+                      className="w-8 h-8 text-white/70"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white/90 mb-2">
+                      امتحانات مع اسئلة حقيقية
+                    </h2>
+                    <p className="text-white/60">
+                      تدرب على أسئلة من امتحانات حقيقية سابقة
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <span className="absolute -top-3 -right-3 px-4 py-1 glass-effect rounded-full text-white text-sm border border-white/10">
+                قريباً
+              </span>
             </div>
-            <span className="absolute -top-3 -right-3 px-4 py-1 glass-effect rounded-full text-white text-sm border border-white/10">
-              قريباً
-            </span>
           </div>
+
+          {/* Enhanced Subjects Modal with Date in Footer - Now a separate memoized component */}
+          <SubjectsModal
+            isOpen={showSubjects}
+            subjects={subjects}
+            currentDate={currentDate}
+            onClose={() => setShowSubjects(false)}
+          />
         </div>
 
-        {/* Enhanced Subjects Modal with Date in Footer - Now a separate memoized component */}
-        <SubjectsModal
-          isOpen={showSubjects}
-          subjects={subjects}
-          currentDate={currentDate}
-          onClose={() => setShowSubjects(false)}
-        />
+        {/* Footer - Now using the  component */}
+        <Footer />
       </div>
-
-      {/* Footer - directly in page */}
-      <footer className="relative z-10 bg-slate-900/60 border-t border-white/10 py-4 mt-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center text-white/50 text-sm">
-            <p>
-              © {new Date().getFullYear()} منصة الاختبارات المصرية - جميع الحقوق
-              محفوظة
-            </p>
-          </div>
-        </div>
-      </footer>
 
       {/* Schema for the exam platform */}
       <script
