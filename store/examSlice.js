@@ -40,12 +40,26 @@ export const examSlice = createSlice({
       state.breakTime = null;
       state.currentResult = null;
       state.examData = {}; // Clear all question data
+
+      // Ensure subPhases is properly initialized
+      state.subPhases = {
+        language: ["arabic", "english"],
+        knowledge: ["iq", "general", "it"],
+      };
     },
 
     // Start a phase with timer
     startPhase: (state, action) => {
       const { phaseId, subPhase = null, duration = 60 } = action.payload;
+
+      if (!phaseId) return; // Guard against undefined phaseId
+
       const fullPhaseId = subPhase ? `${phaseId}_${subPhase}` : phaseId;
+
+      // Initialize phases object if needed
+      if (!state.phases) {
+        state.phases = {};
+      }
 
       state.phases[fullPhaseId] = {
         startTime: Date.now(),
@@ -64,7 +78,19 @@ export const examSlice = createSlice({
     // Save answers for a phase
     saveAnswers: (state, action) => {
       const { phaseId, questionId, answerId } = action.payload;
+
+      if (!phaseId || !questionId || answerId === undefined) return; // Guard against missing data
+
+      // Initialize phases if needed
+      if (!state.phases) {
+        state.phases = {};
+      }
+
       if (state.phases[phaseId]) {
+        if (!state.phases[phaseId].answers) {
+          state.phases[phaseId].answers = {};
+        }
+
         state.phases[phaseId].answers = {
           ...state.phases[phaseId].answers,
           [questionId]: answerId,
@@ -74,46 +100,83 @@ export const examSlice = createSlice({
 
     // Complete a phase
     completePhase: (state, action) => {
-      const { phaseId } = action.payload;
+      try {
+        const { phaseId } = action.payload;
 
-      if (state.phases[phaseId]) {
-        state.phases[phaseId].completed = true;
-        state.phases[phaseId].endTime = Date.now();
+        if (!phaseId) return; // Guard against undefined phaseId
 
-        // Handle main phase vs sub-phase completion
-        if (phaseId.includes("_")) {
-          // This is a sub-phase
-          const [mainPhase, subPhase] = phaseId.split("_");
+        // Ensure phases object exists
+        if (!state.phases) {
+          state.phases = {};
+        }
 
-          // Initialize completedSubPhases for this main phase if needed
-          if (!state.completedSubPhases[mainPhase]) {
-            state.completedSubPhases[mainPhase] = [];
-          }
+        // Ensure completedPhases array exists
+        if (!state.completedPhases) {
+          state.completedPhases = [];
+        }
 
-          // Add to completed sub-phases
-          if (!state.completedSubPhases[mainPhase].includes(subPhase)) {
-            state.completedSubPhases[mainPhase].push(subPhase);
-          }
+        // Ensure completedSubPhases object exists
+        if (!state.completedSubPhases) {
+          state.completedSubPhases = {};
+        }
 
-          // Check if all sub-phases of this main phase are completed
-          const allSubPhases = state.subPhases[mainPhase] || [];
-          const completedSubPhases = state.completedSubPhases[mainPhase] || [];
+        // Ensure subPhases exists
+        if (!state.subPhases) {
+          state.subPhases = {
+            language: ["arabic", "english"],
+            knowledge: ["iq", "general", "it"],
+          };
+        }
 
-          if (
-            allSubPhases.length > 0 &&
-            completedSubPhases.length === allSubPhases.length
-          ) {
-            // All sub-phases completed, mark main phase as completed
-            if (!state.completedPhases.includes(mainPhase)) {
-              state.completedPhases.push(mainPhase);
+        if (state.phases[phaseId]) {
+          state.phases[phaseId].completed = true;
+          state.phases[phaseId].endTime = Date.now();
+
+          // Handle main phase vs sub-phase completion
+          if (phaseId && phaseId.includes("_")) {
+            // This is a sub-phase
+            const parts = phaseId.split("_");
+            if (parts.length !== 2) return; // Invalid format
+
+            const mainPhase = parts[0];
+            const subPhase = parts[1];
+
+            if (!mainPhase || !subPhase) return; // Guard against bad data
+
+            // Initialize completedSubPhases for this main phase if needed
+            if (!state.completedSubPhases[mainPhase]) {
+              state.completedSubPhases[mainPhase] = [];
+            }
+
+            // Add to completed sub-phases
+            if (!state.completedSubPhases[mainPhase].includes(subPhase)) {
+              state.completedSubPhases[mainPhase].push(subPhase);
+            }
+
+            // Check if all sub-phases of this main phase are completed
+            const allSubPhases = state.subPhases[mainPhase] || [];
+            const completedSubPhases =
+              state.completedSubPhases[mainPhase] || [];
+
+            if (
+              allSubPhases.length > 0 &&
+              completedSubPhases.length === allSubPhases.length
+            ) {
+              // All sub-phases completed, mark main phase as completed
+              if (!state.completedPhases.includes(mainPhase)) {
+                state.completedPhases.push(mainPhase);
+              }
+            }
+          } else {
+            // This is a main phase without sub-phases
+            if (!state.completedPhases.includes(phaseId)) {
+              state.completedPhases.push(phaseId);
             }
           }
-        } else {
-          // This is a main phase without sub-phases
-          if (!state.completedPhases.includes(phaseId)) {
-            state.completedPhases.push(phaseId);
-          }
         }
+      } catch (err) {
+        console.error("Error in completePhase reducer:", err);
+        // Don't throw the error - let Redux continue
       }
     },
 
@@ -134,6 +197,13 @@ export const examSlice = createSlice({
     // Set current question index
     setCurrentQuestion: (state, action) => {
       const { phaseId, index } = action.payload;
+
+      if (!phaseId || index === undefined) return;
+
+      if (!state.phases) {
+        state.phases = {};
+      }
+
       if (state.phases[phaseId]) {
         state.phases[phaseId].currentQuestion = index;
       }
@@ -142,6 +212,13 @@ export const examSlice = createSlice({
     // Store questions for a phase - only for current session, no persistence
     setQuestions: (state, action) => {
       const { phaseId, questions } = action.payload;
+
+      if (!phaseId || !questions) return;
+
+      if (!state.examData) {
+        state.examData = {};
+      }
+
       state.examData[phaseId] = {
         questions,
         timestamp: Date.now(),
@@ -167,6 +244,9 @@ export const examSlice = createSlice({
     // Clear questions for a specific phase
     clearPhaseQuestions: (state, action) => {
       const { phaseId } = action.payload;
+
+      if (!phaseId || !state.examData) return;
+
       if (state.examData[phaseId]) {
         delete state.examData[phaseId];
       }
