@@ -1,5 +1,5 @@
 // src/app/api/submit-exam/route.js
-import { rateLimit } from "../../../utils/rate-limit";
+import { rateLimit } from "../../../../utils/rate-limit";
 
 // Create a rate limiter that allows 10 requests per minute per IP
 const limiter = rateLimit({
