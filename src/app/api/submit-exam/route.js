@@ -1,5 +1,44 @@
+// src/app/api/submit-exam/route.js
+import { rateLimit } from "../../../utils/rate-limit";
+
+// Create a rate limiter that allows 10 requests per minute per IP
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute in milliseconds
+  uniqueTokenPerInterval: 500, // Max 500 users per interval
+  limit: 10, // 10 requests per interval
+});
+
 export async function POST(req) {
   try {
+    // Get client IP for rate limiting
+    const ip =
+      req.headers.get("x-forwarded-for") ||
+      req.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    // Apply rate limiting
+    try {
+      await limiter.check(ip);
+    } catch (error) {
+      console.warn(`Rate limit exceeded for IP: ${ip}`);
+      return Response.json(
+        {
+          status: "error",
+          message:
+            "لقد تجاوزت الحد المسموح به من الطلبات. يرجى المحاولة مرة أخرى بعد دقيقة.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-RateLimit-Limit": "10",
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
+    }
+
+    // Process the request normally if rate limit is not exceeded
     const data = await req.json();
     console.log("Received data:", data);
 

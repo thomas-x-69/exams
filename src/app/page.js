@@ -11,31 +11,30 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
 // Memoized subject card component to prevent unnecessary re-renders
-// Memoized subject card component - improved responsiveness
 const SubjectCard = memo(({ subject, onClick }) => (
   <Link
     href={`/exams/instructions?subject=${subject.id}`}
-    className="block group h-full" // Added h-full for consistent height
+    className="block group"
     onClick={onClick}
     aria-label={`اختبار ${subject.title}`}
   >
     <div
-      className={`relative rounded-xl p-4 md:p-5 transition-all duration-300 bg-gradient-to-br ${subject.gradient} border border-white/20 hover:border-white/30 hover:scale-[1.02] group overflow-hidden h-full flex flex-col`}
+      className={`relative rounded-xl p-4 transition-all duration-300 bg-gradient-to-br ${subject.gradient} border border-white/20 hover:border-white/30 hover:scale-[1.02] group overflow-hidden h-full`}
     >
       {/* Shimmer Effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
 
       {/* Content */}
-      <div className="relative flex-1 flex flex-col">
+      <div className="relative">
         {/* Icon & Title */}
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <span className="text-xl sm:text-2xl" aria-hidden="true">
+          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <span className="text-2xl" aria-hidden="true">
               {subject.icon}
             </span>
           </div>
           <div className="flex-1 pt-1">
-            <h3 className="text-base sm:text-lg font-bold text-white mb-1">
+            <h3 className="text-lg font-bold text-white mb-1">
               {subject.title}
             </h3>
             <p className="text-white/70 text-xs leading-relaxed">
@@ -45,9 +44,9 @@ const SubjectCard = memo(({ subject, onClick }) => (
         </div>
 
         {/* Stats */}
-        <div className="mt-auto pt-3 border-t border-white/10">
+        <div className="mt-3 pt-3 border-t border-white/10">
           <div className="flex items-center justify-between text-xs">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
                 <svg
                   className="w-3 h-3 text-white/60"
@@ -257,6 +256,7 @@ const subjects = [
 ];
 
 export default function Home() {
+  const pathname = usePathname();
   const [showSubjects, setShowSubjects] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
 
@@ -302,17 +302,16 @@ export default function Home() {
           </div>
 
           {/* Main Options */}
-          {/* Main Options */}
-          <div className="grid gap-6 w-full max-w-2xl px-4 sm:px-0">
+          <div className="grid gap-6 w-full max-w-2xl">
             <Link
               href="/pdfs"
-              className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group"
+              className="glass-card p-6 hover:bg-white/5 transition-all duration-300 group"
               aria-label="تحميل امتحانات واسئلة"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                <div className="rounded-xl p-4 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 border border-white/10 mx-auto sm:mx-0">
+              <div className="flex items-center gap-6">
+                <div className="rounded-xl p-4 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 border border-white/10">
                   <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8 text-white"
+                    className="w-8 h-8 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -326,8 +325,8 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="text-center sm:text-right">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
                     تحميل امتحانات واسئلة
                   </h2>
                   <p className="text-white/70 group-hover:text-white/80">
@@ -339,13 +338,13 @@ export default function Home() {
 
             <button
               onClick={() => setShowSubjects(true)}
-              className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 w-full text-center sm:text-right group"
+              className="glass-card p-6 hover:bg-white/5 transition-all duration-300 w-full text-right group"
               aria-label="ابدأ الاختبار الآن"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-600/20 to-green-600/20 border border-white/10 mx-auto sm:mx-0">
+              <div className="flex items-center gap-6">
+                <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-600/20 to-green-600/20 border border-white/10">
                   <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8 text-white"
+                    className="w-8 h-8 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -359,8 +358,8 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="text-center sm:text-right">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-white/90">
                     ابدأ الاختبار الآن
                   </h2>
                   <p className="text-white/70 group-hover:text-white/80">
@@ -371,11 +370,11 @@ export default function Home() {
             </button>
 
             <div className="relative">
-              <div className="glass-card p-4 sm:p-6 opacity-75">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                  <div className="rounded-xl p-4 bg-gradient-to-br from-purple-600/20 to-violet-600/20 border border-white/10 mx-auto sm:mx-0">
+              <div className="glass-card p-6 opacity-75">
+                <div className="flex items-center gap-6">
+                  <div className="rounded-xl p-4 bg-gradient-to-br from-purple-600/20 to-violet-600/20 border border-white/10">
                     <svg
-                      className="w-6 h-6 sm:w-8 sm:h-8 text-white/70"
+                      className="w-8 h-8 text-white/70"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -389,8 +388,8 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <div className="text-center sm:text-right">
-                    <h2 className="text-xl sm:text-2xl font-bold text-white/90 mb-2">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white/90 mb-2">
                       امتحانات مع اسئلة حقيقية
                     </h2>
                     <p className="text-white/60">
