@@ -5,7 +5,7 @@ import React from "react";
 
 const Footer = () => {
   return (
-    <footer className="w-full border-t border-white/10 py-4 lg:mt-auto bg-slate-900 mt-6">
+    <footer className="w-full border-t border-white/10 py-4 lg:mt-auto bg-slate-900 mt-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row justify-between items-end gap-10">
           {/* Links on the right in desktop view */}
