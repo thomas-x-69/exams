@@ -9,7 +9,7 @@ import Header from "../../../components/Header";
 const categories = [
   { id: "all", name: "الكل" },
   { id: "mail", name: "البريد" },
-  { id: "pe", name: "تربية رياضية" },
+  { id: "math", name: "تربية رياضيات" },
   { id: "english", name: "تربية انجليزي" },
   { id: "science", name: "تربية علوم" },
   { id: "social", name: "دراسات اجتماعية" },
@@ -28,12 +28,12 @@ const pdfFiles = [
   },
   {
     id: 2,
-    title: "نموذج امتحان التربية الرياضية",
-    category: "pe",
+    title: "نموذج امتحان تربية رياضيات",
+    category: "math",
     date: "2024",
     // downloads: 980,
     size: "1.8MB",
-    path: "/pdfs/pe-exam-2024.pdf",
+    path: "/pdfs/math-exam-2024.pdf",
   },
   {
     id: 3,
