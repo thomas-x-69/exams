@@ -921,7 +921,7 @@ export default function Home() {
         </div>
 
         {/* Footer - Now using the component */}
-        <Footer />
+        <Footer className="bg-slate-900" />
       </div>
 
       {/* Schema for the exam platform */}

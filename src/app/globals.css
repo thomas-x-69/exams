@@ -18,6 +18,8 @@ body {
     /* Indigo 900 */ #1e1b4b 75%,
     /* Indigo 950 */ #0f172a 100% /* Slate 900 */
   );
+  font-family: "Cairo", sans-serif;
+  direction: rtl;
 }
 
 .pattern-grid {
@@ -98,4 +100,16 @@ body {
 /* Override any dark theme styles */
 .exam-page {
   background-color: white !important;
+}
+
+/* Fix for the footer to always stay at the bottom */
+#__next,
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
 }

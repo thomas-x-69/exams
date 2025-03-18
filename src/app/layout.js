@@ -27,55 +27,7 @@ export const metadata = {
     "تدريب على الاختبارات",
     "امتحانات الكترونية",
   ],
-  authors: [{ name: "منصة الاختبارات المصرية" }],
-  creator: "منصة الاختبارات المصرية",
-  publisher: "منصة الاختبارات المصرية",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    title: "منصة الاختبارات المصرية | تدرب على الامتحانات بكفاءة",
-    description:
-      "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
-    url: "https://egyptian-exams.com",
-    siteName: "منصة الاختبارات المصرية",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "منصة الاختبارات المصرية",
-      },
-    ],
-    locale: "ar_EG",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "منصة الاختبارات المصرية | تدرب على الامتحانات بكفاءة",
-    description: "منصة تعليمية متكاملة للتحضير للاختبارات المصرية",
-    images: ["/twitter-image.jpg"],
-    creator: "@EgyptianExams",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  alternates: {
-    canonical: "https://egyptian-exams.com",
-    languages: {
-      ar: "https://egyptian-exams.com",
-    },
-  },
+  // Additional metadata as in your current file...
 };
 
 // Regular layout component without client directive - metadata won't work with "use client"
@@ -94,49 +46,15 @@ export default function RootLayout({ children }) {
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        <link
-          rel="preconnect"
-          href="https://www.googletagmanager.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://pagead2.googlesyndication.com"
-          crossOrigin="anonymous"
-        />
 
         {/* Preload critical assets */}
         <link rel="preload" href="/logo.png" as="image" type="image/png" />
       </head>
       <body
-        className={`${cairo.className} antialiased`}
+        className={`${cairo.className} antialiased app-container`}
         suppressHydrationWarning
       >
-        {/* Google AdSense Script - Using strategy lazyOnload */}
-        <Script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbrowser.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
-          strategy="lazyOnload"
-          id="google-adsense"
-        />
-
-        {/* Schema.org markup for educational organization */}
-        <Script
-          id="schema-organization"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "EducationalOrganization",
-              name: "منصة الاختبارات المصرية",
-              description:
-                "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
-              url: "https://egyptian-exams.com",
-              logo: "https://egyptian-exams.com/logo.png",
-            }),
-          }}
-        />
-
+        {/* Redux Provider */}
         <Providers>
           <div className="min-h-screen pattern-grid relative overflow-hidden top-0">
             {/* Background Elements */}
@@ -157,7 +75,7 @@ export default function RootLayout({ children }) {
             </div>
 
             {/* Main Content with children */}
-            <main className="relative z-10 top-0 pt-0">{children}</main>
+            <main className="relative z-10 top-0">{children}</main>
           </div>
         </Providers>
       </body>
