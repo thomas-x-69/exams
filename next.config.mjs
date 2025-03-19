@@ -29,18 +29,6 @@ const nextConfig = {
       const cssRule = oneOfRule.oneOf.find(
         (rule) => rule.test && rule.test.toString().includes("css")
       );
-
-      if (cssRule) {
-        // Ensure proper handling of CSS variables
-        cssRule.use.push({
-          loader: "postcss-loader",
-          options: {
-            postcssOptions: {
-              plugins: ["postcss-preset-env", "autoprefixer"],
-            },
-          },
-        });
-      }
     }
 
     return config;
