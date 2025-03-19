@@ -10,13 +10,6 @@ const Header = ({ showSubjects, setShowSubjects }) => {
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
 
-  // Safe handler for the subjects button
-  const handleShowSubjects = () => {
-    if (typeof setShowSubjects === "function") {
-      setShowSubjects(true);
-    }
-  };
-
   return (
     <header className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
       <div className="glass-effect rounded-2xl border border-white/10 p-3">
@@ -85,11 +78,11 @@ const Header = ({ showSubjects, setShowSubjects }) => {
               </div>
             </div>
 
-            {/* Start Button with Tooltip */}
-            <div className="relative group">
-              {isLandingPage ? (
+            {/* Start Button with Tooltip - Direct approach to open modal */}
+            {isLandingPage ? (
+              <div className="relative group">
                 <button
-                  onClick={handleShowSubjects}
+                  onClick={() => setShowSubjects(true)}
                   className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
                   aria-label="ابدأ الاختبار الآن"
                 >
@@ -109,22 +102,40 @@ const Header = ({ showSubjects, setShowSubjects }) => {
                     />
                   </svg>
                 </button>
-              ) : (
-                <Link
-                  href="/"
-                  className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
-                  aria-label="العودة للرئيسية"
-                >
-                  <span>العودة للرئيسية</span>
-                </Link>
-              )}
-              {/* Tooltip */}
-              <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                {isLandingPage
-                  ? "ابدأ الاختبار الآن"
-                  : "العودة للصفحة الرئيسية"}
+                {/* Tooltip */}
+                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                  ابدأ الاختبار الآن
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="relative group">
+                <Link
+                  href={"/"}
+                  className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
+                  aria-label="ابدأ الاختبار الآن"
+                >
+                  <span>ابدأ الآن</span>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </Link>
+                {/* Tooltip */}
+                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                  ابدأ الاختبار الآن
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
