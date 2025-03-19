@@ -56,7 +56,7 @@ export default function RootLayout({ children }) {
       >
         {/* Redux Provider */}
         <Providers>
-          <div className="min-h-screen pattern-grid relative overflow-hidden top-0 ">
+          <div className="min-h-screen pattern-grid relative overflow-hidden top-0 pt-0">
             {/* Background Elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
               <div className="absolute inset-0 pattern-dots opacity-30"></div>

@@ -7,7 +7,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import PhonePopup from "../../components/PhonePopup";
 import Head from "next/head";
-import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
 // Memoized subject card component to prevent unnecessary re-renders
@@ -723,6 +722,8 @@ export default function Home() {
   const [showSubjects, setShowSubjects] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/";
 
   useEffect(() => {
     // Set current date
@@ -750,8 +751,136 @@ export default function Home() {
       {/* Phone Popup Component - Handled independently */}
       <PhonePopup />
 
-      {/* Header Component */}
-      <Header showSubjects={showSubjects} setShowSubjects={setShowSubjects} />
+      {/* Inline Header Component - Using original glass-effect styling */}
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
+        <div className="glass-effect rounded-2xl border border-white/10 p-3">
+          <div className="flex items-center justify-between">
+            {/* Logo & Title with Tooltip */}
+            <div className="flex items-center gap-3 px-2">
+              <div className="relative group">
+                <Link href="/">
+                  <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center border border-white/10 overflow-hidden cursor-pointer">
+                    <Image
+                      src="/logo.png"
+                      alt="شعار منصة الاختبارات المصرية"
+                      width={60}
+                      height={40}
+                      className="w-full h-full object-contain p-1"
+                      priority
+                      quality={90}
+                    />
+                  </div>
+                </Link>
+                {/* Tooltip */}
+                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                  منصة غير رسمية
+                </div>
+              </div>
+
+              <div className="relative group">
+                <Link href="/">
+                  <h1 className="text-lg font-bold text-white hidden sm:block">
+                    منصة الاختبارات المصرية
+                  </h1>
+                </Link>
+                {/* Tooltip */}
+                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 top-full right-0 mt-2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700 ">
+                  منصة تدريبية لاختبارات التوظيف المصرية
+                </div>
+              </div>
+            </div>
+
+            {/* Stats & Actions with Tooltips */}
+            <div className="flex items-center gap-3">
+              {/* Stats Pills */}
+              <div className="hidden md:flex items-center gap-2">
+                <div className="relative group">
+                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-white/90 text-sm">3000 سؤال</span>
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                    عدد الأسئلة المتاحة بالمنصة
+                  </div>
+                </div>
+
+                <div className="relative group">
+                  <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <span className="text-white/90 text-sm whitespace-nowrap">
+                      150 اختبار
+                    </span>
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                    عدد الاختبارات المتاحة بالمنصة
+                  </div>
+                </div>
+              </div>
+
+              {/* Start Button with Tooltip - Direct approach to open modal */}
+              {isLandingPage ? (
+                <div className="relative group">
+                  <button
+                    onClick={() => setShowSubjects(true)}
+                    className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
+                    aria-label="ابدأ الاختبار الآن"
+                  >
+                    <span>ابدأ الآن</span>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                  {/* Tooltip */}
+                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                    ابدأ الاختبار الآن
+                  </div>
+                </div>
+              ) : (
+                <div className="relative group">
+                  <Link
+                    href={`/exams/instructions?subject=mail`}
+                    className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
+                    aria-label="ابدأ الاختبار الآن"
+                  >
+                    <span>ابدأ الآن</span>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </Link>
+                  {/* Tooltip */}
+                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                    ابدأ الاختبار الآن
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div className="flex flex-col min-h-screen">
         <div className="flex flex-col items-center justify-center min-h-[75vh] gap-12 pt-28">
@@ -770,7 +899,7 @@ export default function Home() {
             <Link
               href="/pdfs"
               className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group"
-              aria-label="تحميل امتحانات واسئله"
+              aria-label="تحميل امتحانات واسئلة"
             >
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                 <div className="rounded-xl p-4 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 border border-white/10 mx-auto sm:mx-0">
@@ -921,7 +1050,7 @@ export default function Home() {
         </div>
 
         {/* Footer - Now using the component */}
-        <Footer className="bg-[#0f172a]" />
+        <Footer />
       </div>
 
       {/* Schema for the exam platform */}
