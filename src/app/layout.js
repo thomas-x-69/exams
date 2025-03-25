@@ -49,6 +49,10 @@ export default function RootLayout({ children }) {
 
         {/* Preload critical assets */}
         <link rel="preload" href="/logo.png" as="image" type="image/png" />
+        <meta
+          name="google-site-verification"
+          content="9ONgVce-npC3xfNatprDnUxBA4iOXA0tyeX87199ev4"
+        />
       </head>
       <body
         className={`${cairo.className} antialiased app-container`}
