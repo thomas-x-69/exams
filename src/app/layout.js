@@ -58,6 +58,12 @@ export default function RootLayout({ children }) {
         className={`${cairo.className} antialiased app-container`}
         suppressHydrationWarning
       >
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOURPUBLISHERID"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         {/* Redux Provider */}
         <Providers>
           <div className="min-h-screen pattern-grid relative overflow-hidden top-0 pt-0">
