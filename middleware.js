@@ -1,45 +1,49 @@
-// middleware.js
+// middleware.js - Optimized for AdSense, security, and app functionality
 import { NextResponse } from "next/server";
 
 export function middleware(request) {
   // Get response
   const response = NextResponse.next();
 
-  // Define CSP directives
+  /* Define CSP directives - optimized for AdSense + security */
   const csp = [
-    // Default policy for resources without explicit directives
+    // Default fallback - restrict to same origin
     "default-src 'self'",
 
-    // Scripts - Allow self, Google services (for AdSense), cdnjs (for libraries)
-    `"script-src 'self' 'unsafe-inline' 'unsafe-eval' "https://pagead2.googlesyndication.com"  "https://cdnjs.cloudflare.com" `,
-    // Styles - Allow self and inline styles (needed for Tailwind's JIT)
-    "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com",
+    // Scripts - Allow your scripts, inline scripts, eval, and Google services
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.google.com https://*.googleadservices.com https://*.googlesyndication.com https://*.googletagmanager.com https://cdnjs.cloudflare.com",
 
-    // Images - Allow from self, Google services, and placeholders
+    // Styles - Allow your CSS, inline styles, and Google Fonts
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+
+    // Images - Allow from your domain, data URIs, and any HTTPS source
     "img-src 'self' data: https: blob:",
 
-    // Fonts - Allow from self and Google Fonts
+    // Fonts - Allow from your domain, Google Fonts, and data URIs
     "font-src 'self' https://fonts.gstatic.com data:",
 
-    // Connect - Allow connections to API and Google services
+    // Connect - Allow AJAX/fetch to your API and Google services
     "connect-src 'self' https://*.google.com https://*.googleapis.com https://script.google.com",
 
-    // Media - Restrict to self
+    // Media - Restrict audio/video to your domain
     "media-src 'self'",
 
-    // Object - Restrict to none (no Flash, etc.)
+    // Objects - Block plugins like Flash
     "object-src 'none'",
 
-    // Frame ancestors - Prevent clickjacking
+    // Frames - Allow AdSense iframe content
+    "frame-src 'self' https://*.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com",
+
+    // Frame ancestors - Prevent your site from being embedded
     "frame-ancestors 'self'",
 
-    // Form action - Restrict form submissions to self
+    // Form submissions - Restrict to your domain
     "form-action 'self'",
 
-    // Base URI - Restrict base URIs to self
+    // Base URI - Restrict base tag to your domain
     "base-uri 'self'",
 
-    // Upgrade Insecure Requests - Force HTTPS
+    // Force HTTPS
     "upgrade-insecure-requests",
   ].join("; ");
 
@@ -49,6 +53,8 @@ export function middleware(request) {
   response.headers.set("X-Frame-Options", "SAMEORIGIN");
   response.headers.set("X-XSS-Protection", "1; mode=block");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  // Simplified Permissions Policy - restricts access to sensitive features
   response.headers.set(
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
