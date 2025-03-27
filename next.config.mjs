@@ -8,6 +8,9 @@ const nextConfig = {
     locales: ["ar"],
     defaultLocale: "ar",
   },
+  siteMap: {
+    generateRobotsTxt: true,
+  },
   // Add optimizations for production builds
   swcMinify: true,
   // Configure image optimization
