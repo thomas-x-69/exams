@@ -53,6 +53,10 @@ export default function RootLayout({ children }) {
           name="google-site-verification"
           content="9ONgVce-npC3xfNatprDnUxBA4iOXA0tyeX87199ev4"
         />
+        <meta
+          name="google-adsense-account"
+          content="ca-pub-4661333319885394"
+        ></meta>
       </head>
       <body
         className={`${cairo.className} antialiased app-container`}
