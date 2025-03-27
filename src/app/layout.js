@@ -60,7 +60,7 @@ export default function RootLayout({ children }) {
       >
         <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOURPUBLISHERID"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4661333319885394"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
