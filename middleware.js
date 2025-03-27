@@ -11,10 +11,9 @@ export function middleware(request) {
     "default-src 'self'",
 
     // Scripts - Allow self, Google services (for AdSense), cdnjs (for libraries)
-    // "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://*.google.com https://*.googletagmanager.com https://cdnjs.cloudflare.com",
-
+    `"script-src 'self' 'unsafe-inline' 'unsafe-eval' "https://pagead2.googlesyndication.com"  "https://cdnjs.cloudflare.com" `,
     // Styles - Allow self and inline styles (needed for Tailwind's JIT)
-    // "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com",
+    "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com",
 
     // Images - Allow from self, Google services, and placeholders
     "img-src 'self' data: https: blob:",
