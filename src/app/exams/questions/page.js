@@ -12,7 +12,6 @@ import React, {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  startPhase,
   saveAnswers,
   completePhase,
   setCurrentQuestion,
@@ -21,29 +20,6 @@ import {
 } from "../../../../store/examSlice";
 import { getRandomQuestions } from "../../data/questionsUtils";
 import ExitConfirmationDialog from "../../../../components/ExitConfirmationDialog";
-
-// Memoized configuration for phase durations and question counts
-const phaseConfigs = {
-  mail: {
-    behavioral: { time: 25, questionsCount: 1 },
-    language_arabic: { time: 10, questionsCount: 20 },
-    language_english: { time: 10, questionsCount: 20 },
-    knowledge_iq: { time: 5, questionsCount: 15 },
-    knowledge_general: { time: 5, questionsCount: 15 },
-    knowledge_it: { time: 5, questionsCount: 10 },
-    specialization: { time: 15, questionsCount: 30 },
-  },
-  education: {
-    behavioral: { time: 25, questionsCount: 1 },
-    language_arabic: { time: 10, questionsCount: 20 },
-    language_english: { time: 10, questionsCount: 20 },
-    knowledge_iq: { time: 5, questionsCount: 15 },
-    knowledge_general: { time: 5, questionsCount: 15 },
-    knowledge_it: { time: 5, questionsCount: 10 },
-    education: { time: 15, questionsCount: 30 },
-    specialization: { time: 15, questionsCount: 30 },
-  },
-};
 
 // Memoized timer component with improved animation
 const ExamTimer = memo(({ remainingTime, isTimeRunningLow }) => (
@@ -196,32 +172,6 @@ function MountedQuizContent({ phase }) {
     [phase]
   );
 
-  // Function to get phase duration from the phase data - memoized
-  const getPhaseDuration = useCallback(
-    (phaseId) => {
-      const subject = activeExam?.subject || "mail";
-      const phasesData =
-        phaseConfigs[subject === "mail" ? "mail" : "education"];
-
-      // Return duration in seconds (multiply minutes by 60)
-      return (phasesData[phaseId]?.time || 10) * 60; // Default to 10 minutes if not found
-    },
-    [activeExam]
-  );
-
-  // Function to get questions count for a phase - memoized
-  const getPhaseQuestionCount = useCallback(
-    (phaseId) => {
-      const subject = activeExam?.subject || "mail";
-      const phasesData =
-        phaseConfigs[subject === "mail" ? "mail" : "education"];
-
-      // Return question count (default to 20 if not found)
-      return phasesData[phaseId]?.questionsCount || 20;
-    },
-    [activeExam]
-  );
-
   // Handle exit confirmation - memoized
   const handleExit = useCallback(
     (destination = "/", message) => {
@@ -323,8 +273,21 @@ function MountedQuizContent({ phase }) {
   const getPhaseQuestions = useCallback(
     (phaseId) => {
       try {
-        // Get the question count for this phase
-        const questionsCount = getPhaseQuestionCount(phaseId);
+        // Determine appropriate number of questions based on the phase
+        let questionsCount = 20; // Default
+
+        if (phaseId === "behavioral") {
+          questionsCount = 40;
+        } else if (
+          phaseId === "language_arabic" ||
+          phaseId === "language_english"
+        ) {
+          questionsCount = 20;
+        } else if (phaseId.startsWith("knowledge_")) {
+          questionsCount = 15;
+        } else if (phaseId === "specialization" || phaseId === "education") {
+          questionsCount = 30;
+        }
 
         // Get the subject
         const currentSubject = activeExam?.subject || "mail";
@@ -333,7 +296,7 @@ function MountedQuizContent({ phase }) {
         const questionsFromUtils = getRandomQuestions(
           currentSubject,
           phaseId,
-          questionsCount // Use dynamic count from configuration
+          questionsCount
         );
 
         return questionsFromUtils;
@@ -342,7 +305,7 @@ function MountedQuizContent({ phase }) {
         return []; // Return empty array on error
       }
     },
-    [activeExam, getPhaseQuestionCount]
+    [activeExam]
   );
 
   // The shared submit function used by both the button and timer - memoized
@@ -425,15 +388,26 @@ function MountedQuizContent({ phase }) {
 
     // Initialize or resume phase state
     if (!phaseState) {
-      // Calculate the duration for this phase
-      const phaseDuration = getPhaseDuration(phase);
+      // Determine phase duration based on phase type
+      let phaseDuration = 600; // Default to 10 minutes (in seconds)
+
+      // Adjust duration based on phase
+      if (phase === "behavioral") {
+        phaseDuration = 25 * 60; // 25 minutes
+      } else if (phase.startsWith("language_")) {
+        phaseDuration = 10 * 60; // 10 minutes
+      } else if (phase.startsWith("knowledge_")) {
+        phaseDuration = 5 * 60; // 5 minutes
+      } else if (phase === "specialization" || phase === "education") {
+        phaseDuration = 15 * 60; // 15 minutes
+      }
 
       // Start a new phase if not already started
       dispatch(
         startPhase({
           phaseId: mainPhase,
           subPhase: subPhase,
-          duration: phaseDuration, // Use the specific phase duration
+          duration: phaseDuration,
         })
       );
       fetchQuestions();
@@ -476,7 +450,6 @@ function MountedQuizContent({ phase }) {
     subPhase,
     getPhaseQuestions,
     activeExam,
-    getPhaseDuration,
   ]);
 
   // Timer effect - improved version with ref to prevent memory leaks
