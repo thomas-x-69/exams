@@ -1,4 +1,4 @@
-// src/app/exams/questions/page.js
+// src/app/exams/questions/page.js - Enhanced with animations
 "use client";
 
 import React, {
@@ -45,17 +45,19 @@ const phaseConfigs = {
   },
 };
 
-// Memoized timer component
+// Memoized timer component with improved animation
 const ExamTimer = memo(({ remainingTime, isTimeRunningLow }) => (
   <div
     className={`flex items-center gap-2 ${
       isTimeRunningLow ? "bg-red-100" : "bg-amber-100"
-    } px-2 rounded-lg`}
+    } px-2 rounded-lg transition-colors duration-500`}
   >
     <svg
       className={`w-5 h-5 ${
         isTimeRunningLow ? "text-red-600" : "text-amber-600"
-      } ${remainingTime < 10 ? "animate-pulse" : ""}`}
+      } ${
+        remainingTime < 10 ? "animate-pulse" : ""
+      } transition-colors duration-500`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -70,32 +72,34 @@ const ExamTimer = memo(({ remainingTime, isTimeRunningLow }) => (
     <span
       className={`text-lg font-bold ${
         isTimeRunningLow ? "text-red-600" : "text-amber-600"
-      } py-1 rounded-lg`}
+      } py-1 rounded-lg transition-colors duration-500`}
     >
       {formatTime(remainingTime)}
     </span>
   </div>
 ));
 
-// Memoized question option component
+// Memoized question option component with enhanced animation
 const QuestionOption = memo(
   ({ option, index, isSelected, onSelect, disabled }) => (
     <button
       onClick={() => onSelect(index)}
-      className={`w-full p-4 rounded-lg border text-right transition-all duration-200 ${
+      className={`w-full p-4 rounded-lg border text-right transition-all duration-300 transform ${
         isSelected
-          ? "border-blue-500 bg-blue-50 text-blue-700"
-          : "border-gray-200 hover:border-gray-300 text-gray-700"
-      }`}
+          ? "border-blue-500 bg-blue-50 text-blue-700 scale-[1.01] shadow-md"
+          : "border-gray-200 hover:border-gray-300 hover:shadow-sm text-gray-700"
+      } ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
       disabled={disabled}
     >
       <div className="flex items-center gap-3">
         <div
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
             isSelected ? "border-blue-500" : "border-gray-300"
           }`}
         >
-          {isSelected && <div className="w-3 h-3 bg-blue-500 rounded-full" />}
+          {isSelected && (
+            <div className="w-3 h-3 bg-blue-500 rounded-full animate-in fade-in duration-300" />
+          )}
         </div>
         <span className="text-sm">{option}</span>
       </div>
@@ -166,6 +170,9 @@ function MountedQuizContent({ phase }) {
   const timerRef = useRef(null);
   const navigatingRef = useRef(false);
 
+  // Refs for animated elements
+  const questionCardRef = useRef(null);
+
   const [currentQuestion, setCurrentQuestionState] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [questions, setQuestionsState] = useState([]);
@@ -173,6 +180,10 @@ function MountedQuizContent({ phase }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isTimeRunningLow, setIsTimeRunningLow] = useState(false);
+
+  // Animation states
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [direction, setDirection] = useState("next");
 
   // Navigation confirmation dialog
   const [showExitDialog, setShowExitDialog] = useState(false);
@@ -360,10 +371,14 @@ function MountedQuizContent({ phase }) {
       })
     );
 
+    // Apply exit animation
+    setDirection("next");
+    setIsTransitioning(true);
+
     // Use setTimeout to ensure state updates complete before navigation
     setTimeout(() => {
       router.replace("/exams/phases");
-    }, 50);
+    }, 300); // Wait for animation to complete
   }, [dispatch, phase, router]);
 
   // Initialize exam phase
@@ -548,25 +563,44 @@ function MountedQuizContent({ phase }) {
     ]
   );
 
-  // Handle next question - memoized
+  // Handle next question - memoized and enhanced with animation
   const handleNext = useCallback(() => {
-    if (navigatingRef.current) return;
+    if (navigatingRef.current || isTransitioning) return;
 
     if (currentQuestion < questions.length - 1) {
-      const nextIndex = currentQuestion + 1;
-      setCurrentQuestionState(nextIndex);
+      // Start transition animation
+      setDirection("next");
+      setIsTransitioning(true);
 
-      // Update current question in Redux
-      dispatch(
-        setCurrentQuestion({
-          phaseId: phase,
-          index: nextIndex,
-        })
-      );
+      // Wait for animation to complete before changing the question
+      setTimeout(() => {
+        const nextIndex = currentQuestion + 1;
+        setCurrentQuestionState(nextIndex);
+
+        // Update current question in Redux
+        dispatch(
+          setCurrentQuestion({
+            phaseId: phase,
+            index: nextIndex,
+          })
+        );
+
+        // End transition after question has changed
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, 250);
     } else {
       handleSubmit();
     }
-  }, [currentQuestion, questions.length, dispatch, phase, handleSubmit]);
+  }, [
+    currentQuestion,
+    questions.length,
+    dispatch,
+    phase,
+    handleSubmit,
+    isTransitioning,
+  ]);
 
   // Display a loading state while fetching questions
   if (loading) {
@@ -668,11 +702,11 @@ function MountedQuizContent({ phase }) {
             </div>
           </div>
 
-          {/* Clean Progress Bar - No Animation */}
+          {/* Animated Progress Bar */}
           <div className="mt-4">
             <div className="relative h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
               <div
-                className="absolute top-0 right-0 h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
+                className="absolute top-0 right-0 h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>
@@ -680,43 +714,71 @@ function MountedQuizContent({ phase }) {
         </div>
       </div>
 
-      {/* Question Card */}
-      {questions[currentQuestion] && (
-        <div className="bg-white rounded-xl shadow-sm mb-6">
-          <div className="p-6">
-            {/* Question Text */}
-            <h2 className="text-lg font-bold text-gray-900 mb-6">
-              {questions[currentQuestion].text}
-            </h2>
+      {/* Animated Question Card */}
+      <div
+        ref={questionCardRef}
+        className={`relative transition-all duration-300 ease-out ${
+          isTransitioning
+            ? direction === "next"
+              ? "opacity-0 transform -translate-y-4"
+              : "opacity-0 transform translate-y-4"
+            : "opacity-100 transform translate-y-0"
+        }`}
+      >
+        {questions[currentQuestion] && (
+          <div className="bg-white rounded-xl shadow-sm mb-6">
+            <div className="p-6">
+              {/* Question Text */}
+              <h2 className="text-lg font-bold text-gray-900 mb-6">
+                {questions[currentQuestion].text}
+              </h2>
 
-            {/* Options */}
-            <div className="space-y-3">
-              {questions[currentQuestion].options.map((option, index) => (
-                <QuestionOption
-                  key={index}
-                  option={option}
-                  index={index}
-                  isSelected={
-                    selectedAnswers[questions[currentQuestion].id] === index
-                  }
-                  onSelect={handleAnswerSelect}
-                  disabled={navigatingRef.current}
-                />
-              ))}
+              {/* Options with Staggered Animation */}
+              <div className="space-y-3">
+                {questions[currentQuestion].options.map((option, index) => (
+                  <div
+                    key={index}
+                    className="transition-all duration-300 ease-out"
+                    style={{
+                      transform: isTransitioning
+                        ? `translateY(${index * 5}px)`
+                        : "translateY(0)",
+                      opacity: isTransitioning ? 0 : 1,
+                      transitionDelay: `${index * 50}ms`,
+                    }}
+                  >
+                    <QuestionOption
+                      option={option}
+                      index={index}
+                      isSelected={
+                        selectedAnswers[questions[currentQuestion].id] === index
+                      }
+                      onSelect={handleAnswerSelect}
+                      disabled={navigatingRef.current || isTransitioning}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Navigation Button - Centered, Bigger, and Only Active When Question is Answered */}
+      {/* Navigation Button - With Animation */}
       <div className="flex justify-center">
         {currentQuestion === questions.length - 1 ? (
           <button
             onClick={handleSubmit}
-            disabled={!isCurrentQuestionAnswered || navigatingRef.current}
+            disabled={
+              !isCurrentQuestionAnswered ||
+              navigatingRef.current ||
+              isTransitioning
+            }
             className={`px-8 py-3 text-white rounded-lg text-base font-medium transition-all duration-300 ${
-              isCurrentQuestionAnswered && !navigatingRef.current
-                ? "bg-green-600 hover:bg-green-700"
+              isCurrentQuestionAnswered &&
+              !navigatingRef.current &&
+              !isTransitioning
+                ? "bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg hover:scale-105"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >
@@ -725,10 +787,16 @@ function MountedQuizContent({ phase }) {
         ) : (
           <button
             onClick={handleNext}
-            disabled={!isCurrentQuestionAnswered || navigatingRef.current}
+            disabled={
+              !isCurrentQuestionAnswered ||
+              navigatingRef.current ||
+              isTransitioning
+            }
             className={`px-8 py-3 text-white rounded-lg text-base font-medium transition-all duration-300 ${
-              isCurrentQuestionAnswered && !navigatingRef.current
-                ? "bg-blue-600 hover:bg-blue-700"
+              isCurrentQuestionAnswered &&
+              !navigatingRef.current &&
+              !isTransitioning
+                ? "bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg hover:scale-105"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >
