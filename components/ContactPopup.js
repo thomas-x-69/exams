@@ -207,7 +207,7 @@ export default function ContactPopup() {
             </div>
 
             {/* Community Count */}
-            <div className="flex justify-center mb-5">
+            {/* <div className="flex justify-center mb-5 border-0">
               <div className="bg-gradient-to-r from-blue-600/40 to-indigo-600/40 rounded-lg px-5 py-3 border border-blue-400/20 shadow-lg shadow-blue-500/10">
                 <span className="text-white font-medium text-center block">
                   انضم إلى{" "}
@@ -217,7 +217,7 @@ export default function ContactPopup() {
                   متدرب
                 </span>
               </div>
-            </div>
+            </div> */}
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
