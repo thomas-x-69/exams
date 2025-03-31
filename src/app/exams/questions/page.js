@@ -277,16 +277,16 @@ function MountedQuizContent({ phase }) {
         let questionsCount = 20; // Default
 
         if (phaseId === "behavioral") {
-          questionsCount = 40;
+          questionsCount = 4;
         } else if (
           phaseId === "language_arabic" ||
           phaseId === "language_english"
         ) {
-          questionsCount = 20;
+          questionsCount = 1;
         } else if (phaseId.startsWith("knowledge_")) {
-          questionsCount = 15;
+          questionsCount = 1;
         } else if (phaseId === "specialization" || phaseId === "education") {
-          questionsCount = 30;
+          questionsCount = 1;
         }
 
         // Get the subject
