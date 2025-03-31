@@ -514,7 +514,7 @@ const Certificate = memo(
               نتمنى لك التوفيق الدائم والنجاح في مسيرتك المهنية
             </p>
             <div className="text-xs md:text-sm text-blue-600 font-bold">
-              https://egyptianexams.vercel.app/
+              https://www.egyptianexams.com
             </div>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import PhonePopup from "../../components/PhonePopup";
+import ContactPopup from "../../components/ContactPopup";
 import Head from "next/head";
 import Footer from "../../components/Footer";
 
@@ -749,7 +749,7 @@ export default function Home() {
       </Head>
 
       {/* Phone Popup Component - Handled independently */}
-      <PhonePopup />
+      <ContactPopup />
 
       {/* Inline Header Component - Using original glass-effect styling */}
       <header className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
