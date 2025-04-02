@@ -1,4 +1,4 @@
-// src/app/exams/instructions/page.js
+// src/app/exams/instructions/page.js - Fixed with proper state initialization
 "use client";
 
 import React, { useState, useMemo, memo } from "react";
@@ -76,6 +76,7 @@ const ExamInstructions = () => {
   const dispatch = useDispatch();
 
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false); // Add loading state
 
   // Generate organization code once when component mounts
   const organizationCode = useMemo(
@@ -117,6 +118,8 @@ const ExamInstructions = () => {
     }
 
     try {
+      setLoading(true); // Set loading state to true
+
       // Initialize exam in Redux
       dispatch(
         initExam({
@@ -126,10 +129,22 @@ const ExamInstructions = () => {
         })
       );
 
-      // Navigate to phases page with replace:true to prevent back navigation
-      router.replace(`/exams/phases?subject=${subject}`);
+      // Store in localStorage as well to ensure persistence
+      // This acts as a backup in case Redux state isn't immediately available
+      localStorage.setItem("currentExamSubject", subject);
+      localStorage.setItem("currentExamUser", name);
+      localStorage.setItem("currentExamOrgCode", organizationCode);
+      localStorage.setItem("activeExam", "true"); // Flag to indicate an active exam
+
+      // Add a small delay to ensure state is updated before navigation
+      setTimeout(() => {
+        // Navigate to phases page with replace:true to prevent back navigation
+        router.replace(`/exams/phases?subject=${subject}`);
+      }, 100);
     } catch (error) {
       console.error("Error starting exam:", error);
+      setLoading(false); // Reset loading state on error
+      alert("حدث خطأ أثناء بدء الاختبار. يرجى المحاولة مرة أخرى.");
     }
   };
 
@@ -260,21 +275,31 @@ const ExamInstructions = () => {
               type="submit"
               onClick={handleStartExam}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 group text-sm"
+              disabled={loading} // Disable button while loading
             >
-              <span>ابدأ الاختبار</span>
-              <svg
-                className="w-4 h-4 transform transition-transform group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                />
-              </svg>
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>جاري البدء...</span>
+                </>
+              ) : (
+                <>
+                  <span>ابدأ الاختبار</span>
+                  <svg
+                    className="w-4 h-4 transform transition-transform group-hover:translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                    />
+                  </svg>
+                </>
+              )}
             </button>
           </div>
         </div>

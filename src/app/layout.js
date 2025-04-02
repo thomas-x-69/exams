@@ -89,7 +89,7 @@ export default function RootLayout({ children }) {
             </div>
 
             {/* Main Content with children */}
-            <main className="relative z-10 top-0">{children}</main>
+            <main>{children}</main>
           </div>
         </Providers>
       </body>

@@ -1050,8 +1050,8 @@ export default function Home() {
         </div>
 
         {/* Footer - Now using the component */}
-        <Footer />
       </div>
+      <Footer />
 
       {/* Schema for the exam platform */}
       <script
