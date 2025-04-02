@@ -142,10 +142,6 @@ export default function ExamLayout({ children }) {
     if (checkReload()) return;
 
     // Remove padding from main element
-    const mainElement = document.querySelector("main");
-    if (mainElement) {
-      mainElement.classList.remove("pt-28");
-    }
 
     // Set unload flag to detect reloads
     window.addEventListener("beforeunload", () => {
@@ -160,12 +156,6 @@ export default function ExamLayout({ children }) {
 
     // Wait until after client-side hydration to mount
     setMounted(true);
-
-    return () => {
-      if (mainElement) {
-        mainElement.classList.add("pt-28");
-      }
-    };
   }, [pathname, router, checkReload]);
 
   // Render nothing while checking for reload or waiting for hydration
