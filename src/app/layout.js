@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "../../store/provider";
 import "./globals.css";
+import Footer from "../../components/Footer";
 
 // Optimize font loading with display swap
 const cairo = Cairo({
@@ -92,6 +93,7 @@ export default function RootLayout({ children }) {
             <main>{children}</main>
           </div>
         </Providers>
+        <Footer />
       </body>
     </html>
   );
