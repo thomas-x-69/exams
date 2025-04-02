@@ -56,7 +56,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
               <div className="relative group">
                 <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-white/90 text-sm">3000 سؤال</span>
+                  <span className="text-white/90 text-sm">5000 سؤال</span>
                 </div>
                 {/* Tooltip */}
                 <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
@@ -68,7 +68,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
                 <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                   <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                   <span className="text-white/90 text-sm whitespace-nowrap">
-                    150 اختبار
+                    500 اختبار
                   </span>
                 </div>
                 {/* Tooltip */}

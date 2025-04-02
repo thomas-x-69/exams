@@ -3,7 +3,6 @@
 "use client";
 
 import React, { useState, useMemo, memo } from "react";
-import Footer from "../../../components/Footer";
 import Header from "../../../components/Header";
 
 const categories = [
@@ -260,7 +259,6 @@ export default function PDFsPage() {
           ))}
         </div>
       </div>
-      <Footer className="bottom-0 bg-[#0f172a] mb-0" />
     </>
   );
 }

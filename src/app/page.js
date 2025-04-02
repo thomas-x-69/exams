@@ -7,7 +7,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ContactPopup from "../../components/ContactPopup";
 import Head from "next/head";
-import Footer from "../../components/Footer";
 
 // Memoized subject card component to prevent unnecessary re-renders
 // Memoized subject card component - improved responsiveness
@@ -1051,7 +1050,6 @@ export default function Home() {
 
         {/* Footer - Now using the component */}
       </div>
-      <Footer />
 
       {/* Schema for the exam platform */}
       <script

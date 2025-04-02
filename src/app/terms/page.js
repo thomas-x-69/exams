@@ -145,7 +145,6 @@ export default function TermsOfService() {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 }

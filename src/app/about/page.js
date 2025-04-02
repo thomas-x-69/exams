@@ -277,7 +277,6 @@ export default function AboutUsPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 }
