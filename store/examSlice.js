@@ -222,6 +222,32 @@ export const examSlice = createSlice({
     completeExam: (state) => {
       state.examCompleted = true;
       state.breakTime = null;
+
+      // Store the current result in localStorage for history tracking
+      try {
+        if (state.currentResult && state.activeExam) {
+          // Create a unique key with timestamp for this result
+          const resultKey = `examResult_${Date.now()}_${
+            state.activeExam.organizationCode
+          }`;
+
+          // Prepare the result data with all needed information
+          const resultData = {
+            ...state.currentResult,
+            subject: state.activeExam.subject,
+            userName: state.activeExam.userName,
+            organizationCode: state.activeExam.organizationCode,
+            completedAt: new Date().toISOString(),
+          };
+
+          // Store in localStorage
+          localStorage.setItem(resultKey, JSON.stringify(resultData));
+          console.log("Exam result saved to history:", resultKey);
+        }
+      } catch (error) {
+        console.error("Failed to save exam result to history:", error);
+      }
+
       // Clear stored questions when exam is completed
       state.examData = {};
     },
