@@ -489,11 +489,83 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              {/* Section 4: Results */}
+              {/* NEW SECTION: Score Calculation - Added as requested */}
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10 border-blue-400/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/20 flex items-center justify-center text-white">
+                    4
+                  </div>
+                  <h3 className="text-lg font-bold text-white">
+                    طريقة حساب الدرجات
+                  </h3>
+                </div>
+                <ul className="space-y-2 text-white/80 text-sm">
+                  <li className="flex items-start gap-2">
+                    <svg
+                      className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>
+                      <strong>حساب درجة كل مرحلة:</strong> تُحسب الكفايات
+                      السلوكية بناءً على النقاط المكتسبة، بينما تُحسب باقي
+                      الكفايات بعدد الإجابات الصحيحة.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg
+                      className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>
+                      <strong>حساب الدرجة الإجمالية:</strong> تُجمع نتائج جميع
+                      المراحل مع إعطاء وزن لكل مرحلة حسب عدد الأسئلة.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg
+                      className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>
+                      <strong>الدرجة النهائية:</strong> تُحسب بمعادلة: (مجموع
+                      (درجة المرحلة × عدد أسئلة المرحلة)) ÷ العدد الكلي للأسئلة.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Section 4: Results - Adjusted section number */}
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-amber-600/20 border border-amber-500/20 flex items-center justify-center text-white">
-                    4
+                    5
                   </div>
                   <h3 className="text-lg font-bold text-white">
                     النتائج والتقييم
@@ -556,11 +628,11 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              {/* Section 5: Tips */}
+              {/* Section 5: Tips - Adjusted section number */}
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-rose-600/20 border border-rose-500/20 flex items-center justify-center text-white">
-                    5
+                    6
                   </div>
                   <h3 className="text-lg font-bold text-white">نصائح للنجاح</h3>
                 </div>

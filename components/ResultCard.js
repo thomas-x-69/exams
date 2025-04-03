@@ -1,4 +1,4 @@
-// components/ResultCard.js
+// Updated components/ResultCard.js
 "use client";
 
 import React, { useState } from "react";
@@ -99,8 +99,8 @@ const ResultCard = ({ result, onViewAnalysis, onDelete, isSelected }) => {
         }`}
     >
       <div className="p-6">
-        {/* Header Row with Score and Info */}
-        <div className="flex flex-col md:flex-row gap-5 items-center mb-6">
+        {/* Header Row with Score and Info - Improved Layout */}
+        <div className="flex flex-col md:flex-row gap-5 items-center ">
           {/* Score Circle - Enhanced with gradient */}
           <div className="relative h-24 w-24 flex-shrink-0">
             <svg className="w-full h-full" viewBox="0 0 100 100">
@@ -181,13 +181,13 @@ const ResultCard = ({ result, onViewAnalysis, onDelete, isSelected }) => {
             </div>
           </div>
 
-          {/* Info Section */}
+          {/* Info Section - Enhanced with better spacing */}
           <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-right">
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className="text-xl font-bold text-white mb-1">
               {getSubjectName(result.subject)}
             </h3>
 
-            <div className="text-white/60 text-sm mb-3">
+            <div className="text-white/60 text-sm mb-2">
               <span className="inline-flex items-center gap-1">
                 <svg
                   className="w-4 h-4"
@@ -206,7 +206,7 @@ const ResultCard = ({ result, onViewAnalysis, onDelete, isSelected }) => {
               </span>
             </div>
 
-            <div className="flex flex-wrap justify-center md:justify-start gap-3">
+            <div className="flex flex-wrap justify-center md:justify-start gap-4">
               <div className="flex items-center gap-1 text-white/70 text-sm">
                 <svg
                   className="w-4 h-4 text-white/50"
@@ -243,12 +243,11 @@ const ResultCard = ({ result, onViewAnalysis, onDelete, isSelected }) => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 mt-4 md:mt-0 md:mr-auto">
-            {/* Analysis Button */}
+          {/* Action Buttons - Better spacing */}
+          <div className="flex gap-2 mt-3 md:mt-0 md:mr-auto">
             <button
               onClick={onViewAnalysis}
-              className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all duration-300 shadow-sm ${
+              className={`px-5 py-2 rounded-lg text-sm flex items-center gap-2 transition-all duration-300 shadow-sm font-medium ${
                 isSelected
                   ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-md"
                   : "bg-white/10 text-white hover:bg-white/20"
@@ -308,52 +307,6 @@ const ResultCard = ({ result, onViewAnalysis, onDelete, isSelected }) => {
               </button>
             )}
           </div>
-        </div>
-
-        {/* Phase Scores Grid - Streamlined without heading */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white/5 rounded-xl p-4 border border-white/10">
-          {Object.entries(result.phaseScores || {}).map(([phaseId, score]) => {
-            // Define phase display names
-            const phaseDisplayNames = {
-              behavioral: "الكفايات السلوكية",
-              language_arabic: "اللغة العربية",
-              language_english: "اللغة الإنجليزية",
-              knowledge_iq: "اختبار الذكاء",
-              knowledge_general: "معلومات عامة",
-              knowledge_it: "تكنولوجيا المعلومات",
-              language: "الكفايات اللغوية",
-              knowledge: "الكفايات المعرفية",
-              specialization: "كفايات التخصص",
-              education: "الكفايات التربوية",
-            };
-
-            const phaseName = phaseDisplayNames[phaseId] || phaseId;
-            const phaseScoreLevel = getScoreLevel(score);
-
-            return (
-              <div key={phaseId} className="relative group">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-white/80 text-xs">{phaseName}</span>
-                  <span
-                    className={`text-xs font-medium ${phaseScoreLevel.textColor}`}
-                  >
-                    {score}%
-                  </span>
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${phaseScoreLevel.progressColor}`}
-                    style={{ width: `${score}%` }}
-                  ></div>
-                </div>
-
-                {/* Hover tooltip with more info */}
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full right-0 mb-2 p-2 bg-gray-800 rounded text-xs text-white pointer-events-none whitespace-nowrap z-10">
-                  {phaseName}: {score}%
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>
