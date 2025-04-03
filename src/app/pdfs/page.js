@@ -12,7 +12,7 @@ const categories = [
   { id: "english", name: "تربية انجليزي" },
   { id: "science", name: "تربية علوم" },
   { id: "social", name: "دراسات اجتماعية" },
-  { id: "arabic", name: "تربية عربي" },
+  { id: "arabic", name: "تربية لغة عربية" },
 ];
 
 const pdfFiles = [
