@@ -195,10 +195,10 @@ export default function HistoryPage() {
         <div className="relative mb-6">
           <button
             onClick={() => setShowScoreInfo(!showScoreInfo)}
-            className="text-white/70 text-sm hover:text-white flex items-center gap-1.5 mx-auto transition-colors"
+            className="text-white flex items-center gap-2 bg-gradient-to-r from-blue-600/70 to-indigo-600/70 px-4 py-2 rounded-lg shadow-md hover:from-blue-700/70 hover:to-indigo-700/70 transition-all duration-300 mx-auto"
           >
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -212,7 +212,7 @@ export default function HistoryPage() {
             </svg>
             <span>كيف يتم حساب الدرجات؟</span>
             <svg
-              className={`w-4 h-4 transition-transform duration-300 ${
+              className={`w-5 h-5 transition-transform duration-300 ${
                 showScoreInfo ? "rotate-180" : ""
               }`}
               fill="none"
@@ -229,7 +229,7 @@ export default function HistoryPage() {
           </button>
 
           {showScoreInfo && (
-            <div className="glass-card bg-white/10 p-6 mt-3 animate-in slide-in-from-top-4 duration-300">
+            <div className="glass-card bg-white/10 p-6 mt-3 animate-in slide-in-from-top-4 duration-300 border-2 border-blue-500/30">
               <h3 className="text-lg font-bold text-white mb-4">
                 طريقة حساب الدرجات
               </h3>
@@ -495,49 +495,9 @@ export default function HistoryPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             {/* Filters - Redesigned for better UX */}
             <div className="flex flex-wrap gap-4 w-full sm:w-auto">
-              <div className="relative z-10">
-                <label className="sr-only">تصفية حسب نوع الاختبار</label>
-                <div className="relative">
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="appearance-none bg-white/10 border border-white/20 text-white px-4 py-2.5 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all duration-200 hover:bg-white/15"
-                  >
-                    <option value="all">جميع الاختبارات</option>
-                    <option value="mail">البريد المصري</option>
-                    <option value="education">اختبارات التربية</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <svg
-                      className="w-4 h-4 text-white/60"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
               <div className="flex items-center gap-2 text-white bg-white/10 border border-white/20 rounded-xl px-4 py-2">
                 <label className="text-white/70 text-sm">الترتيب:</label>
                 <div className="flex">
-                  <button
-                    onClick={() => setSortBy("date")}
-                    className={`px-3 py-1 text-sm rounded-l-lg transition-colors ${
-                      sortBy === "date"
-                        ? "bg-white/20 text-white"
-                        : "text-white/60 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    التاريخ
-                  </button>
                   <button
                     onClick={() => setSortBy("score")}
                     className={`px-3 py-1 text-sm rounded-r-lg transition-colors ${
@@ -547,6 +507,16 @@ export default function HistoryPage() {
                     }`}
                   >
                     الدرجة
+                  </button>
+                  <button
+                    onClick={() => setSortBy("date")}
+                    className={`px-3 py-1 text-sm rounded-l-lg transition-colors ${
+                      sortBy === "date"
+                        ? "bg-white/20 text-white"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    التاريخ
                   </button>
                 </div>
 
