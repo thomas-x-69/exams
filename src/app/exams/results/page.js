@@ -594,6 +594,18 @@ const ResultsPage = () => {
     try {
       console.log("Preparing to submit exam results");
 
+      // Use the organization code as a unique identifier for this exam
+      const submissionKey = `exam_submitted_${activeExam.organizationCode}`;
+
+      // Check if we've already submitted results for this organization code
+      if (localStorage.getItem(submissionKey)) {
+        console.log(
+          "Results already submitted for this exam",
+          activeExam.organizationCode
+        );
+        return; // Skip submission
+      }
+
       // Create well-formed data object
       const submitData = {
         name: activeExam.userName || "Unknown User",
@@ -606,9 +618,11 @@ const ResultsPage = () => {
           knowledge_iq: currentResult.phaseScores?.knowledge_iq || 0,
           specialization: currentResult.phaseScores?.specialization || 0,
         },
+        // Also include the organizationCode to track uniqueness server-side if needed
+        organizationCode: activeExam.organizationCode,
       };
 
-      console.log("Submitting data:", submitData);
+      console.log("Sending data to Google Script:", submitData);
 
       // Make the API request
       const response = await fetch("/api/submit-exam", {
@@ -617,25 +631,29 @@ const ResultsPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(submitData),
+        cache: "no-store",
+        next: { revalidate: 0 },
       });
 
       console.log("Response status:", response.status);
-      const data = await response.json();
-      console.log("Response data:", data);
+      const resultText = await response.text();
 
-      if (data.status !== "success") {
-        console.error("Error submitting results:", data.message);
-        // Optionally show an error notification to the user
-      } else {
-        console.log("Results submitted successfully");
-        // Optionally show a success notification to the user
+      try {
+        const result = JSON.parse(resultText);
+        console.log("Parsed response:", result);
+
+        if (result.status === "success") {
+          // Mark this organization code as submitted in localStorage
+          localStorage.setItem(submissionKey, "true");
+          console.log("Results successfully submitted and marked as completed");
+        }
+      } catch (error) {
+        console.error("Failed to parse response as JSON:", error);
       }
     } catch (error) {
       console.error("Failed to submit exam results:", error);
-      // Optionally show an error notification to the user
     }
   }, [activeExam, currentResult]);
-
   // Submit results effect
   useEffect(() => {
     if (mounted && !loading && currentResult && activeExam) {
