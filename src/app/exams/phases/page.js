@@ -594,7 +594,6 @@ const ExamPhases = () => {
       // Clear the flag
       localStorage.removeItem("_wasReloaded");
       // Redirect immediately to landing page
-      router.replace("/");
       return;
     }
 
