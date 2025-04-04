@@ -9,7 +9,6 @@ import ContactPopup from "../../components/ContactPopup";
 import Head from "next/head";
 
 // Memoized subject card component to prevent unnecessary re-renders
-// Memoized subject card component - improved responsiveness
 const SubjectCard = memo(({ subject, onClick }) => (
   <Link
     href={`/exams/instructions?subject=${subject.id}`}
@@ -554,7 +553,7 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
 
                     <div className="mr-8 mb-3">
                       <div className="bg-white/5 rounded-lg p-2 mb-3">
-                        <p className="text-white/90 text-sm mb-2">
+                        <p className="text-white/90 text-sm">
                           تختلف هذه المرحلة حسب نوع الاختبار:
                         </p>
                       </div>
@@ -999,6 +998,7 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
   );
 });
 
+// Subject data with rich descriptions
 const subjects = [
   {
     id: "mail",
@@ -1079,17 +1079,17 @@ export default function Home() {
     <>
       {/* Add essential meta tags directly in the page for SEO */}
       <Head>
-        <title>منصة الاختبارات المصرية | تدرب على امتحانات التوظيف</title>
+        <title>منصة الاختبارات المصرية | تدرب على امتحانات التوظيف ٢٠٢٥</title>
         <meta
           name="description"
-          content="منصة تدريبية متكاملة لاختبارات التوظيف المصرية. تدرب على امتحانات البريد المصري والتربية بمختلف تخصصاتها في بيئة محاكية للاختبارات الحقيقية"
+          content="منصة تدريبية متكاملة لاختبارات التوظيف المصرية. تدرب على امتحانات البريد المصري والتربية بمختلف تخصصاتها في بيئة محاكية للاختبارات الحقيقية. نماذج اختبارات التوظيف الحكومي والتنظيم والإدارة وكفايات المعلمين."
         />
       </Head>
 
       {/* Phone Popup Component - Handled independently */}
       <ContactPopup />
 
-      {/* Inline Header Component - Using original glass-effect styling */}
+      {/* Header Component */}
       <header className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
         <div className="glass-effect rounded-2xl border border-white/10 p-3">
           <div className="flex items-center justify-between">
@@ -1111,7 +1111,7 @@ export default function Home() {
                 </Link>
                 {/* Tooltip */}
                 <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                  منصة غير رسمية
+                  منصة تدريبية للامتحانات المصرية
                 </div>
               </div>
 
@@ -1135,7 +1135,7 @@ export default function Home() {
                 <div className="relative group">
                   <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span className="text-white/90 text-sm">3000 سؤال</span>
+                    <span className="text-white/90 text-sm">5000 سؤال</span>
                   </div>
                   {/* Tooltip */}
                   <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
@@ -1147,7 +1147,7 @@ export default function Home() {
                   <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                     <span className="text-white/90 text-sm whitespace-nowrap">
-                      150 اختبار
+                      500 اختبار
                     </span>
                   </div>
                   {/* Tooltip */}
@@ -1183,13 +1183,13 @@ export default function Home() {
                   </button>
                   {/* Tooltip */}
                   <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                    ابدأ الاختبار الآن
+                    ابدأ اختبار تدريبي الآن
                   </div>
                 </div>
               ) : (
                 <div className="relative group">
                   <Link
-                    href={`/exams/instructions?subject=mail`}
+                    href={"/"}
                     className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
                     aria-label="ابدأ الاختبار الآن"
                   >
@@ -1211,7 +1211,7 @@ export default function Home() {
                   </Link>
                   {/* Tooltip */}
                   <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                    ابدأ الاختبار الآن
+                    ابدأ اختبار تدريبي الآن
                   </div>
                 </div>
               )}
@@ -1222,17 +1222,40 @@ export default function Home() {
 
       <div className="flex flex-col min-h-screen">
         <div className="flex flex-col items-center justify-center min-h-[75vh] gap-12 pt-28">
-          {/* Hero Section */}
+          {/* Hero Section - Enhanced with better SEO keywords */}
           <div className="text-center space-y-6 max-w-3xl">
-            <h1 className="text-5xl font-bold text-white leading-tight">
-              منصة الاختبارات المصرية
+            <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
+              منصة الاختبارات المصرية الشاملة
             </h1>
+            <h2 className="text-2xl text-white/90 mb-2">
+              اختبارات البريد - التربية - التنظيم والإدارة ٢٠٢٥
+            </h2>
             <p className="text-xl text-white/80">
-              نقدم لك تجربة تعليمية متكاملة للتحضير للاختبارات بكل سهولة وكفاءة
+              تدرب على اختبارات التوظيف المصرية في بيئة محاكية للاختبارات
+              الحقيقية. أكثر من 5000 سؤال و500 اختبار تدريبي
             </p>
+
+            {/* Added Keywords Tags */}
+            <div className="flex flex-wrap gap-2 justify-center mt-4">
+              <span className="bg-white/10 px-3 py-1 rounded-full text-white/80 text-sm">
+                اختبارات البريد المصري
+              </span>
+              <span className="bg-white/10 px-3 py-1 rounded-full text-white/80 text-sm">
+                اختبارات التربية
+              </span>
+              <span className="bg-white/10 px-3 py-1 rounded-full text-white/80 text-sm">
+                التنظيم والإدارة
+              </span>
+              <span className="bg-white/10 px-3 py-1 rounded-full text-white/80 text-sm">
+                كفايات المعلمين
+              </span>
+              <span className="bg-white/10 px-3 py-1 rounded-full text-white/80 text-sm">
+                تدريب اونلاين
+              </span>
+            </div>
           </div>
 
-          {/* Main Options */}
+          {/* Main Options - Enhanced descriptions for better SEO */}
           <div className="grid gap-6 w-full max-w-2xl px-4 sm:px-0">
             <Link
               href="/pdfs"
@@ -1258,10 +1281,11 @@ export default function Home() {
                 </div>
                 <div className="text-center sm:text-right">
                   <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
-                    تحميل امتحانات واسئلة
+                    تحميل امتحانات ونماذج أسئلة
                   </h2>
                   <p className="text-white/70 group-hover:text-white/80">
-                    حمل مجموعة شاملة من الامتحانات السابقة للتدريب
+                    حمل مجموعة شاملة من نماذج امتحانات البريد المصري والتربية
+                    والتنظيم والإدارة
                   </p>
                 </div>
               </div>
@@ -1294,11 +1318,12 @@ export default function Home() {
                     ابدأ الاختبار الآن
                   </h2>
                   <p className="text-white/70 group-hover:text-white/80">
-                    خوض تجربة اختبار تحاكي الامتحان الحقيقي
+                    بيئة تدريبية تحاكي الاختبارات الحقيقية مع تقييم فوري لأدائك
                   </p>
                 </div>
               </div>
             </button>
+
             <Link
               href="/history"
               className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group"
@@ -1323,15 +1348,16 @@ export default function Home() {
                 </div>
                 <div className="text-center sm:text-right">
                   <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
-                    سجل النتائج السابقة
+                    سجل نتائجك وتحليل أدائك
                   </h2>
                   <p className="text-white/70 group-hover:text-white/80">
-                    عرض وتحليل نتائج اختباراتك السابقة
+                    تتبع تقدمك وحلل نقاط قوتك وضعفك في الاختبارات المختلفة
                   </p>
                 </div>
               </div>
             </Link>
-            {/* New Instructions Card */}
+
+            {/* Instructions Card with Enhanced Title */}
             <div className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                 <div className="rounded-xl p-4 bg-gradient-to-br from-amber-600/20 to-orange-600/20 border border-white/10 mx-auto sm:mx-0">
@@ -1352,10 +1378,11 @@ export default function Home() {
                 </div>
                 <div className="text-center sm:text-right">
                   <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
-                    تعليمات استخدام المنصة
+                    دليل اختبارات التوظيف المصرية
                   </h2>
                   <p className="text-white/70 group-hover:text-white/80">
-                    دليل شامل لاستخدام المنصة والتحضير للاختبارات
+                    تعرف على نظام الاختبارات وكيفية التحضير المثالي للامتحانات
+                    الرسمية
                   </p>
 
                   <button
@@ -1368,6 +1395,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Coming Soon Card */}
             <div className="relative">
               <div className="glass-card p-4 sm:p-6 opacity-75">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
@@ -1389,10 +1417,10 @@ export default function Home() {
                   </div>
                   <div className="text-center sm:text-right">
                     <h2 className="text-xl sm:text-2xl font-bold text-white/90 mb-2">
-                      امتحانات مع اسئلة حقيقية
+                      امتحانات حقيقية من الاختبارات السابقة
                     </h2>
                     <p className="text-white/60">
-                      تدرب على أسئلة من امتحانات حقيقية سابقة
+                      تدرب على أسئلة من امتحانات التوظيف الفعلية السابقة
                     </p>
                   </div>
                 </div>
@@ -1403,7 +1431,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Enhanced Subjects Modal with Date in Footer - Now a separate memoized component */}
+          {/* SubjectsModal */}
           <SubjectsModal
             isOpen={showSubjects}
             subjects={subjects}
@@ -1411,17 +1439,78 @@ export default function Home() {
             onClose={() => setShowSubjects(false)}
           />
 
-          {/* Instructions Modal */}
+          {/* InstructionsModal */}
           <InstructionsModal
             isOpen={showInstructions}
             onClose={() => setShowInstructions(false)}
           />
-        </div>
 
-        {/* Footer - Now using the component */}
+          {/* Additional FAQs Section for SEO */}
+          <div className="w-full max-w-2xl mt-6">
+            <div className="glass-card p-6">
+              <h2 className="text-xl font-bold text-white mb-4">
+                أسئلة شائعة عن الاختبارات
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    ما هي مراحل اختبار البريد المصري؟
+                  </h3>
+                  <p className="text-white/70">
+                    يتكون اختبار البريد المصري من أربع مراحل رئيسية: الكفايات
+                    السلوكية والنفسية، الكفايات اللغوية (عربي وإنجليزي)،
+                    الكفايات المعرفية والتكنولوجية، وكفايات التخصص.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    كيف أحضر لاختبارات التربية؟
+                  </h3>
+                  <p className="text-white/70">
+                    للتحضير لاختبارات التربية، ننصح بالتدرب على الكفايات
+                    التربوية والتخصصية، ومراجعة المناهج التعليمية، والتدرب على
+                    حل نماذج امتحانات سابقة موجودة في قسم التحميلات بالموقع.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    هل اختبارات الموقع محاكية للاختبارات الفعلية؟
+                  </h3>
+                  <p className="text-white/70">
+                    نعم، جميع اختباراتنا مصممة لتحاكي بيئة الاختبارات الرسمية من
+                    حيث نوع الأسئلة وتوزيعها والوقت المخصص لكل مرحلة، مما يوفر
+                    تجربة تدريبية واقعية تساعدك على الاستعداد الأمثل.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Schema for the exam platform */}
+      {/* Enhanced structured data for the exam platform */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            url: "https://egyptianexams.com/",
+            name: "منصة الاختبارات المصرية",
+            description:
+              "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://egyptianexams.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          }),
+        }}
+      />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -1434,16 +1523,105 @@ export default function Home() {
             provider: {
               "@type": "Organization",
               name: "منصة الاختبارات المصرية",
+              url: "https://egyptianexams.com",
             },
             audience: {
               "@type": "Audience",
-              audienceType: "طلاب التوظيف المصريين",
+              audienceType: "باحثي الوظائف الحكومية المصرية",
+              geographicArea: {
+                "@type": "Country",
+                name: "مصر",
+              },
             },
             educationalLevel: "متقدم",
             keywords:
-              "اختبارات مصرية, امتحان البريد المصري, امتحانات التربية, تدريب على الاختبارات",
+              "اختبارات مصرية, امتحان البريد المصري, امتحانات التربية, تدريب على الاختبارات, التنظيم والإدارة",
             teaches: "التحضير للاختبارات المصرية",
             learningResourceType: "امتحانات تدريبية تفاعلية",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "EGP",
+              availability: "https://schema.org/InStock",
+            },
+          }),
+        }}
+      />
+
+      {/* FAQ Schema for search engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "ما هي مراحل اختبار البريد المصري؟",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "يتكون اختبار البريد المصري من أربع مراحل رئيسية: الكفايات السلوكية والنفسية، الكفايات اللغوية (عربي وإنجليزي)، الكفايات المعرفية والتكنولوجية، وكفايات التخصص.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "كيف أحضر لاختبارات التربية؟",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "للتحضير لاختبارات التربية، ننصح بالتدرب على الكفايات التربوية والتخصصية، ومراجعة المناهج التعليمية، والتدرب على حل نماذج امتحانات سابقة موجودة في قسم التحميلات بالموقع.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "هل اختبارات الموقع محاكية للاختبارات الفعلية؟",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "نعم، جميع اختباراتنا مصممة لتحاكي بيئة الاختبارات الرسمية من حيث نوع الأسئلة وتوزيعها والوقت المخصص لكل مرحلة، مما يوفر تجربة تدريبية واقعية تساعدك على الاستعداد الأمثل.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "كيف يتم حساب الدرجات في الاختبارات؟",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "يتم حساب درجة كل مرحلة بناءً على النقاط المكتسبة مقسومة على إجمالي النقاط المتاحة. أما الدرجة النهائية فتحسب كمتوسط مرجح للمراحل المختلفة حسب الأهمية النسبية لكل منها.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "كيف أحصل على شهادة بعد إتمام الاختبار؟",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "بعد إتمام جميع مراحل الاختبار، ستظهر لك صفحة النتائج التي تتضمن شهادة إتمام يمكنك تحميلها وطباعتها، بالإضافة إلى تحليل مفصل لأدائك في كل مرحلة من مراحل الاختبار.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
+
+      {/* BreadcrumbList Schema for better navigation visibility */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "الرئيسية",
+                item: "https://egyptianexams.com",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "أنواع الاختبارات",
+                item: "https://egyptianexams.com#subjects",
+              },
+            ],
           }),
         }}
       />
