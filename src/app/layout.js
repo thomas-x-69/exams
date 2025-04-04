@@ -7,21 +7,23 @@ import Footer from "../../components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 
-// Optimize font loading with display swap
+// Optimize font loading for better Core Web Vitals
 const cairo = Cairo({
   subsets: ["arabic"],
-  display: "swap", // Add display strategy for better performance
-  preload: true, // Ensure font is preloaded
+  display: "swap",
+  preload: true,
+  weight: ["400", "500", "600", "700"],
+  adjustFontFallback: true,
 });
 
-// Properly export metadata for Next.js
 export const metadata = {
+  metadataBase: new URL("https://egyptianexams.com"),
   title: {
-    default: "منصة الاختبارات المصرية | تدرب على الامتحانات بكفاءة",
-    template: "%s | منصة الاختبارات المصرية",
+    default: "منصة الاختبارات المصرية | تدرب على امتحانات التوظيف المصرية 2025",
+    template: "%s | منصة الاختبارات المصرية - أفضل موقع لتحضير الامتحانات",
   },
   description:
-    "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة. تدرب على نماذج امتحانات البريد المصري والتربية وغيرها",
+    "منصة تعليمية متكاملة للتحضير لاختبارات التوظيف المصرية. نماذج محاكية لاختبارات البريد المصري والتربية والتنظيم والإدارة وجميع الوظائف الحكومية بطريقة تفاعلية. تدرب واستعد للامتحان بكفاءة.",
   keywords: [
     "اختبارات مصرية",
     "امتحان البريد المصري",
@@ -29,11 +31,94 @@ export const metadata = {
     "نماذج امتحانات",
     "تدريب على الاختبارات",
     "امتحانات الكترونية",
+    "اختبار التنظيم والادارة",
+    "امتحانات الوظائف الحكومية",
+    "نموذج امتحان",
+    "اختبارات التوظيف",
+    "اسئلة امتحان البريد المصري",
+    "امتحانات الحكومة",
+    "امتحانات وزارة التربية",
+    "اختبارات تجريبية",
+    "التقديم للوظائف الحكومية",
+    "اختبار كفايات",
+    "كفايات سلوكية",
+    "كفايات لغوية",
+    "كفايات معرفية",
+    "كفايات تربوية",
+    "كفايات تخصص",
+    "امتحان اونلاين",
+    "امتحان تجريبي",
+    "وظائف مصر",
+    "مسابقات وظائف",
+    "نماذج امتحانات سابقة",
+    "تحميل امتحانات",
+    "حل اسئلة البريد المصري",
+    "اختبارات التوظيف 2025",
+    "امتحانات تنظيم وادارة",
   ],
-  // Additional metadata as in your current file...
+  authors: [
+    { name: "منصة الاختبارات المصرية", url: "https://egyptianexams.com" },
+  ],
+  creator: "منصة الاختبارات المصرية",
+  publisher: "منصة الاختبارات المصرية",
+  applicationName: "منصة الاختبارات المصرية",
+  generator: "Next.js",
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  appleWebApp: {
+    title: "منصة الاختبارات المصرية",
+    statusBarStyle: "black-translucent",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+  },
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+    { media: "(prefers-color-scheme: light)", color: "#1e40af" },
+  ],
+  category: "education",
+  openGraph: {
+    type: "website",
+    locale: "ar_EG",
+    url: "https://egyptianexams.com",
+    siteName: "منصة الاختبارات المصرية - اختبارات التوظيف المصرية",
+    title: "منصة الاختبارات المصرية | تدرب على امتحانات التوظيف المصرية 2025",
+    description:
+      "منصة تعليمية متكاملة للتحضير لاختبارات التوظيف المصرية. نماذج محاكية لاختبارات البريد المصري والتربية والتنظيم والإدارة وجميع الوظائف الحكومية بطريقة تفاعلية. تدرب واستعد للامتحان بكفاءة.",
+    images: [
+      {
+        url: "/images/egyptianexams-og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "منصة الاختبارات المصرية - تحضير اختبارات التوظيف المصرية",
+        type: "image/jpeg",
+      },
+    ],
+  },
+
+  alternates: {
+    canonical: "https://egyptianexams.com",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
-// Regular layout component without client directive - metadata won't work with "use client"
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
@@ -49,28 +134,66 @@ export default function RootLayout({ children }) {
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        <link
+          rel="preconnect"
+          href="https://pagead2.googlesyndication.com"
+          crossOrigin="anonymous"
+        />
 
         {/* Preload critical assets */}
         <link rel="preload" href="/logo.png" as="image" type="image/png" />
-        <meta
-          name="google-site-verification"
-          content="9ONgVce-npC3xfNatprDnUxBA4iOXA0tyeX87199ev4"
+
+        {/* Favicons */}
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
         />
-        <meta
-          name="google-adsense-account"
-          content="ca-pub-4661333319885394"
-        ></meta>
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/favicon-32x32.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/favicon-16x16.png"
+        />
+        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
+        <meta name="msapplication-TileColor" content="#1e40af" />
       </head>
       <body
         className={`${cairo.className} antialiased app-container`}
         suppressHydrationWarning
       >
+        {/* Google AdSense Script with strategy="afterInteractive" */}
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4661333319885394"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+
+        {/* Structured data for Organization */}
+        <Script
+          id="organization-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "منصة الاختبارات المصرية",
+              url: "https://egyptianexams.com",
+              logo: "https://egyptianexams.com/logo.png",
+              description:
+                "منصة تعليمية متخصصة في تقديم نماذج محاكية لاختبارات التوظيف المصرية",
+            }),
+          }}
+        />
+
         {/* Redux Provider */}
         <Providers>
           <div className="min-h-screen pattern-grid relative overflow-hidden top-0 pt-0">
