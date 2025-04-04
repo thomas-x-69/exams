@@ -61,7 +61,7 @@ export default function ContactPopup() {
       handleClose();
 
       // Open Telegram group in new tab
-      window.open("https://t.me/egyptianexams", "_blank");
+      window.open("https://t.me/Egyptian_Exams", "_blank");
     } catch (e) {
       console.error("Error saving to localStorage:", e);
     }
