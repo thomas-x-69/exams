@@ -1135,7 +1135,7 @@ export default function Home() {
                 <div className="relative group">
                   <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span className="text-white/90 text-sm">5000 سؤال</span>
+                    <span className="text-white/90 text-sm">+8000 سؤال</span>
                   </div>
                   {/* Tooltip */}
                   <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
@@ -1147,7 +1147,7 @@ export default function Home() {
                   <div className="glass-effect px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 cursor-default">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                     <span className="text-white/90 text-sm whitespace-nowrap">
-                      500 اختبار
+                      +1000 اختبار
                     </span>
                   </div>
                   {/* Tooltip */}
@@ -1232,7 +1232,7 @@ export default function Home() {
             </h2>
             <p className="text-xl text-white/80">
               تدرب على اختبارات التوظيف المصرية في بيئة محاكية للاختبارات
-              الحقيقية. أكثر من 5000 سؤال و500 اختبار تدريبي
+              الحقيقية. أكثر من 8000 سؤال و1000 اختبار تدريبي
             </p>
 
             {/* Added Keywords Tags */}
@@ -1377,7 +1377,7 @@ export default function Home() {
                 </div>
                 <div className="text-center sm:text-right">
                   <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
-                    دليل اختبارات التوظيف المصرية
+                    تعليمات استخدام المنصة{" "}
                   </h2>
                   <p className="text-white/70 group-hover:text-white/80">
                     تعرف على نظام الاختبارات وكيفية التحضير المثالي للامتحانات
@@ -1445,7 +1445,7 @@ export default function Home() {
           />
 
           {/* Additional FAQs Section for SEO */}
-          <div className="w-full max-w-2xl mt-6">
+          <div className="w-full max-w-2xl mb-4">
             <div className="glass-card p-6">
               <h2 className="text-xl font-bold text-white mb-4">
                 أسئلة شائعة عن الاختبارات
