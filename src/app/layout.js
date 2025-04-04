@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Providers } from "../../store/provider";
 import "./globals.css";
 import Footer from "../../components/Footer";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // Optimize font loading with display swap
 const cairo = Cairo({
@@ -94,6 +95,7 @@ export default function RootLayout({ children }) {
           </div>
         </Providers>
         <Footer />
+        <SpeedInsights />
       </body>
     </html>
   );
