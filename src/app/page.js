@@ -1223,7 +1223,7 @@ export default function Home() {
       <div className="flex flex-col min-h-screen">
         <div className="flex flex-col items-center justify-center min-h-[75vh] gap-12 pt-28">
           {/* Hero Section - Enhanced with better SEO keywords */}
-          <div className="text-center space-y-6 max-w-3xl">
+          <div className="text-center space-y-6 max-w-3xl mt-6">
             <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
               منصة الاختبارات المصرية الشاملة
             </h1>
@@ -1257,6 +1257,38 @@ export default function Home() {
 
           {/* Main Options - Enhanced descriptions for better SEO */}
           <div className="grid gap-6 w-full max-w-2xl px-4 sm:px-0">
+            <button
+              onClick={() => setShowSubjects(true)}
+              className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 w-full text-center sm:text-right group"
+              aria-label="ابدأ الاختبار الآن"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-600/20 to-green-600/20 border border-white/10 mx-auto sm:mx-0">
+                  <svg
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <div className="text-center sm:text-right">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                    ابدأ الاختبار الآن
+                  </h2>
+                  <p className="text-white/70 group-hover:text-white/80">
+                    بيئة تدريبية تحاكي الاختبارات الحقيقية مع تقييم فوري لأدائك
+                  </p>
+                </div>
+              </div>
+            </button>
             <Link
               href="/pdfs"
               className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group"
@@ -1290,39 +1322,6 @@ export default function Home() {
                 </div>
               </div>
             </Link>
-
-            <button
-              onClick={() => setShowSubjects(true)}
-              className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 w-full text-center sm:text-right group"
-              aria-label="ابدأ الاختبار الآن"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-600/20 to-green-600/20 border border-white/10 mx-auto sm:mx-0">
-                  <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                </div>
-                <div className="text-center sm:text-right">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
-                    ابدأ الاختبار الآن
-                  </h2>
-                  <p className="text-white/70 group-hover:text-white/80">
-                    بيئة تدريبية تحاكي الاختبارات الحقيقية مع تقييم فوري لأدائك
-                  </p>
-                </div>
-              </div>
-            </button>
 
             <Link
               href="/history"
