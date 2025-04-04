@@ -1,9 +1,11 @@
-// src/app/pdfs/page.js
+// src/app/pdfs/page.js - Optimized for SEO
 
 "use client";
 
-import React, { useState, useMemo, memo } from "react";
+import React, { useState, useMemo, memo, useEffect } from "react";
+import Head from "next/head";
 import Header from "../../../components/Header";
+import Footer from "../../../components/Footer";
 
 const categories = [
   { id: "all", name: "الكل" },
@@ -18,57 +20,67 @@ const categories = [
 const pdfFiles = [
   {
     id: 1,
-    title: "نموذج امتحان البريد المصري",
+    title: "نموذج امتحان البريد المصري المحاكي للإختبار الرسمي",
     category: "mail",
     date: "2024",
     // downloads: 1250,
     size: "2.4MB",
     path: "/pdfs/mail-exam-2024.pdf",
+    description:
+      "نموذج امتحان شامل للبريد المصري يحاكي الإختبار الرسمي بنفس نمط الأسئلة والزمن",
   },
   {
     id: 2,
-    title: "نموذج امتحان تربية رياضيات",
+    title: "نموذج امتحان تربية رياضيات - المرحلة الأولى",
     category: "math",
     date: "2024",
     // downloads: 980,
     size: "1.8MB",
     path: "/pdfs/math-exam-2024.pdf",
+    description: "امتحان تربية رياضيات محاكي للمرحلة الأولى من الاختبار الرسمي",
   },
   {
     id: 3,
-    title: "نموذج امتحان اللغة الإنجليزية",
+    title: "اختبار اللغة الإنجليزية للتربية والتعليم",
     category: "english",
     date: "2024",
     // downloads: 1560,
     size: "2.1MB",
     path: "/pdfs/english-exam-2024.pdf",
+    description:
+      "اختبار اللغة الإنجليزية لمسابقة التربية والتعليم مع نماذج الإجابة",
   },
   {
     id: 4,
-    title: "نموذج امتحان اللغة الإنجليزية",
+    title: "امتحان اللغة الإنجليزية المطور للوظائف الحكومية",
     category: "english",
     date: "2024",
     // downloads: 1560,
     size: "2.1MB",
     path: "/pdfs/english-exam-2024.pdf",
+    description: "نموذج امتحان اللغة الإنجليزية المطور لجميع الوظائف الحكومية",
   },
   {
     id: 5,
-    title: "نموذج امتحان اللغة الإنجليزية",
+    title: "ملخص الكفايات اللغوية لامتحانات مصر",
     category: "english",
     date: "2024",
     // downloads: 1560,
     size: "2.1MB",
     path: "/pdfs/english-exam-2024.pdf",
+    description:
+      "ملخص شامل للكفايات اللغوية المطلوبة في اختبارات مصر التوظيفية",
   },
   {
     id: 6,
-    title: "نموذج امتحان اللغة الإنجليزية",
+    title: "بنك أسئلة امتحانات مصر للتوظيف",
     category: "english",
     date: "2024",
     // downloads: 1560,
     size: "2.1MB",
     path: "/pdfs/english-exam-2024.pdf",
+    description:
+      "بنك أسئلة شامل لجميع امتحانات مصر التوظيفية والوزارات المختلفة",
   },
 ];
 
@@ -111,6 +123,8 @@ const PDFCard = memo(({ pdf }) => (
         {/* Content */}
         <div className="flex-1">
           <h3 className="text-xl font-bold text-white mb-2">{pdf.title}</h3>
+          {/* Added PDF description for better SEO */}
+          <p className="text-white/70 text-sm mb-3">{pdf.description}</p>
           <div className="flex flex-wrap gap-3 text-sm text-white/60">
             <span className="flex items-center gap-1">
               <svg
@@ -157,7 +171,10 @@ const PDFCard = memo(({ pdf }) => (
         download
         className="mt-6 w-full py-2 px-4 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-all duration-300"
       >
-        <span>تحميل الملف</span>
+        <span>
+          تحميل ملف{" "}
+          {pdf.category === "mail" ? "امتحان البريد" : "اختبارات التربية"}
+        </span>
         <svg
           className="w-5 h-5"
           fill="none"
@@ -179,6 +196,23 @@ const PDFCard = memo(({ pdf }) => (
 export default function PDFsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [pageTitle, setPageTitle] = useState(
+    "مكتبة امتحانات مصر | نماذج اختبارات مصر للتحميل"
+  );
+
+  // Update page title based on selected category
+  useEffect(() => {
+    if (selectedCategory === "all") {
+      setPageTitle("مكتبة امتحانات مصر | نماذج اختبارات مصر للتحميل");
+    } else if (selectedCategory === "mail") {
+      setPageTitle("نماذج امتحانات البريد المصري | امتحانات مصر للتوظيف");
+    } else {
+      const category = categories.find((c) => c.id === selectedCategory);
+      setPageTitle(
+        `نماذج امتحانات ${category?.name || ""} | اختبارات مصر التعليمية`
+      );
+    }
+  }, [selectedCategory]);
 
   // Memoize the filtered PDFs to prevent unnecessary filtering on every render
   const filteredPDFs = useMemo(() => {
@@ -199,15 +233,27 @@ export default function PDFsPage() {
 
   return (
     <>
+      <Head>
+        <title>{pageTitle}</title>
+        <meta
+          name="description"
+          content="تحميل نماذج امتحانات مصر التوظيفية وملفات PDF لاختبارات البريد المصري والتربية. أكثر من 100 ملف تدريبي لامتحانات مصر الرسمية."
+        />
+        <meta
+          name="keywords"
+          content="تحميل امتحانات مصر, نماذج اختبارات مصر, ملفات PDF, امتحان البريد المصري, اختبارات التربية, نماذج أسئلة"
+        />
+      </Head>
+
       <div className="max-w-7xl mx-auto px-4 py-8 pt-28">
         {/* Header */}
         <Header />
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            مكتبة الامتحانات والأسئلة
+          <h1 className="text-4xl font-bold text-white mb-4 mt-4">
+            مكتبة امتحانات مصر وملفات التدريب
           </h1>
           <p className="text-xl text-white/70">
-            تصفح وحمل نماذج الامتحانات السابقة للتدريب
+            تصفح وحمل نماذج اختبارات مصر التوظيفية السابقة للتدريب
           </p>
         </div>
 
@@ -218,7 +264,7 @@ export default function PDFsPage() {
             <div className="relative w-full md:w-96">
               <input
                 type="text"
-                placeholder="ابحث عن ملف..."
+                placeholder="ابحث عن نماذج امتحانات مصر..."
                 className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:border-white/20"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -258,7 +304,63 @@ export default function PDFsPage() {
             <PDFCard key={pdf.id} pdf={pdf} />
           ))}
         </div>
+
+        {/* SEO Content Section */}
+        <div className="mt-16 glass-card p-6">
+          <h2 className="text-2xl font-bold text-white mb-4 mt-6">
+            امتحانات مصر التوظيفية - دليل المتقدمين
+          </h2>
+          <div className="text-white/80 space-y-4">
+            <p>
+              توفر منصة امتحانات مصر مجموعة شاملة من نماذج اختبارات مصر
+              التوظيفية المحاكية للاختبارات الرسمية. تشمل هذه المكتبة نماذج
+              امتحانات البريد المصري واختبارات التربية بتخصصاتها المختلفة.
+            </p>
+            <p>
+              تم إعداد هذه النماذج وفقاً لأحدث معايير امتحانات مصر الحكومية، حيث
+              تغطي جميع الكفايات المطلوبة: السلوكية، اللغوية، المعرفية
+              والتكنولوجية، بالإضافة إلى كفايات التخصص.
+            </p>
+            <h3 className="text-xl font-bold text-white mt-6 mb-3">
+              أنواع ملفات اختبارات مصر المتوفرة للتحميل:
+            </h3>
+            <ul className="list-disc mr-8 space-y-2">
+              <li>نماذج محاكية لامتحانات البريد المصري</li>
+              <li>نماذج اختبارات التربية والتعليم بجميع التخصصات</li>
+              <li>بنوك أسئلة للكفايات المختلفة</li>
+              <li>ملخصات وشروحات للمهارات المطلوبة</li>
+              <li>اختبارات الدفعات السابقة مع الحلول النموذجية</li>
+            </ul>
+          </div>
+        </div>
       </div>
+
+      {/* Structured Data for PDFs Page */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: pageTitle,
+            description:
+              "تحميل نماذج امتحانات مصر التوظيفية وملفات PDF لاختبارات البريد المصري والتربية",
+            keywords:
+              "امتحانات مصر, اختبارات مصر, نماذج امتحانات البريد المصري, اختبارات التربية",
+            url: "https://www.egyptianexams.com/pdfs",
+            mainEntity: {
+              "@type": "ItemList",
+              itemListElement: filteredPDFs.map((pdf, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                url: `https://www.egyptianexams.com${pdf.path}`,
+                name: pdf.title,
+                description: pdf.description,
+              })),
+            },
+          }),
+        }}
+      />
     </>
   );
 }
