@@ -20,14 +20,10 @@ const categories = [
 const pdfFiles = [
   {
     id: 1,
-    title: "نموذج امتحان البريد المصري المحاكي للإختبار الرسمي",
-    category: "mail",
-    date: "2024",
-    // downloads: 1250,
-    size: "2.4MB",
-    path: "/pdfs/mail-exam-2024.pdf",
-    description:
-      "نموذج امتحان شامل للبريد المصري يحاكي الإختبار الرسمي بنفس نمط الأسئلة والزمن",
+    title: "ملفات تخصص الرياضيات",
+    category: "math",
+    path: "https://drive.google.com/drive/folders/1xIU_Tfn1q9iYAAPwxNLAS6XgOb5_NfXP",
+    description: "ملفات شاملة لتخصص الرياضيات تشمل نماذج امتحانات وملخصات",
   },
   {
     id: 2,
@@ -140,7 +136,6 @@ const PDFCard = memo(({ pdf }) => (
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              {pdf.date}
             </span>
             {pdf.downloads && (
               <span className="flex items-center gap-1">
@@ -168,12 +163,13 @@ const PDFCard = memo(({ pdf }) => (
       {/* Download Button */}
       <a
         href={pdf.path}
+        target="_blank"
         download
         className="mt-6 w-full py-2 px-4 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-all duration-300"
       >
         <span>
-          تحميل ملف{" "}
-          {pdf.category === "mail" ? "امتحان البريد" : "اختبارات التربية"}
+          رابط تحميل ومشاهدة الملف
+          {/* {pdf.category === "mail" ? "امتحان البريد" : "اختبارات التربية"} */}
         </span>
         <svg
           className="w-5 h-5"
