@@ -1306,9 +1306,6 @@ const calculateActualScores = (examState) => {
   Object.entries(phases).forEach(([phaseId, phaseData]) => {
     if (!phaseData.completed) return;
 
-    // Special handling for behavioral phase
-    const isBehavioralPhase = phaseId === "behavioral";
-
     // Get the answers for this phase
     const phaseAnswers = phaseData.answers || {};
 
@@ -1319,22 +1316,17 @@ const calculateActualScores = (examState) => {
     // Use the utility function to calculate the correct score
     const scoreResult = calculatePhaseScore(subject, phaseId, phaseAnswers);
 
-    // Log for debugging
-    console.log(`Phase ${phaseId} score result:`, scoreResult);
+    // Log raw score result
+    console.log(
+      `Phase ${phaseId} raw score result:`,
+      JSON.stringify(scoreResult)
+    );
 
-    // Get the percentage as a number
-    const percentage = parseFloat(scoreResult.percentage);
+    // IMPORTANT: Use the calculated percentage directly, with no modifications
+    phaseScores[phaseId] = scoreResult.percentage;
 
-    // Special handling for behavioral to ensure it's not 0
-    if (isBehavioralPhase && percentage === 0 && questionCount > 0) {
-      console.warn(
-        "Behavioral score is 0 despite having answers - forcing minimum score"
-      );
-      phaseScores[phaseId] = 50; // Assign a minimum value to prevent 0
-    } else {
-      // Store the percentage score
-      phaseScores[phaseId] = percentage;
-    }
+    // Log the score we're using for this phase
+    console.log(`Using score for ${phaseId}: ${phaseScores[phaseId]}`);
 
     // Add to weighted average calculation
     totalWeightedScore += phaseScores[phaseId] * questionCount;
@@ -1345,9 +1337,9 @@ const calculateActualScores = (examState) => {
   const finalScore =
     totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
 
-  // Log final calculations for debugging
-  console.log("Final score calculation:", {
-    phaseScores,
+  // Log final calculations in detail
+  console.log("Final score calculation details:", {
+    individualPhaseScores: JSON.stringify(phaseScores),
     totalWeightedScore,
     totalWeight,
     finalScore,
@@ -1362,5 +1354,4 @@ const calculateActualScores = (examState) => {
     },
   };
 };
-
 export default ExamPhases;
