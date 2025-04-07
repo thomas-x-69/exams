@@ -121,14 +121,16 @@ const ExamInstructions = () => {
       setLoading(true); // Set loading state to true
 
       // Initialize exam in Redux
-      dispatch(
-        initExam({
-          subject,
-          userName: name,
-          organizationCode,
-        })
-      );
-
+      async function initExam() {
+        dispatch(
+          await initExam({
+            subject,
+            userName: name,
+            organizationCode,
+          })
+        );
+      }
+      initExam();
       // Store in localStorage as well to ensure persistence
       // This acts as a backup in case Redux state isn't immediately available
       localStorage.setItem("currentExamSubject", subject);
