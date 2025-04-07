@@ -1491,6 +1491,7 @@ export default function Home() {
       </div>
 
       {/* Enhanced structured data for the exam platform */}
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -1624,6 +1625,14 @@ export default function Home() {
           }),
         }}
       />
+      {/* <script
+        async="async"
+        data-cfasync="false"
+        src="//pl26316627.effectiveratecpm.com/8ec6bdce286a228c65ed68b05a0ddd40/invoke.js"
+      ></script>
+      <div id="container-8ec6bdce286a228c65ed68b05a0ddd40" className="">
+        thos is ad
+      </div> */}
     </>
   );
 }

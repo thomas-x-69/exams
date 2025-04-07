@@ -1288,111 +1288,140 @@ function MountedPhasesContent({ subject }) {
   );
 }
 
-// Calculate actual scores based on answers by comparing with correct answers
 const calculateActualScores = (examState) => {
   const { phases, activeExam } = examState;
   const subject = activeExam?.subject || "mail";
 
-  // Calculate score for each phase
+  console.log("Starting exam score calculation for subject:", subject);
+
+  // Track all phase scores and question counts
   const phaseScores = {};
+  const phaseQuestionCounts = {};
 
-  // For debugging
-  console.log("Calculating actual scores for phases:", Object.keys(phases));
-
-  // First pass: Calculate individual phase scores
+  // 1. First calculate individual phase scores
   Object.entries(phases).forEach(([phaseId, phaseData]) => {
+    // Skip incomplete phases
     if (!phaseData.completed) return;
 
-    // Special handling for behavioral phase
-    const isBehavioralPhase = phaseId === "behavioral";
-
-    // Get the answers for this phase
+    // Get answers for this phase
     const phaseAnswers = phaseData.answers || {};
-
-    // Skip if no answers
     const questionCount = Object.keys(phaseAnswers).length;
-    if (questionCount === 0) return;
 
-    // Use the utility function to calculate the correct score
+    // Always record the question count, even for phases with no answers
+    phaseQuestionCounts[phaseId] = questionCount;
+
+    // Skip calculation if no answers, but still include with 0 score
+    if (questionCount === 0) {
+      phaseScores[phaseId] = 0;
+      return;
+    }
+
+    // Calculate score for this phase using our utility function
     const scoreResult = calculatePhaseScore(subject, phaseId, phaseAnswers);
 
-    // Log for debugging
-    console.log(`Phase ${phaseId} score result:`, scoreResult);
+    // Store the percentage score
+    phaseScores[phaseId] = scoreResult.percentage || 0;
 
-    // Get the percentage as a number
-    const percentage = parseFloat(scoreResult.percentage);
-
-    // Store the percentage score - ensure behavioral score is properly handled
-    phaseScores[phaseId] =
-      isBehavioralPhase && scoreResult.maxPossiblePoints > 0
-        ? Math.round(
-            (scoreResult.totalPoints / scoreResult.maxPossiblePoints) * 100
-          )
-        : percentage;
+    console.log(`Phase ${phaseId} calculated score: ${phaseScores[phaseId]}%`);
   });
 
-  // Second pass: Group phases into main phases
+  // 2. Organize scores by main phase and subphase
   const mainPhaseScores = {};
-  const mainPhaseCount = {};
+  const mainPhaseQuestionCounts = {};
 
-  Object.keys(phaseScores).forEach((phaseId) => {
+  Object.entries(phaseScores).forEach(([phaseId, score]) => {
     if (phaseId.includes("_")) {
-      // This is a sub-phase
+      // This is a subphase (e.g., language_arabic)
       const [mainPhase, _] = phaseId.split("_");
 
+      // Initialize arrays if needed
       if (!mainPhaseScores[mainPhase]) {
-        mainPhaseScores[mainPhase] = 0;
-        mainPhaseCount[mainPhase] = 0;
+        mainPhaseScores[mainPhase] = [];
+        mainPhaseQuestionCounts[mainPhase] = 0;
       }
 
-      mainPhaseScores[mainPhase] += phaseScores[phaseId];
-      mainPhaseCount[mainPhase]++;
+      // Add this subphase's score and questions
+      mainPhaseScores[mainPhase].push(score);
+      mainPhaseQuestionCounts[mainPhase] += phaseQuestionCounts[phaseId] || 0;
     } else {
-      // This is a main phase without sub-phases
-      mainPhaseScores[phaseId] = phaseScores[phaseId];
-      mainPhaseCount[phaseId] = 1;
+      // This is a main phase with no subphases - directly store its score
+      mainPhaseScores[phaseId] = [score];
+      mainPhaseQuestionCounts[phaseId] = phaseQuestionCounts[phaseId] || 0;
     }
   });
 
-  // Calculate average for each main phase
-  const finalMainPhaseScores = {};
-  Object.keys(mainPhaseScores).forEach((mainPhase) => {
-    if (mainPhaseCount[mainPhase] > 0) {
-      finalMainPhaseScores[mainPhase] = Math.round(
-        mainPhaseScores[mainPhase] / mainPhaseCount[mainPhase]
-      );
+  // 3. Calculate average for each main phase
+  const finalPhaseScores = {};
+
+  Object.entries(mainPhaseScores).forEach(([phaseId, scores]) => {
+    // Calculate average score for this main phase
+    const totalScore = scores.reduce((sum, score) => sum + score, 0);
+    const averageScore =
+      scores.length > 0 ? Math.round(totalScore / scores.length) : 0;
+
+    // Store the average score
+    finalPhaseScores[phaseId] = averageScore;
+
+    console.log(
+      `Main phase ${phaseId} average score: ${averageScore}% from ${scores.length} subphases`
+    );
+  });
+
+  // 4. Calculate final weighted score
+  // Define phase weights (importance)
+  const phaseWeights = {
+    behavioral: 0.2, // 25% weight
+    language: 0.2, // 20% weight
+    knowledge: 0.2, // 25% weight
+    education: 0.2, // 15% weight
+    specialization: 0.2, // 15% weight
+  };
+
+  // Calculate weighted score
+  let weightedScore = 0;
+  let totalWeightUsed = 0;
+  let totalQuestions = 0;
+
+  Object.entries(finalPhaseScores).forEach(([phaseId, score]) => {
+    // Add to total questions count
+    totalQuestions += mainPhaseQuestionCounts[phaseId] || 0;
+
+    // Apply weight if defined
+    if (phaseWeights[phaseId] !== undefined) {
+      weightedScore += score * phaseWeights[phaseId];
+      totalWeightUsed += phaseWeights[phaseId];
     }
   });
 
-  // Calculate final score as average of main phase scores
-  let totalMainPhaseScore = 0;
-  let mainPhaseCounter = 0;
-
-  Object.values(finalMainPhaseScores).forEach((score) => {
-    totalMainPhaseScore += score;
-    mainPhaseCounter++;
-  });
-
+  // Calculate final score, defaulting to 0 if no phases completed
   const finalScore =
-    mainPhaseCounter > 0
-      ? Math.round(totalMainPhaseScore / mainPhaseCounter)
-      : 0;
+    totalWeightUsed > 0 ? Math.round(weightedScore / totalWeightUsed) : 0;
 
-  // Log final calculations for debugging
-  console.log("Final score calculation:", {
-    phaseScores,
-    mainPhaseScores: finalMainPhaseScores,
-    totalMainPhaseScore,
-    mainPhaseCounter,
+  console.log("Final exam calculation:", {
+    individualPhaseScores: phaseScores,
+    mainPhaseScores: finalPhaseScores,
+    totalQuestions,
     finalScore,
   });
 
+  // Prepare merged scores object with all phases
+  // This ensures all phases appear in results, even with 0 scores
+  const mergedScores = { ...phaseScores, ...finalPhaseScores };
+
+  // Ensure we always include behavioral, specialization, and education with a score
+  if (mergedScores.behavioral === undefined) mergedScores.behavioral = 0;
+  if (mergedScores.specialization === undefined)
+    mergedScores.specialization = 0;
+  if (activeExam?.subject !== "mail" && mergedScores.education === undefined) {
+    mergedScores.education = 0;
+  }
+
   return {
     totalScore: finalScore,
-    phaseScores,
+    phaseScores: mergedScores,
     details: {
-      totalCorrect: 0,
-      totalQuestions: Object.keys(phaseScores).length,
+      totalQuestions,
+      questionsByPhase: phaseQuestionCounts,
     },
   };
 };

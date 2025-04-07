@@ -253,6 +253,7 @@ export const examSlice = createSlice({
     },
 
     // Set exam results
+    // Set exam results
     setExamResults: (state, action) => {
       // Convert any string percentage values to numbers
       const results = action.payload;
@@ -267,7 +268,24 @@ export const examSlice = createSlice({
             results.phaseScores[key] = Number(results.phaseScores[key]);
           }
         });
+
+        // Ensure all phases have numeric scores (default to 0 if undefined)
+        const requiredPhases = [
+          "behavioral",
+          "language",
+          "knowledge",
+          "education",
+          "specialization",
+        ];
+        requiredPhases.forEach((phase) => {
+          if (results.phaseScores[phase] === undefined) {
+            results.phaseScores[phase] = 0;
+          }
+        });
       }
+
+      // Log results for debugging
+      console.log("Setting exam results:", JSON.stringify(results, null, 2));
 
       state.currentResult = results;
     },

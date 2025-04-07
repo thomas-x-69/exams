@@ -1404,64 +1404,79 @@ function getQuestionCount(mainPhase, subPhase) {
   return questionCounts[mainPhase] || 10;
 }
 
-// Helper function to organize phase scores into categories
+// Replace the organizePhaseScores function in src/app/exams/results/page.js
+
+// Simple, reliable function to organize phase scores for display
 function organizePhaseScores(phaseScores) {
+  // Define the standard structure for all categories
   const categories = {
     behavioral: {
       id: "behavioral",
       title: "الكفايات السلوكية والنفسية",
       scores: [],
       color: "blue",
-      mainScore: phaseScores.behavioral || 0,
+      mainScore: 0,
     },
     language: {
       id: "language",
       title: "الكفايات اللغوية",
       scores: [],
       color: "green",
+      mainScore: 0,
     },
     knowledge: {
       id: "knowledge",
       title: "الكفايات المعرفية والتكنولوجية",
       scores: [],
       color: "purple",
+      mainScore: 0,
     },
     specialization: {
       id: "specialization",
       title: "كفايات التخصص",
       scores: [],
       color: "amber",
-      mainScore: phaseScores.specialization || 0,
+      mainScore: 0,
     },
     education: {
       id: "education",
       title: "الكفايات التربوية",
       scores: [],
       color: "rose",
-      mainScore: phaseScores.education || 0,
+      mainScore: 0,
     },
   };
 
-  // Sort scores into categories
+  // Assign main phase scores directly
+  Object.entries(phaseScores).forEach(([phaseId, score]) => {
+    // Handle main phases directly
+    if (!phaseId.includes("_") && categories[phaseId]) {
+      categories[phaseId].mainScore = score;
+    }
+  });
+
+  // Process subphases and add them to their respective main phases
   Object.entries(phaseScores).forEach(([phaseId, score]) => {
     if (phaseId.includes("_")) {
       const [mainPhase, subPhase] = phaseId.split("_");
+
       if (categories[mainPhase]) {
         categories[mainPhase].scores.push({
           id: phaseId,
           title: getSubPhaseTitle(subPhase),
-          score,
-          questions: getQuestionCount(mainPhase, subPhase),
+          score: score,
+          questions: getStandardQuestionCount(mainPhase, subPhase), // Using renamed function
         });
       }
     }
   });
 
-  // Calculate main scores for categories with sub-phases
+  // Calculate main scores for categories where needed
   Object.keys(categories).forEach((categoryKey) => {
     const category = categories[categoryKey];
-    if (category.scores.length > 0 && !category.mainScore) {
-      // Calculate average from sub-scores
+
+    // If we have subphases but no main score, calculate it as the average
+    if (category.scores.length > 0 && category.mainScore === undefined) {
       const totalScore = category.scores.reduce(
         (sum, item) => sum + item.score,
         0
@@ -1470,11 +1485,62 @@ function organizePhaseScores(phaseScores) {
     }
   });
 
-  // Filter out empty categories
-  return Object.values(categories).filter(
-    (category) => category.scores.length > 0 || category.mainScore
-  );
+  // Convert to array and sort in a logical order
+  const result = Object.values(categories);
+
+  // Sort categories in a logical order
+  result.sort((a, b) => {
+    const order = [
+      "behavioral",
+      "language",
+      "knowledge",
+      "education",
+      "specialization",
+    ];
+    return order.indexOf(a.id) - order.indexOf(b.id);
+  });
+
+  return result;
 }
+
+// Helper function to get friendly names for subphases
+function getSubPhaseTitle(subPhaseId) {
+  const titles = {
+    arabic: "اللغة العربية",
+    english: "اللغة الإنجليزية",
+    iq: "اختبار الذكاء",
+    general: "معلومات عامة",
+    it: "تكنولوجيا المعلومات",
+  };
+
+  return titles[subPhaseId] || subPhaseId;
+}
+
+// Helper function to get standard question counts - RENAMED to avoid conflict
+function getStandardQuestionCount(mainPhase, subPhase) {
+  const questionCounts = {
+    behavioral: 30,
+    language: {
+      arabic: 20,
+      english: 20,
+    },
+    knowledge: {
+      iq: 15,
+      general: 15,
+      it: 10,
+    },
+    specialization: 30,
+    education: 30,
+  };
+
+  if (subPhase && questionCounts[mainPhase]?.[subPhase]) {
+    return questionCounts[mainPhase][subPhase];
+  }
+
+  return questionCounts[mainPhase] || 10;
+}
+
+// Helper function to get friendly names for subphases
 
 // Helper function to get top scoring category
 function getTopCategory(categories) {
@@ -1523,17 +1589,6 @@ function getAverageScore(scores) {
 }
 
 // Helper function to get subphase title
-function getSubPhaseTitle(subPhaseId) {
-  const subPhaseTitles = {
-    arabic: "اللغة العربية",
-    english: "اللغة الإنجليزية",
-    iq: "اختبار الذكاء",
-    general: "معلومات عامة",
-    it: "تكنولوجيا المعلومات",
-  };
-
-  return subPhaseTitles[subPhaseId] || subPhaseId;
-}
 
 // Helper function to get bar color
 function getBarColor(color) {

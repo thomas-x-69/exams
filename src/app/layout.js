@@ -129,6 +129,11 @@ export default function RootLayout({ children }) {
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         {/* Resource Hints - Preconnect to external domains */}
+        <Script
+          strategy="lazyOnload"
+          src="//pl26316499.effectiveratecpm.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
+        />
+
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"

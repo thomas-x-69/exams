@@ -1,26 +1,25 @@
-// components/BehavioralAnalysis.js - Simplified without trait categorization
+// components/BehavioralAnalysis.js - Complete rewrite
+
 import React from "react";
 import { analyzeBehavioralResults } from "../src/app/data/behavioralAnalysis";
 import questionsBank from "../src/app/data/index";
 
 const BehavioralAnalysis = ({ examState }) => {
-  // Extract behavioral answers and questions
-  const behavioralPhase = examState.phases["behavioral"] || {};
+  // Extract behavioral phase data from the exam state
+  const behavioralPhase = examState.phases?.["behavioral"] || {};
   const behavioralAnswers = behavioralPhase.answers || {};
-  const behavioralQuestions = questionsBank.mail.behavioral || [];
+  const behavioralQuestions = questionsBank.mail?.behavioral || [];
 
-  // Analyze results
+  // Always run the analysis, even with no answers
   const analysis = analyzeBehavioralResults(
     behavioralAnswers,
     behavioralQuestions
   );
 
-  // If no behavioral questions were answered, don't show the component
-  if (Object.keys(behavioralAnswers).length === 0) {
-    return null;
-  }
+  // Check if we have answers (for conditional rendering decisions)
+  const hasAnswers = Object.keys(behavioralAnswers).length > 0;
 
-  // Function to get color class based on score
+  // Function to get color based on score
   const getScoreColorClass = (score) => {
     if (score >= 85) return "bg-green-500";
     if (score >= 70) return "bg-blue-500";
@@ -34,7 +33,7 @@ const BehavioralAnalysis = ({ examState }) => {
         تحليل المهارات السلوكية والشخصية
       </h3>
 
-      {/* Overall Score */}
+      {/* Always show the score section */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <h4 className="font-bold text-gray-700">الدرجة الكلية</h4>
@@ -42,6 +41,8 @@ const BehavioralAnalysis = ({ examState }) => {
             {analysis.overallScore}%
           </span>
         </div>
+
+        {/* Progress bar */}
         <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full ${getScoreColorClass(
@@ -50,13 +51,16 @@ const BehavioralAnalysis = ({ examState }) => {
             style={{ width: `${analysis.overallScore}%` }}
           ></div>
         </div>
+
+        {/* Question count */}
         <p className="mt-2 text-sm text-gray-600">
-          تم الإجابة على {analysis.questionCount} سؤال من أسئلة المهارات
-          السلوكية والشخصية
+          {hasAnswers
+            ? `تم الإجابة على ${analysis.questionCount} سؤال من أسئلة المهارات السلوكية والشخصية`
+            : "لم يتم الإجابة على أسئلة المهارات السلوكية والشخصية"}
         </p>
       </div>
 
-      {/* Performance Summary */}
+      {/* Info box - always show */}
       <div className="px-4 py-3 bg-blue-50 text-blue-800 rounded-lg mb-6">
         <div className="flex items-start gap-2">
           <svg
@@ -80,8 +84,8 @@ const BehavioralAnalysis = ({ examState }) => {
         </div>
       </div>
 
-      {/* Strengths */}
-      {analysis.strengths.length > 0 && (
+      {/* Strengths section - always show at least one */}
+      {analysis.strengths && analysis.strengths.length > 0 && (
         <div className="mb-6">
           <h4 className="font-bold text-gray-700 mb-3">نقاط القوة</h4>
           <div className="space-y-3">
@@ -113,40 +117,45 @@ const BehavioralAnalysis = ({ examState }) => {
         </div>
       )}
 
-      {/* Areas for Improvement */}
-      {analysis.areasForImprovement.length > 0 && (
-        <div>
-          <h4 className="font-bold text-gray-700 mb-3">فرص التحسين</h4>
-          <div className="space-y-3">
-            {analysis.areasForImprovement.map((item, index) => (
-              <div
-                key={index}
-                className="bg-amber-50 rounded-lg p-3 border border-amber-100"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <svg
-                    className="w-4 h-4 text-amber-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01M12 6a7 7 0 110 14 7 7 0 010-14z"
-                    />
-                  </svg>
-                  <span className="font-bold text-amber-800">مجال للتحسين</span>
+      {/* Areas for improvement - always show at least one */}
+      {analysis.areasForImprovement &&
+        analysis.areasForImprovement.length > 0 && (
+          <div>
+            <h4 className="font-bold text-gray-700 mb-3">فرص التحسين</h4>
+            <div className="space-y-3">
+              {analysis.areasForImprovement.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-amber-50 rounded-lg p-3 border border-amber-100"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg
+                      className="w-4 h-4 text-amber-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01M12 6a7 7 0 110 14 7 7 0 010-14z"
+                      />
+                    </svg>
+                    <span className="font-bold text-amber-800">
+                      مجال للتحسين
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 pr-6">
+                    {item.description}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-700 pr-6">{item.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* General Tips */}
+      {/* General tips - always show */}
       <div className="mt-6 pt-6 border-t border-gray-100">
         <h4 className="font-bold text-gray-700 mb-3">نصائح عامة</h4>
         <ul className="space-y-2 text-sm text-gray-600">
