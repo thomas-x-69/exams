@@ -1,21 +1,11 @@
-// src/app/exams/instructions/page.js
+// src/app/exams/instructions/page.js - Fixed with proper state initialization
 "use client";
 
-import React, { useState, useEffect, useMemo, memo } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
-import Link from "next/link";
+import Image from "next/image";
 import { initExam } from "../../../../store/examSlice";
-
-// Memoized instruction item component
-const InstructionItem = memo(({ icon, text }) => (
-  <div className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
-    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-xl shadow-sm">
-      {icon}
-    </div>
-    <p className="text-gray-700 text-sm pt-1.5">{text}</p>
-  </div>
-));
 
 // Memoized subject information to prevent recalculation
 const subjectInfo = {
@@ -69,6 +59,16 @@ const subjectInfo = {
   },
 };
 
+// Memoized instruction item component
+const InstructionItem = memo(({ icon, text }) => (
+  <div className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
+    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-xl shadow-sm">
+      {icon}
+    </div>
+    <p className="text-gray-700 text-sm pt-1.5">{text}</p>
+  </div>
+));
+
 const ExamInstructions = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,8 +76,7 @@ const ExamInstructions = () => {
   const dispatch = useDispatch();
 
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Add loading state
 
   // Generate organization code once when component mounts
   const organizationCode = useMemo(
@@ -110,56 +109,49 @@ const ExamInstructions = () => {
     []
   );
 
-  // Clear any error message when name changes
-  useEffect(() => {
-    if (errorMessage) {
-      setErrorMessage("");
-    }
-  }, [name, errorMessage]);
-
   const handleStartExam = async (e) => {
     e.preventDefault();
 
     if (!name.trim()) {
-      setErrorMessage("برجاء إدخال الاسم");
+      alert("برجاء إدخال الاسم");
       return;
     }
 
     try {
-      setLoading(true);
+      setLoading(true); // Set loading state to true
 
-      // First, store in localStorage to ensure it's immediately available
-      // This helps prevent the infinite loading issue
-      localStorage.setItem("currentExamSubject", subject || "mail");
-      localStorage.setItem("currentExamUser", name);
-      localStorage.setItem("currentExamOrgCode", organizationCode);
-      localStorage.setItem("activeExam", "true");
-
-      // Then initialize exam in Redux
+      // Initialize exam in Redux
       dispatch(
         initExam({
-          subject: subject || "mail",
+          subject,
           userName: name,
           organizationCode,
         })
       );
 
-      // Add a delay to ensure Redux state is updated before navigation
+      // Store in localStorage as well to ensure persistence
+      // This acts as a backup in case Redux state isn't immediately available
+      localStorage.setItem("currentExamSubject", subject);
+      localStorage.setItem("currentExamUser", name);
+      localStorage.setItem("currentExamOrgCode", organizationCode);
+      localStorage.setItem("activeExam", "true"); // Flag to indicate an active exam
+
+      // Add a small delay to ensure state is updated before navigation
       setTimeout(() => {
         // Navigate to phases page with replace:true to prevent back navigation
-        router.replace(`/exams/phases?subject=${subject || "mail"}`);
-      }, 500);
+        router.replace(`/exams/phases?subject=${subject}`);
+      }, 100);
     } catch (error) {
       console.error("Error starting exam:", error);
-      setLoading(false);
-      setErrorMessage("حدث خطأ أثناء بدء الاختبار. يرجى المحاولة مرة أخرى.");
+      setLoading(false); // Reset loading state on error
+      alert("حدث خطأ أثناء بدء الاختبار. يرجى المحاولة مرة أخرى.");
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-2 h-[calc(100vh-4rem)] flex items-center justify-center">
       {/* Main Card */}
-      <div className="bg-white rounded-2xl shadow-xl shadow-indigo-200/20 max-h-full overflow-hidden flex flex-col w-full">
+      <div className="bg-white rounded-2xl shadow-xl shadow-indigo-200/20 max-h-full overflow-hidden flex flex-col">
         {/* Header with Subject Info */}
         <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100 flex-shrink-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,rgba(233,238,255,0.5),transparent)]"></div>
@@ -224,13 +216,6 @@ const ExamInstructions = () => {
 
           {/* Form Section */}
           <div className="space-y-4">
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg border border-red-200 text-sm">
-                {errorMessage}
-              </div>
-            )}
-
             {/* Name Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -289,10 +274,8 @@ const ExamInstructions = () => {
             <button
               type="submit"
               onClick={handleStartExam}
-              disabled={loading}
-              className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 group text-sm ${
-                loading ? "opacity-70 cursor-not-allowed" : ""
-              }`}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 group text-sm"
+              disabled={loading} // Disable button while loading
             >
               {loading ? (
                 <>
