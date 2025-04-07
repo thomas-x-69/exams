@@ -1296,15 +1296,15 @@ const calculateActualScores = (examState) => {
   // Calculate score for each phase
   const phaseScores = {};
 
-  // For weighted average calculation
-  let totalWeightedScore = 0;
-  let totalWeight = 0;
-
   // For debugging
   console.log("Calculating actual scores for phases:", Object.keys(phases));
 
+  // First pass: Calculate individual phase scores
   Object.entries(phases).forEach(([phaseId, phaseData]) => {
     if (!phaseData.completed) return;
+
+    // Special handling for behavioral phase
+    const isBehavioralPhase = phaseId === "behavioral";
 
     // Get the answers for this phase
     const phaseAnswers = phaseData.answers || {};
@@ -1316,32 +1316,74 @@ const calculateActualScores = (examState) => {
     // Use the utility function to calculate the correct score
     const scoreResult = calculatePhaseScore(subject, phaseId, phaseAnswers);
 
-    // Log raw score result
-    console.log(
-      `Phase ${phaseId} raw score result:`,
-      JSON.stringify(scoreResult)
-    );
+    // Log for debugging
+    console.log(`Phase ${phaseId} score result:`, scoreResult);
 
-    // IMPORTANT: Use the calculated percentage directly, with no modifications
-    phaseScores[phaseId] = scoreResult.percentage;
+    // Get the percentage as a number
+    const percentage = parseFloat(scoreResult.percentage);
 
-    // Log the score we're using for this phase
-    console.log(`Using score for ${phaseId}: ${phaseScores[phaseId]}`);
-
-    // Add to weighted average calculation
-    totalWeightedScore += phaseScores[phaseId] * questionCount;
-    totalWeight += questionCount;
+    // Store the percentage score - ensure behavioral score is properly handled
+    phaseScores[phaseId] =
+      isBehavioralPhase && scoreResult.maxPossiblePoints > 0
+        ? Math.round(
+            (scoreResult.totalPoints / scoreResult.maxPossiblePoints) * 100
+          )
+        : percentage;
   });
 
-  // Calculate weighted average for final score
-  const finalScore =
-    totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
+  // Second pass: Group phases into main phases
+  const mainPhaseScores = {};
+  const mainPhaseCount = {};
 
-  // Log final calculations in detail
-  console.log("Final score calculation details:", {
-    individualPhaseScores: JSON.stringify(phaseScores),
-    totalWeightedScore,
-    totalWeight,
+  Object.keys(phaseScores).forEach((phaseId) => {
+    if (phaseId.includes("_")) {
+      // This is a sub-phase
+      const [mainPhase, _] = phaseId.split("_");
+
+      if (!mainPhaseScores[mainPhase]) {
+        mainPhaseScores[mainPhase] = 0;
+        mainPhaseCount[mainPhase] = 0;
+      }
+
+      mainPhaseScores[mainPhase] += phaseScores[phaseId];
+      mainPhaseCount[mainPhase]++;
+    } else {
+      // This is a main phase without sub-phases
+      mainPhaseScores[phaseId] = phaseScores[phaseId];
+      mainPhaseCount[phaseId] = 1;
+    }
+  });
+
+  // Calculate average for each main phase
+  const finalMainPhaseScores = {};
+  Object.keys(mainPhaseScores).forEach((mainPhase) => {
+    if (mainPhaseCount[mainPhase] > 0) {
+      finalMainPhaseScores[mainPhase] = Math.round(
+        mainPhaseScores[mainPhase] / mainPhaseCount[mainPhase]
+      );
+    }
+  });
+
+  // Calculate final score as average of main phase scores
+  let totalMainPhaseScore = 0;
+  let mainPhaseCounter = 0;
+
+  Object.values(finalMainPhaseScores).forEach((score) => {
+    totalMainPhaseScore += score;
+    mainPhaseCounter++;
+  });
+
+  const finalScore =
+    mainPhaseCounter > 0
+      ? Math.round(totalMainPhaseScore / mainPhaseCounter)
+      : 0;
+
+  // Log final calculations for debugging
+  console.log("Final score calculation:", {
+    phaseScores,
+    mainPhaseScores: finalMainPhaseScores,
+    totalMainPhaseScore,
+    mainPhaseCounter,
     finalScore,
   });
 
@@ -1350,7 +1392,7 @@ const calculateActualScores = (examState) => {
     phaseScores,
     details: {
       totalCorrect: 0,
-      totalQuestions: totalWeight,
+      totalQuestions: Object.keys(phaseScores).length,
     },
   };
 };

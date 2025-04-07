@@ -142,7 +142,7 @@ const CategoryCard = memo(
           </div>
 
           {/* Main category score preview */}
-          {category.mainScore && (
+          {category.mainScore !== undefined && (
             <div className="mt-2">
               <div className="flex justify-between items-center mb-1">
                 <div className="text-sm font-medium text-gray-700">
@@ -245,12 +245,19 @@ const CategoryDetail = memo(
                     <div className="flex justify-between text-gray-600 mb-2 pb-1 border-b border-gray-100">
                       <span>
                         عدد الأسئلة الكلي:{" "}
-                        {Math.round(
-                          (100 / score.score) * (score.score / 100) * 10
-                        )}
+                        {score.questions ||
+                          getQuestionCount(category.id, score.id.split("_")[1])}
                       </span>
                       <span>
-                        الإجابات الصحيحة: {Math.round((score.score / 100) * 10)}
+                        الإجابات الصحيحة:{" "}
+                        {Math.round(
+                          (score.score / 100) *
+                            (score.questions ||
+                              getQuestionCount(
+                                category.id,
+                                score.id.split("_")[1]
+                              ))
+                        )}
                       </span>
                     </div>
 
@@ -1128,8 +1135,9 @@ const ResultsPage = () => {
           </div>
 
           {/* Behavioral Analysis - Only shown if behavioral phase was completed */}
-          {examState.completedPhases &&
-            examState.completedPhases.includes("behavioral") && (
+          {examState.phases &&
+            examState.phases.behavioral &&
+            examState.phases.behavioral.completed && (
               <BehavioralAnalysis examState={examState} />
             )}
 
@@ -1372,22 +1380,66 @@ function getCertificateType(score) {
   return "شهادة مشاركة";
 }
 
+// Function to get question counts for each phase/subphase
+function getQuestionCount(mainPhase, subPhase) {
+  const questionCounts = {
+    behavioral: 30,
+    language: {
+      arabic: 20,
+      english: 20,
+    },
+    knowledge: {
+      iq: 15,
+      general: 15,
+      it: 10,
+    },
+    specialization: 30,
+    education: 30,
+  };
+
+  if (subPhase) {
+    return questionCounts[mainPhase]?.[subPhase] || 10;
+  }
+
+  return questionCounts[mainPhase] || 10;
+}
+
 // Helper function to organize phase scores into categories
 function organizePhaseScores(phaseScores) {
   const categories = {
     behavioral: {
+      id: "behavioral",
       title: "الكفايات السلوكية والنفسية",
       scores: [],
       color: "blue",
+      mainScore: phaseScores.behavioral || 0,
     },
-    language: { title: "الكفايات اللغوية", scores: [], color: "green" },
+    language: {
+      id: "language",
+      title: "الكفايات اللغوية",
+      scores: [],
+      color: "green",
+    },
     knowledge: {
+      id: "knowledge",
       title: "الكفايات المعرفية والتكنولوجية",
       scores: [],
       color: "purple",
     },
-    specialization: { title: "كفايات التخصص", scores: [], color: "amber" },
-    education: { title: "الكفايات التربوية", scores: [], color: "rose" },
+    specialization: {
+      id: "specialization",
+      title: "كفايات التخصص",
+      scores: [],
+      color: "amber",
+      mainScore: phaseScores.specialization || 0,
+    },
+    education: {
+      id: "education",
+      title: "الكفايات التربوية",
+      scores: [],
+      color: "rose",
+      mainScore: phaseScores.education || 0,
+    },
   };
 
   // Sort scores into categories
@@ -1399,12 +1451,22 @@ function organizePhaseScores(phaseScores) {
           id: phaseId,
           title: getSubPhaseTitle(subPhase),
           score,
+          questions: getQuestionCount(mainPhase, subPhase),
         });
       }
-    } else {
-      if (categories[phaseId]) {
-        categories[phaseId].mainScore = score;
-      }
+    }
+  });
+
+  // Calculate main scores for categories with sub-phases
+  Object.keys(categories).forEach((categoryKey) => {
+    const category = categories[categoryKey];
+    if (category.scores.length > 0 && !category.mainScore) {
+      // Calculate average from sub-scores
+      const totalScore = category.scores.reduce(
+        (sum, item) => sum + item.score,
+        0
+      );
+      category.mainScore = Math.round(totalScore / category.scores.length);
     }
   });
 
