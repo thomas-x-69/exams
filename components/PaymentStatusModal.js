@@ -1,9 +1,24 @@
 // components/PaymentStatusModal.js
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { handleSuccessfulPayment } from "../utils/premiumService";
 
 const PaymentStatusModal = ({ isOpen, status, onClose }) => {
   const router = useRouter();
+
+  // Handle successful payment automatically
+  useEffect(() => {
+    if (isOpen && status?.status === "success") {
+      const result = handleSuccessfulPayment({ id: "lifetime" });
+      if (result.success) {
+        // Set a timer to redirect to premium content
+        const timer = setTimeout(() => {
+          router.push("/premium-exams");
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isOpen, status, router]);
 
   if (!isOpen || !status) return null;
 
@@ -11,9 +26,9 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
     switch (status.status) {
       case "success":
         return (
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-24 h-24 bg-gradient-to-br from-green-50 to-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-500/20">
             <svg
-              className="w-12 h-12 text-green-600"
+              className="w-14 h-14 text-green-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -29,9 +44,9 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
         );
       case "error":
         return (
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-24 h-24 bg-gradient-to-br from-red-50 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-red-500/20">
             <svg
-              className="w-12 h-12 text-red-600"
+              className="w-14 h-14 text-red-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -48,9 +63,9 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
       case "pending":
       default:
         return (
-          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/20">
             <svg
-              className="w-12 h-12 text-blue-600 animate-spin"
+              className="w-14 h-14 text-blue-600 animate-spin"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -84,12 +99,38 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
     }
   };
 
+  const getBackgroundColor = () => {
+    switch (status.status) {
+      case "success":
+        return "bg-gradient-to-br from-white to-green-50";
+      case "error":
+        return "bg-gradient-to-br from-white to-red-50";
+      case "pending":
+      default:
+        return "bg-gradient-to-br from-white to-blue-50";
+    }
+  };
+
+  const getBorderColor = () => {
+    switch (status.status) {
+      case "success":
+        return "border-green-200";
+      case "error":
+        return "border-red-200";
+      case "pending":
+      default:
+        return "border-blue-200";
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center animate-in fade-in zoom-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <div
+        className={`${getBackgroundColor()} rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-in zoom-in fade-in duration-300 border-2 ${getBorderColor()}`}
+      >
         {getStatusIcon()}
 
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">
+        <h3 className="text-2xl font-bold text-gray-800 mb-3">
           {status.status === "success"
             ? "تم الدفع بنجاح!"
             : status.status === "error"
@@ -97,17 +138,31 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
             : "جاري معالجة الدفع"}
         </h3>
 
-        <p className="text-gray-600 mb-6">{status.message}</p>
+        <p className="text-gray-600 mb-6 text-lg">{status.message}</p>
+
+        {status.status === "success" && (
+          <>
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-6">
+              <div
+                className="h-full bg-green-500 animate-pulse"
+                style={{ width: "100%" }}
+              ></div>
+            </div>
+            <p className="text-gray-500 mb-4 text-sm">
+              جاري تحويلك للمحتوى المميز خلال ثواني...
+            </p>
+          </>
+        )}
 
         <button
           onClick={handleAction}
-          className={`px-8 py-2 rounded-lg font-bold text-white ${
+          className={`px-8 py-3 rounded-xl font-bold text-white text-lg ${
             status.status === "success"
-              ? "bg-green-600 hover:bg-green-700"
+              ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               : status.status === "error"
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-blue-600"
-          } transition-colors`}
+              ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+              : "bg-gradient-to-r from-blue-500 to-indigo-600"
+          } transition-colors shadow-lg`}
         >
           {status.status === "success"
             ? "استعرض المحتوى المميز"
@@ -115,6 +170,15 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
             ? "حاول مرة أخرى"
             : "انتظار..."}
         </button>
+
+        {status.status === "error" && (
+          <p className="mt-4 text-gray-500 text-sm">
+            إذا واجهت أي مشكلة، يرجى التواصل مع الدعم الفني على{" "}
+            <span className="font-medium text-gray-800">
+              support@egyptianexams.com
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );
