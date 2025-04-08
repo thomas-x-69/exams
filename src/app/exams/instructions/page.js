@@ -109,9 +109,6 @@ const ExamInstructions = () => {
     []
   );
 
-  // src/app/exams/instructions/page.js
-  // Update the handleStartExam function:
-
   const handleStartExam = async (e) => {
     e.preventDefault();
 

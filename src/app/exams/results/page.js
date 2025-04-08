@@ -1404,10 +1404,10 @@ function getQuestionCount(mainPhase, subPhase) {
   return questionCounts[mainPhase] || 10;
 }
 
-// Replace the organizePhaseScores function in src/app/exams/results/page.js
+// Fixed organizePhaseScores function that properly accepts subject parameter
+function organizePhaseScores(phaseScores, examSubject) {
+  console.log("Organizing phase scores for subject:", examSubject);
 
-// Simple, reliable function to organize phase scores for display
-function organizePhaseScores(phaseScores) {
   // Define the standard structure for all categories
   const categories = {
     behavioral: {
@@ -1438,17 +1438,26 @@ function organizePhaseScores(phaseScores) {
       color: "amber",
       mainScore: 0,
     },
-    education: {
+  };
+
+  // Add education category only for non-mail subjects
+  if (examSubject !== "mail") {
+    categories.education = {
       id: "education",
       title: "الكفايات التربوية",
       scores: [],
       color: "rose",
       mainScore: 0,
-    },
-  };
+    };
+  }
 
   // Assign main phase scores directly
   Object.entries(phaseScores).forEach(([phaseId, score]) => {
+    // Skip education for mail exams
+    if (phaseId === "education" && examSubject === "mail") {
+      return;
+    }
+
     // Handle main phases directly
     if (!phaseId.includes("_") && categories[phaseId]) {
       categories[phaseId].mainScore = score;
@@ -1460,12 +1469,17 @@ function organizePhaseScores(phaseScores) {
     if (phaseId.includes("_")) {
       const [mainPhase, subPhase] = phaseId.split("_");
 
+      // Skip education for mail exams
+      if (mainPhase === "education" && examSubject === "mail") {
+        return;
+      }
+
       if (categories[mainPhase]) {
         categories[mainPhase].scores.push({
           id: phaseId,
           title: getSubPhaseTitle(subPhase),
           score: score,
-          questions: getStandardQuestionCount(mainPhase, subPhase), // Using renamed function
+          questions: getStandardQuestionCount(mainPhase, subPhase),
         });
       }
     }
@@ -1500,6 +1514,10 @@ function organizePhaseScores(phaseScores) {
     return order.indexOf(a.id) - order.indexOf(b.id);
   });
 
+  console.log(
+    "Organized categories:",
+    result.map((c) => c.id)
+  );
   return result;
 }
 

@@ -1368,14 +1368,23 @@ const calculateActualScores = (examState) => {
   });
 
   // 4. Calculate final weighted score
-  // Define phase weights (importance)
-  const phaseWeights = {
-    behavioral: 0.2, // 25% weight
-    language: 0.2, // 20% weight
-    knowledge: 0.2, // 25% weight
-    education: 0.2, // 15% weight
-    specialization: 0.2, // 15% weight
-  };
+  // Define phase weights based on subject (mail or education)
+  const phaseWeights = {};
+
+  if (subject === "mail") {
+    // For mail exams: exclude education and distribute weight equally among 4 phases
+    phaseWeights.behavioral = 0.25;
+    phaseWeights.language = 0.25;
+    phaseWeights.knowledge = 0.25;
+    phaseWeights.specialization = 0.25;
+  } else {
+    // For education exams: include all 5 phases with equal weight
+    phaseWeights.behavioral = 0.2;
+    phaseWeights.language = 0.2;
+    phaseWeights.knowledge = 0.2;
+    phaseWeights.education = 0.2;
+    phaseWeights.specialization = 0.2;
+  }
 
   // Calculate weighted score
   let weightedScore = 0;
@@ -1408,10 +1417,12 @@ const calculateActualScores = (examState) => {
   // This ensures all phases appear in results, even with 0 scores
   const mergedScores = { ...phaseScores, ...finalPhaseScores };
 
-  // Ensure we always include behavioral, specialization, and education with a score
+  // Ensure we always include behavioral, specialization with a score
   if (mergedScores.behavioral === undefined) mergedScores.behavioral = 0;
   if (mergedScores.specialization === undefined)
     mergedScores.specialization = 0;
+
+  // Only include education for non-mail subjects
   if (activeExam?.subject !== "mail" && mergedScores.education === undefined) {
     mergedScores.education = 0;
   }
