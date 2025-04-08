@@ -136,17 +136,17 @@ export async function POST(req) {
     switch (paymentMethodId) {
       case "fawry":
         // Fawry payment URL
-        paymentUrl = `https://accept.paymob.com/api/acceptance/payments/pay?payment_token=${paymentToken}`;
+        paymentUrl = `https://accept.paymob.com/api/acceptance/iframes/911567?payment_token=${paymentToken}`;
         break;
 
       case "wallet":
         // Mobile wallet payment URL
-        paymentUrl = `https://accept.paymob.com/api/acceptance/payments/pay?payment_token=${paymentToken}`;
+        paymentUrl = `https://accept.paymob.com/api/acceptance/iframes/911566?payment_token=${paymentToken}`;
         break;
 
       case "credit":
         // Card payment URL (iframe)
-        paymentUrl = `https://accept.paymob.com/api/acceptance/iframes/${process.env.PAYMOB_IFRAME_ID}?payment_token=${paymentToken}`;
+        paymentUrl = `hhttps://accept.paymob.com/api/acceptance/iframes/911566?payment_token=${paymentToken}`;
         break;
 
       default:

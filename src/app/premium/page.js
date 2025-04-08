@@ -70,7 +70,7 @@ export default function PremiumPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-900 relative overflow-hidden ">
+      <div className="min-h-screen bg-slate-900 relative overflow-hidden">
         {/* Dynamic Animated Background Elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* Base Grid Pattern */}
@@ -100,9 +100,9 @@ export default function PremiumPage() {
           <Header />
 
           {/* Hero Section - Enhanced with animated elements */}
-          <div className="max-w-4xl mx-auto text-center mb-8">
+          <div className="max-w-4xl mx-auto text-center mb-8 ">
             {/* Limited Time Offer Tag */}
-            <div className="inline-block bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse mb-6 transform -rotate-2">
+            <div className="inline-block bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg mb-6 ">
               عرض خاص لفترة محدودة - ينتهي خلال 7 أيام
             </div>
 
@@ -147,7 +147,7 @@ export default function PremiumPage() {
             </div>
 
             {/* Scroll Direction Indicator */}
-            <div className="hidden md:flex flex-col items-center mt-12 animate-bounce">
+            <div className="hidden md:flex flex-col items-center mt-12  animate-bounce">
               <span className="text-white/60 text-sm mb-2">اكتشف المزيد</span>
               <svg
                 className="w-6 h-6 text-white/60"
@@ -207,12 +207,24 @@ export default function PremiumPage() {
               </p>
             </div>
 
-            {/* Features Grid */}
+            {/* Features Grid - WITH SVG ICONS INSTEAD OF EMOJIS */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Feature 1 */}
+              {/* Feature 1 - Exam Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4 text-3xl">
-                  📝
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   امتحانات حقيقية
@@ -223,10 +235,22 @@ export default function PremiumPage() {
                 </p>
               </div>
 
-              {/* Feature 2 */}
+              {/* Feature 2 - Analytics Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4 text-3xl">
-                  📊
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   تحليل متقدم للنتائج
@@ -237,10 +261,22 @@ export default function PremiumPage() {
                 </p>
               </div>
 
-              {/* Feature 3 */}
+              {/* Feature 3 - Updates Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4 text-3xl">
-                  🔄
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   تحديثات مستمرة
@@ -251,10 +287,22 @@ export default function PremiumPage() {
                 </p>
               </div>
 
-              {/* Feature 4 */}
+              {/* Feature 4 - Certificate Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4 text-3xl">
-                  🏆
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   شهادات إتمام
@@ -265,10 +313,22 @@ export default function PremiumPage() {
                 </p>
               </div>
 
-              {/* Feature 5 */}
+              {/* Feature 5 - Support Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4 text-3xl">
-                  💬
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   دعم فني متميز
@@ -279,10 +339,22 @@ export default function PremiumPage() {
                 </p>
               </div>
 
-              {/* Feature 6 */}
+              {/* Feature 6 - Payment/Lifetime Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4 text-3xl">
-                  💰
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   اشتراك لمرة واحدة
