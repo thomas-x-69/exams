@@ -141,7 +141,7 @@ const ExamInstructions = () => {
       // Increase delay to ensure Redux state is updated before navigation
       setTimeout(() => {
         router.replace(`/exams/phases?subject=${subjectToUse}`);
-      }, 300); // Increased from 100ms
+      }, 3000); // Increased from 100ms
     } catch (error) {
       console.error("Error starting exam:", error);
       setLoading(false);
