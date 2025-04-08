@@ -569,8 +569,8 @@ const ResultsPage = () => {
   // Consistently called on EVERY render, before any conditionals
   const resultLevel = useMemo(() => getResultLevel(totalScore), [totalScore]);
   const categories = useMemo(
-    () => organizePhaseScores(phaseScores),
-    [phaseScores]
+    () => organizePhaseScores(phaseScores, activeExam?.subject || ""),
+    [phaseScores, activeExam?.subject]
   );
   const currentSubject = useMemo(
     () => (activeExam?.subject === "mail" ? "البريد المصري" : "التربية"),
@@ -1328,6 +1328,121 @@ const ResultsPage = () => {
   );
 };
 
+// Helper function to organize phase scores with proper subject handling
+function organizePhaseScores(phaseScores, examSubject) {
+  console.log("Organizing phase scores for subject:", examSubject);
+
+  // Define the standard structure for all categories
+  const categories = {
+    behavioral: {
+      id: "behavioral",
+      title: "الكفايات السلوكية والنفسية",
+      scores: [],
+      color: "blue",
+      mainScore: 0,
+    },
+    language: {
+      id: "language",
+      title: "الكفايات اللغوية",
+      scores: [],
+      color: "green",
+      mainScore: 0,
+    },
+    knowledge: {
+      id: "knowledge",
+      title: "الكفايات المعرفية والتكنولوجية",
+      scores: [],
+      color: "purple",
+      mainScore: 0,
+    },
+    specialization: {
+      id: "specialization",
+      title: "كفايات التخصص",
+      scores: [],
+      color: "amber",
+      mainScore: 0,
+    },
+  };
+
+  // Add education category only for non-mail subjects
+  if (examSubject !== "mail") {
+    categories.education = {
+      id: "education",
+      title: "الكفايات التربوية",
+      scores: [],
+      color: "rose",
+      mainScore: 0,
+    };
+  }
+
+  // Process all phase scores
+  Object.entries(phaseScores).forEach(([phaseId, score]) => {
+    // Skip education scores for mail exams
+    if (phaseId === "education" && examSubject === "mail") {
+      return;
+    }
+
+    // Handle main phases directly
+    if (!phaseId.includes("_") && categories[phaseId]) {
+      categories[phaseId].mainScore = score;
+    }
+    // Process subphases
+    else if (phaseId.includes("_")) {
+      const [mainPhase, subPhase] = phaseId.split("_");
+
+      // Skip education subphases for mail exams
+      if (mainPhase === "education" && examSubject === "mail") {
+        return;
+      }
+
+      // Add score to the appropriate category if it exists
+      if (categories[mainPhase]) {
+        categories[mainPhase].scores.push({
+          id: phaseId,
+          title: getSubPhaseTitle(subPhase),
+          score: score,
+          questions: getStandardQuestionCount(mainPhase, subPhase),
+        });
+      }
+    }
+  });
+
+  // Calculate main scores for categories with subphases
+  Object.keys(categories).forEach((categoryKey) => {
+    const category = categories[categoryKey];
+
+    // Calculate average score if we have subphases but no main score
+    if (category.scores.length > 0 && category.mainScore === undefined) {
+      const totalScore = category.scores.reduce(
+        (sum, item) => sum + item.score,
+        0
+      );
+      category.mainScore = Math.round(totalScore / category.scores.length);
+    }
+  });
+
+  // Convert to array and sort in a logical order
+  const result = Object.values(categories);
+
+  // Sort categories in a logical order
+  result.sort((a, b) => {
+    const order = [
+      "behavioral",
+      "language",
+      "knowledge",
+      "education",
+      "specialization",
+    ];
+    return order.indexOf(a.id) - order.indexOf(b.id);
+  });
+
+  console.log(
+    "Organized categories:",
+    result.map((c) => c.id)
+  );
+  return result;
+}
+
 // Helper function to get result level based on score
 function getResultLevel(score) {
   if (score >= 90)
@@ -1404,124 +1519,7 @@ function getQuestionCount(mainPhase, subPhase) {
   return questionCounts[mainPhase] || 10;
 }
 
-// Fixed organizePhaseScores function that properly accepts subject parameter
-function organizePhaseScores(phaseScores, examSubject) {
-  console.log("Organizing phase scores for subject:", examSubject);
-
-  // Define the standard structure for all categories
-  const categories = {
-    behavioral: {
-      id: "behavioral",
-      title: "الكفايات السلوكية والنفسية",
-      scores: [],
-      color: "blue",
-      mainScore: 0,
-    },
-    language: {
-      id: "language",
-      title: "الكفايات اللغوية",
-      scores: [],
-      color: "green",
-      mainScore: 0,
-    },
-    knowledge: {
-      id: "knowledge",
-      title: "الكفايات المعرفية والتكنولوجية",
-      scores: [],
-      color: "purple",
-      mainScore: 0,
-    },
-    specialization: {
-      id: "specialization",
-      title: "كفايات التخصص",
-      scores: [],
-      color: "amber",
-      mainScore: 0,
-    },
-  };
-
-  // Add education category only for non-mail subjects
-  if (examSubject !== "mail") {
-    categories.education = {
-      id: "education",
-      title: "الكفايات التربوية",
-      scores: [],
-      color: "rose",
-      mainScore: 0,
-    };
-  }
-
-  // Assign main phase scores directly
-  Object.entries(phaseScores).forEach(([phaseId, score]) => {
-    // Skip education for mail exams
-    if (phaseId === "education" && examSubject === "mail") {
-      return;
-    }
-
-    // Handle main phases directly
-    if (!phaseId.includes("_") && categories[phaseId]) {
-      categories[phaseId].mainScore = score;
-    }
-  });
-
-  // Process subphases and add them to their respective main phases
-  Object.entries(phaseScores).forEach(([phaseId, score]) => {
-    if (phaseId.includes("_")) {
-      const [mainPhase, subPhase] = phaseId.split("_");
-
-      // Skip education for mail exams
-      if (mainPhase === "education" && examSubject === "mail") {
-        return;
-      }
-
-      if (categories[mainPhase]) {
-        categories[mainPhase].scores.push({
-          id: phaseId,
-          title: getSubPhaseTitle(subPhase),
-          score: score,
-          questions: getStandardQuestionCount(mainPhase, subPhase),
-        });
-      }
-    }
-  });
-
-  // Calculate main scores for categories where needed
-  Object.keys(categories).forEach((categoryKey) => {
-    const category = categories[categoryKey];
-
-    // If we have subphases but no main score, calculate it as the average
-    if (category.scores.length > 0 && category.mainScore === undefined) {
-      const totalScore = category.scores.reduce(
-        (sum, item) => sum + item.score,
-        0
-      );
-      category.mainScore = Math.round(totalScore / category.scores.length);
-    }
-  });
-
-  // Convert to array and sort in a logical order
-  const result = Object.values(categories);
-
-  // Sort categories in a logical order
-  result.sort((a, b) => {
-    const order = [
-      "behavioral",
-      "language",
-      "knowledge",
-      "education",
-      "specialization",
-    ];
-    return order.indexOf(a.id) - order.indexOf(b.id);
-  });
-
-  console.log(
-    "Organized categories:",
-    result.map((c) => c.id)
-  );
-  return result;
-}
-
-// Helper function to get friendly names for subphases
+// Helper function to get subphase title
 function getSubPhaseTitle(subPhaseId) {
   const titles = {
     arabic: "اللغة العربية",
@@ -1534,7 +1532,7 @@ function getSubPhaseTitle(subPhaseId) {
   return titles[subPhaseId] || subPhaseId;
 }
 
-// Helper function to get standard question counts - RENAMED to avoid conflict
+// Helper function to get standard question counts
 function getStandardQuestionCount(mainPhase, subPhase) {
   const questionCounts = {
     behavioral: 30,
@@ -1557,8 +1555,6 @@ function getStandardQuestionCount(mainPhase, subPhase) {
 
   return questionCounts[mainPhase] || 10;
 }
-
-// Helper function to get friendly names for subphases
 
 // Helper function to get top scoring category
 function getTopCategory(categories) {
@@ -1605,8 +1601,6 @@ function getAverageScore(scores) {
   const total = scores.reduce((sum, item) => sum + (item.score || 0), 0);
   return total / scores.length;
 }
-
-// Helper function to get subphase title
 
 // Helper function to get bar color
 function getBarColor(color) {
