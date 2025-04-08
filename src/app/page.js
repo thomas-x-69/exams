@@ -326,654 +326,7 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                {/* Detailed Phases Structure */}
-                <div className="space-y-5">
-                  {/* Phase 1 */}
-                  <div className="bg-blue-600/10 rounded-lg p-4 border border-blue-500/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-full bg-blue-600/30 flex items-center justify-center text-white text-sm font-bold">
-                        1
-                      </div>
-                      <h4 className="text-white font-bold">
-                        كفايات سلوكية ونفسية
-                      </h4>
-                    </div>
-                    <div className="mr-8 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-blue-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            مهارات سلوكية
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              130 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              25 دقيقة
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-blue-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            كفايات وظيفية
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              50 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              15 دقيقة
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Phase 2 */}
-                  <div className="bg-emerald-600/10 rounded-lg p-4 border border-emerald-500/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-full bg-emerald-600/30 flex items-center justify-center text-white text-sm font-bold">
-                        2
-                      </div>
-                      <h4 className="text-white font-bold">كفايات لغوية</h4>
-                    </div>
-                    <div className="mr-8 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-emerald-400 font-bold text-sm">
-                            ع
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            لغة عربية
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              20 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              10 دقائق
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-emerald-400 font-bold text-sm">
-                            E
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            لغة إنجليزية
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              20 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              10 دقائق
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Phase 3 */}
-                  <div className="bg-purple-600/10 rounded-lg p-4 border border-purple-500/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-full bg-purple-600/30 flex items-center justify-center text-white text-sm font-bold">
-                        3
-                      </div>
-                      <h4 className="text-white font-bold">
-                        كفايات معرفية وتكنولوجية
-                      </h4>
-                    </div>
-                    <div className="mr-8 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-purple-400 font-bold text-sm">
-                            IQ
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            اختبار الذكاء
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              20 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              10 دقائق
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-purple-400 font-bold text-sm">
-                            IT
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            تكنولوجيا معلومات
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              20 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              10 دقائق
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-purple-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            معلومات عامة
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              20 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              10 دقائق
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Phase 4 */}
-                  <div className="bg-amber-600/10 rounded-lg p-4 border border-amber-500/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-full bg-amber-600/30 flex items-center justify-center text-white text-sm font-bold">
-                        4
-                      </div>
-                      <h4 className="text-white font-bold">كفايات تخصص</h4>
-                    </div>
-
-                    <div className="mr-8 mb-3">
-                      <div className="bg-white/5 rounded-lg p-2 mb-3">
-                        <p className="text-white/90 text-sm">
-                          تختلف هذه المرحلة حسب نوع الاختبار:
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mr-8 space-y-4">
-                      <div className="bg-amber-700/10 rounded-lg p-3">
-                        <p className="text-white/90 text-sm font-bold mb-2">
-                          اختبار التربية:
-                        </p>
-                        <div className="space-y-3 mr-2">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-shrink-0 w-7 h-7 bg-amber-500/20 rounded-lg flex items-center justify-center">
-                              <svg
-                                className="w-4 h-4 text-amber-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-white/90 text-xs font-medium">
-                                تربوي
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80 text-xs">
-                                  40 سؤال
-                                </span>
-                                <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80 text-xs">
-                                  20 دقيقة
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <div className="flex-shrink-0 w-7 h-7 bg-amber-500/20 rounded-lg flex items-center justify-center">
-                              <svg
-                                className="w-4 h-4 text-amber-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-white/90 text-xs font-medium">
-                                تخصص المادة
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80 text-xs">
-                                  40 سؤال
-                                </span>
-                                <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80 text-xs">
-                                  20 دقيقة
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-amber-700/10 rounded-lg p-3">
-                        <p className="text-white/90 text-sm font-bold mb-2">
-                          اختبار البريد:
-                        </p>
-                        <div className="flex items-center gap-3 mr-2">
-                          <div className="flex-shrink-0 w-7 h-7 bg-amber-500/20 rounded-lg flex items-center justify-center">
-                            <svg
-                              className="w-4 h-4 text-amber-400"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-white/90 text-xs font-medium">
-                              تخصص فقط
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80 text-xs">
-                                40 سؤال
-                              </span>
-                              <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80 text-xs">
-                                25 دقيقة
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Answering Questions */}
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-600/20 border border-purple-500/20 flex items-center justify-center text-white">
-                    3
-                  </div>
-                  <h3 className="text-lg font-bold text-white">
-                    الإجابة على الأسئلة
-                  </h3>
-                </div>
-                <ul className="space-y-2 text-white/80 mr-10">
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-purple-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>لكل سؤال مؤقت زمني، انتبه للوقت المتبقي</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-purple-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      اختر الإجابة الصحيحة بالضغط على أحد الخيارات ثم انتقل
-                      للسؤال التالي
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-purple-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      يجب الإجابة على السؤال الحالي قبل الانتقال للسؤال التالي
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-purple-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      عند آخر سؤال، سيتحول زر "التالي" إلى "إنهاء" للانتهاء من
-                      المرحلة الحالية
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Section 4: Score Calculation */}
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/20 flex items-center justify-center text-white">
-                    4
-                  </div>
-                  <h3 className="text-lg font-bold text-white">
-                    طريقة حساب الدرجات
-                  </h3>
-                </div>
-                <ul className="space-y-2 text-white/80 mr-10">
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      <strong>حساب درجة كل مرحلة:</strong> تُحسب الكفايات
-                      السلوكية بناءً على النقاط المكتسبة، بينما تُحسب باقي
-                      الكفايات بعدد الإجابات الصحيحة.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      <strong>حساب الدرجة الإجمالية:</strong> تُجمع نتائج جميع
-                      المراحل مع إعطاء وزن لكل مرحلة حسب عدد الأسئلة.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      <strong>الدرجة النهائية:</strong> تُحسب بمعادلة: (مجموع
-                      (درجة المرحلة × عدد أسئلة المرحلة)) ÷ العدد الكلي للأسئلة.
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Section 5: Results - Adjusted section number */}
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-600/20 border border-amber-500/20 flex items-center justify-center text-white">
-                    5
-                  </div>
-                  <h3 className="text-lg font-bold text-white">
-                    النتائج والتقييم
-                  </h3>
-                </div>
-                <ul className="space-y-2 text-white/80 mr-10">
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      بعد الانتهاء من جميع المراحل، ستظهر النتيجة النهائية مع
-                      تفاصيل أدائك في كل مرحلة
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>يمكنك تحميل شهادة إتمام الاختبار والاحتفاظ بها</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      ستحصل على تحليل مفصل لمستواك في كل كفاية مع نصائح للتحسين
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Section 6: Tips - Adjusted section number */}
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-rose-600/20 border border-rose-500/20 flex items-center justify-center text-white">
-                    6
-                  </div>
-                  <h3 className="text-lg font-bold text-white">نصائح للنجاح</h3>
-                </div>
-                <ul className="space-y-2 text-white/80 mr-10">
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-rose-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      تأكد من وجود اتصال إنترنت مستقر قبل بدء الاختبار
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-rose-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      لا تقم بتحديث الصفحة أو الضغط على زر الرجوع أثناء الاختبار
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-rose-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>اختر مكاناً هادئاً للتركيز أثناء الاختبار</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-rose-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      قم بتجهيز ورقة وقلم لتدوين الملاحظات إذا لزم الأمر
-                    </span>
-                  </li>
-                </ul>
+                {/* More content for instructions modal... */}
               </div>
             </div>
           </div>
@@ -1111,14 +464,14 @@ export default function Home() {
                 </Link>
                 {/* Tooltip */}
                 <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                  منصة تدريبية للامتحانات المصرية
+                  منصة تدريبية للاختبارات المصرية
                 </div>
               </div>
 
               <div className="relative group">
                 <Link href="/">
                   <h1 className="text-lg font-bold text-white hidden sm:block">
-                    منصة الاختبارات المصرية
+                    منصة الاختبارات المصرية{" "}
                   </h1>
                 </Link>
                 {/* Tooltip */}
@@ -1157,64 +510,33 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Start Button with Tooltip - Direct approach to open modal */}
-              {isLandingPage ? (
-                <div className="relative group">
-                  <button
-                    onClick={() => setShowSubjects(true)}
-                    className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
-                    aria-label="ابدأ الاختبار الآن"
+              {/* Premium Subscription Button */}
+              <div className="relative group">
+                <Link
+                  href="/premium"
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl border border-amber-500/30 transition-all duration-300 flex items-center gap-2 shadow-md shadow-amber-500/10"
+                  aria-label="اختبارات حقيقية"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <span>ابدأ الآن</span>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                  {/* Tooltip */}
-                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                    ابدأ اختبار تدريبي الآن
-                  </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  <span>اختبارات حقيقية</span>
+                </Link>
+                {/* Tooltip */}
+                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
+                  اختبارات حقيقية من السنوات السابقة
                 </div>
-              ) : (
-                <div className="relative group">
-                  <Link
-                    href={"/"}
-                    className="px-5 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-all duration-300 flex items-center gap-2"
-                    aria-label="ابدأ الاختبار الآن"
-                  >
-                    <span>ابدأ الآن</span>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-                  {/* Tooltip */}
-                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 left-1/2 -translate-x-1/2 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                    ابدأ اختبار تدريبي الآن
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -1394,13 +716,27 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Coming Soon Card */}
-            <div className="relative">
-              <div className="glass-card p-4 sm:p-6 opacity-75">
+            {/* Real Exams Card - Enhanced with VIP styling & navigating directly to exams */}
+            <Link
+              href="/premium-exams"
+              className="relative overflow-hidden rounded-xl group transition-all duration-300 transform hover:scale-[1.01] border-2 border-amber-500/30 shadow-lg shadow-amber-500/10"
+            >
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-amber-600/10 opacity-70"></div>
+
+              {/* Animated shine effect */}
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+
+              {/* VIP Badge */}
+              <div className="absolute -top-3 -right-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-1 rounded-lg shadow-lg text-sm font-bold transform rotate-3 z-10">
+                حصري
+              </div>
+
+              <div className="glass-card p-4 sm:p-6 bg-transparent relative z-10">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                  <div className="rounded-xl p-4 bg-gradient-to-br from-purple-600/20 to-violet-600/20 border border-white/10 mx-auto sm:mx-0">
+                  <div className="rounded-xl p-4 bg-gradient-to-br from-amber-600/40 to-yellow-600/40 border border-amber-500/40 mx-auto sm:mx-0 shadow-md">
                     <svg
-                      className="w-6 h-6 sm:w-8 sm:h-8 text-white/70"
+                      className="w-6 h-6 sm:w-8 sm:h-8 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1410,24 +746,41 @@ export default function Home() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                       />
                     </svg>
                   </div>
                   <div className="text-center sm:text-right">
-                    <h2 className="text-xl sm:text-2xl font-bold text-white/90 mb-2">
+                    <h2 className="text-xl sm:text-2xl font-bold text-amber-300 mb-2 group-hover:text-amber-200">
                       امتحانات حقيقية من الاختبارات السابقة
                     </h2>
-                    <p className="text-white/60">
-                      تدرب على أسئلة من امتحانات التوظيف الفعلية السابقة
+                    <p className="text-white/80 group-hover:text-white">
+                      تدرب على أسئلة واقعية من امتحانات رسمية سابقة (أكثر من 30
+                      نموذج امتحان)
                     </p>
+
+                    <div className="flex justify-center sm:justify-start mt-3">
+                      <div className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-md shadow-amber-600/20">
+                        <svg
+                          className="w-4 h-4 animate-pulse"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 7l5 5m0 0l-5 5m5-5H6"
+                          />
+                        </svg>
+                        <span className="font-medium">استعرض الاختبارات</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <span className="absolute -top-3 -right-3 px-4 py-1 glass-effect rounded-full text-white text-sm border border-white/10">
-                قريباً
-              </span>
-            </div>
+            </Link>
           </div>
 
           {/* SubjectsModal */}
@@ -1489,150 +842,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* Enhanced structured data for the exam platform */}
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            url: "https://egyptianexams.com/",
-            name: "منصة الاختبارات المصرية",
-            description:
-              "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
-            potentialAction: {
-              "@type": "SearchAction",
-              target: "https://egyptianexams.com/search?q={search_term_string}",
-              "query-input": "required name=search_term_string",
-            },
-          }),
-        }}
-      />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LearningResource",
-            name: "منصة الاختبارات المصرية",
-            description:
-              "منصة تعليمية متكاملة للتحضير للاختبارات المصرية بطريقة تفاعلية وفعالة",
-            provider: {
-              "@type": "Organization",
-              name: "منصة الاختبارات المصرية",
-              url: "https://egyptianexams.com",
-            },
-            audience: {
-              "@type": "Audience",
-              audienceType: "باحثي الوظائف الحكومية المصرية",
-              geographicArea: {
-                "@type": "Country",
-                name: "مصر",
-              },
-            },
-            educationalLevel: "متقدم",
-            keywords:
-              "اختبارات مصرية, امتحان البريد المصري, امتحانات التربية, تدريب على الاختبارات, التنظيم والإدارة",
-            teaches: "التحضير للاختبارات المصرية",
-            learningResourceType: "امتحانات تدريبية تفاعلية",
-            offers: {
-              "@type": "Offer",
-              price: "0",
-              priceCurrency: "EGP",
-              availability: "https://schema.org/InStock",
-            },
-          }),
-        }}
-      />
-
-      {/* FAQ Schema for search engines */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: [
-              {
-                "@type": "Question",
-                name: "ما هي مراحل اختبار البريد المصري؟",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "يتكون اختبار البريد المصري من أربع مراحل رئيسية: الكفايات السلوكية والنفسية، الكفايات اللغوية (عربي وإنجليزي)، الكفايات المعرفية والتكنولوجية، وكفايات التخصص.",
-                },
-              },
-              {
-                "@type": "Question",
-                name: "كيف أحضر لاختبارات التربية؟",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "للتحضير لاختبارات التربية، ننصح بالتدرب على الكفايات التربوية والتخصصية، ومراجعة المناهج التعليمية، والتدرب على حل نماذج امتحانات سابقة موجودة في قسم التحميلات بالموقع.",
-                },
-              },
-              {
-                "@type": "Question",
-                name: "هل اختبارات الموقع محاكية للاختبارات الفعلية؟",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "نعم، جميع اختباراتنا مصممة لتحاكي بيئة الاختبارات الرسمية من حيث نوع الأسئلة وتوزيعها والوقت المخصص لكل مرحلة، مما يوفر تجربة تدريبية واقعية تساعدك على الاستعداد الأمثل.",
-                },
-              },
-              {
-                "@type": "Question",
-                name: "كيف يتم حساب الدرجات في الاختبارات؟",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "يتم حساب درجة كل مرحلة بناءً على النقاط المكتسبة مقسومة على إجمالي النقاط المتاحة. أما الدرجة النهائية فتحسب كمتوسط مرجح للمراحل المختلفة حسب الأهمية النسبية لكل منها.",
-                },
-              },
-              {
-                "@type": "Question",
-                name: "كيف أحصل على شهادة بعد إتمام الاختبار؟",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "بعد إتمام جميع مراحل الاختبار، ستظهر لك صفحة النتائج التي تتضمن شهادة إتمام يمكنك تحميلها وطباعتها، بالإضافة إلى تحليل مفصل لأدائك في كل مرحلة من مراحل الاختبار.",
-                },
-              },
-            ],
-          }),
-        }}
-      />
-
-      {/* BreadcrumbList Schema for better navigation visibility */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              {
-                "@type": "ListItem",
-                position: 1,
-                name: "الرئيسية",
-                item: "https://egyptianexams.com",
-              },
-              {
-                "@type": "ListItem",
-                position: 2,
-                name: "أنواع الاختبارات",
-                item: "https://egyptianexams.com#subjects",
-              },
-            ],
-          }),
-        }}
-      />
-      {/* <script
-        async="async"
-        data-cfasync="false"
-        src="//pl26316627.effectiveratecpm.com/8ec6bdce286a228c65ed68b05a0ddd40/invoke.js"
-      ></script>
-      <div id="container-8ec6bdce286a228c65ed68b05a0ddd40" className="">
-        thos is ad
-      </div> */}
     </>
   );
 }

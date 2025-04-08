@@ -12,7 +12,6 @@ export default function PremiumPage() {
   const router = useRouter();
   const [isPremiumUser, setIsPremiumUser] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showTestimonials, setShowTestimonials] = useState(false);
 
   // Check premium status on initial load
   useEffect(() => {
@@ -100,9 +99,9 @@ export default function PremiumPage() {
           <Header />
 
           {/* Hero Section - Enhanced with animated elements */}
-          <div className="max-w-4xl mx-auto text-center mb-8 ">
+          <div className="max-w-4xl mx-auto text-center mb-6">
             {/* Limited Time Offer Tag */}
-            <div className="inline-block bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg mb-6 ">
+            <div className="inline-block bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg mb-6">
               عرض خاص لفترة محدودة - ينتهي خلال 7 أيام
             </div>
 
@@ -145,31 +144,13 @@ export default function PremiumPage() {
                 <span className="text-white/80 text-sm">اشتراك مدى الحياة</span>
               </div>
             </div>
-
-            {/* Scroll Direction Indicator */}
-            <div className="hidden md:flex flex-col items-center mt-12  animate-bounce">
-              <span className="text-white/60 text-sm mb-2">اكتشف المزيد</span>
-              <svg
-                className="w-6 h-6 text-white/60"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                />
-              </svg>
-            </div>
           </div>
 
-          {/* Premium Card with Highlights */}
-          <div className="max-w-6xl mx-auto relative">
+          {/* Premium Subscription Component */}
+          <div className="max-w-6xl mx-auto relative mt-16">
             {/* Spotlight Effect - Premium Highlight Banner */}
-            <div className="absolute inset-x-0 -top-10 flex justify-center">
-              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-3 rounded-full text-white font-bold shadow-lg transform -rotate-2 z-20 text-center">
+            <div className="absolute inset-x-0 -top-8 flex justify-center">
+              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-3 rounded-full text-white font-bold shadow-lg transform -rotate-2 z-10 text-center">
                 <span className="text-xl">
                   أقوى باقة تدريبية للاختبارات المصرية
                 </span>
@@ -177,12 +158,12 @@ export default function PremiumPage() {
             </div>
 
             {/* Premium Card with Shine Effect */}
-            <div className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 shadow-2xl shadow-amber-500/20">
+            <div className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 shadow-2xl  shadow-amber-500/20">
               {/* Animated Shine Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shine z-10 pointer-events-none"></div>
 
               {/* Card Content */}
-              <div className="glass-card rounded-3xl overflow-hidden backdrop-blur-xl bg-slate-900/80">
+              <div className="glass-card rounded-3xl overflow-hidden backdrop-blur-xl bg-slate-900/80 ">
                 <div className="p-6 sm:p-10">
                   <PremiumSubscription />
                 </div>
@@ -207,7 +188,7 @@ export default function PremiumPage() {
               </p>
             </div>
 
-            {/* Features Grid - WITH SVG ICONS INSTEAD OF EMOJIS */}
+            {/* Features Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Feature 1 - Exam Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
@@ -462,24 +443,6 @@ export default function PremiumPage() {
                       الفعلي
                     </span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    <span className="text-white/70">
-                      بدون شهادات مخصصة توثق مستوى أدائك وتقدمك
-                    </span>
-                  </li>
                 </ul>
 
                 <div className="mt-8 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
@@ -575,25 +538,6 @@ export default function PremiumPage() {
                       الرسمي
                     </span>
                   </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-white/90">
-                      شهادات إتمام مخصصة قابلة للتحميل والمشاركة لكل اختبار
-                      تجتازه
-                    </span>
-                  </li>
                 </ul>
 
                 <div className="mt-8 bg-green-500/10 rounded-lg p-4 border border-green-500/20">
@@ -658,7 +602,7 @@ export default function PremiumPage() {
               </div>
 
               {/* FAQ Item 4 */}
-              <div className="border-b border-white/10 pb-4 mb-4">
+              <div>
                 <h3 className="text-xl font-bold text-amber-400 mb-2">
                   هل الامتحانات حقيقية فعلاً من الاختبارات السابقة؟
                 </h3>
@@ -669,95 +613,51 @@ export default function PremiumPage() {
                   تجربة تدريبية واقعية تماماً.
                 </p>
               </div>
-
-              {/* FAQ Item 5 */}
-              <div>
-                <h3 className="text-xl font-bold text-amber-400 mb-2">
-                  هل يمكنني تجربة المنصة قبل الاشتراك؟
-                </h3>
-                <p className="text-white/80 text-sm">
-                  نعم، يمكنك تجربة النسخة المجانية من المنصة التي توفر بعض
-                  الاختبارات التدريبية العامة. ومع ذلك، فإن الامتحانات الحقيقية
-                  المأخوذة من الاختبارات السابقة متوفرة فقط للمشتركين في العضوية
-                  الذهبية. العرض الحالي (99 جنيه بدلاً من 150 جنيه) متاح لفترة
-                  محدودة.
-                </p>
-              </div>
             </div>
           </div>
 
-          {/* CTA Section */}
-          <div className="max-w-5xl mx-auto mt-20 px-4 relative z-10">
-            <div className="relative overflow-hidden rounded-3xl">
-              {/* Animated Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-600/30 to-amber-600/30 overflow-hidden">
-                {/* Animated particles (decorative divs) */}
-                <div
-                  className="absolute w-20 h-20 rounded-full bg-yellow-400/20 top-10 left-10 animate-float"
-                  style={{ animationDelay: "0s" }}
-                ></div>
-                <div
-                  className="absolute w-32 h-32 rounded-full bg-amber-400/10 bottom-10 right-20 animate-float"
-                  style={{ animationDelay: "-3s" }}
-                ></div>
-                <div
-                  className="absolute w-16 h-16 rounded-full bg-yellow-400/20 top-1/2 right-1/3 animate-float"
-                  style={{ animationDelay: "-1.5s" }}
-                ></div>
-                <div
-                  className="absolute w-24 h-24 rounded-full bg-amber-400/10 bottom-1/3 left-1/4 animate-float"
-                  style={{ animationDelay: "-2.5s" }}
-                ></div>
-              </div>
+          {/* CTA Section - Simplified */}
+          <div className="max-w-5xl mx-auto mt-16 px-4 mb-16 relative z-10">
+            <div className="glass-card overflow-hidden rounded-2xl border-2 border-amber-500/30 shadow-lg">
+              <div className="p-8 md:p-10 text-center relative">
+                {/* Background accent */}
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-yellow-500/10"></div>
 
-              {/* Content */}
-              <div className="glass-card backdrop-blur-md p-8 md:p-16 rounded-3xl border-2 border-amber-500/20 relative z-10">
-                <div className="text-center space-y-6">
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                    استمتع بأكثر من 30 امتحان{" "}
-                    <span className="text-yellow-400">حقيقي</span> الآن!
-                  </h2>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 relative z-10">
+                  استمتع بأكثر من 30 امتحان{" "}
+                  <span className="text-yellow-400">حقيقي</span> الآن!
+                </h2>
 
-                  <p className="text-xl text-white/90 max-w-3xl mx-auto">
-                    احصل على العضوية الذهبية بخصم 34% لفترة محدودة
-                  </p>
-
-                  <div className="bg-white/10 rounded-2xl p-6 inline-block mb-8">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <div>
-                        <span className="text-white/60 text-sm line-through">
-                          150 جنيه
-                        </span>
-                        <div className="flex items-end gap-2">
-                          <span className="text-4xl font-bold text-white">
-                            99
-                          </span>
-                          <span className="text-xl text-white/80 mb-1">
-                            جنيه فقط
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold animate-pulse">
-                        خصم 34%
-                      </div>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                  <div className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
+                    <span className="text-white/60 text-sm line-through">
+                      150 جنيه
+                    </span>
+                    <div className="flex items-end gap-1">
+                      <span className="text-3xl font-bold text-white">99</span>
+                      <span className="text-lg text-white/80 mb-1">
+                        جنيه فقط
+                      </span>
                     </div>
                   </div>
 
-                  <div>
-                    <button
-                      onClick={() =>
-                        window.scrollTo({ top: 0, behavior: "smooth" })
-                      }
-                      className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-4 rounded-xl font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-lg shadow-amber-600/20"
-                    >
-                      اشترك الآن في العضوية الذهبية
-                    </button>
-                    <p className="text-white/60 text-sm mt-4">
-                      *دفعة واحدة فقط - بدون اشتراكات شهرية - وصول مدى الحياة
-                    </p>
+                  <div className="bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold animate-pulse">
+                    خصم 34%
                   </div>
                 </div>
+
+                <button
+                  onClick={() =>
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }
+                  className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
+                  اشترك الآن في العضوية الذهبية
+                </button>
+
+                <p className="text-white/60 text-sm mt-3 relative z-10">
+                  دفعة واحدة فقط - بدون اشتراكات شهرية - وصول مدى الحياة
+                </p>
               </div>
             </div>
           </div>
