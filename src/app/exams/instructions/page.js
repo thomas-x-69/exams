@@ -109,6 +109,9 @@ const ExamInstructions = () => {
     []
   );
 
+  // src/app/exams/instructions/page.js
+  // Update the handleStartExam function:
+
   const handleStartExam = async (e) => {
     e.preventDefault();
 
@@ -118,34 +121,33 @@ const ExamInstructions = () => {
     }
 
     try {
-      setLoading(true); // Set loading state to true
+      setLoading(true);
+
+      // Ensure we have a valid subject
+      const subjectToUse = subject || "mail";
 
       // Initialize exam in Redux
-      async function initExam() {
-        dispatch(
-          await initExam({
-            subject,
-            userName: name,
-            organizationCode,
-          })
-        );
-      }
-      initExam();
-      // Store in localStorage as well to ensure persistence
-      // This acts as a backup in case Redux state isn't immediately available
-      localStorage.setItem("currentExamSubject", subject);
+      dispatch(
+        initExam({
+          subject: subjectToUse,
+          userName: name,
+          organizationCode,
+        })
+      );
+
+      // Store in localStorage as backup for hydration issues
+      localStorage.setItem("currentExamSubject", subjectToUse);
       localStorage.setItem("currentExamUser", name);
       localStorage.setItem("currentExamOrgCode", organizationCode);
-      localStorage.setItem("activeExam", "true"); // Flag to indicate an active exam
+      localStorage.setItem("activeExam", "true");
 
-      // Add a small delay to ensure state is updated before navigation
+      // Increase delay to ensure Redux state is updated before navigation
       setTimeout(() => {
-        // Navigate to phases page with replace:true to prevent back navigation
-        router.replace(`/exams/phases?subject=${subject}`);
-      }, 100);
+        router.replace(`/exams/phases?subject=${subjectToUse}`);
+      }, 300); // Increased from 100ms
     } catch (error) {
       console.error("Error starting exam:", error);
-      setLoading(false); // Reset loading state on error
+      setLoading(false);
       alert("حدث خطأ أثناء بدء الاختبار. يرجى المحاولة مرة أخرى.");
     }
   };
