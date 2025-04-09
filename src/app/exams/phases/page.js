@@ -1,4 +1,4 @@
-// src/app/exams/phases/page.js - Enhanced with sleek animations and transitions
+// src/app/exams/phases/page.js - Enhanced with strict access control
 "use client";
 
 import React, {
@@ -29,6 +29,39 @@ const PhaseStatus = {
   PENDING_SUBPHASE: "pending_subphase",
   COMPLETED_SUBPHASE: "completed_subphase",
 };
+
+// Access denied component
+const AccessDenied = memo(({ onReturn, message = "غير مصرح بالوصول" }) => (
+  <div className="max-w-3xl mx-auto px-4 py-6 text-center">
+    <div className="bg-white rounded-xl p-8 shadow-lg border border-red-200">
+      <div className="w-20 h-20 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center text-red-500">
+        <svg
+          className="w-10 h-10"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      </div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">{message}</h2>
+      <p className="text-gray-600 mb-6">
+        لا يمكنك الوصول إلى صفحة المراحل مباشرة. يجب عليك بدء اختبار جديد أولاً.
+      </p>
+      <button
+        onClick={onReturn}
+        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow"
+      >
+        العودة للصفحة الرئيسية
+      </button>
+    </div>
+  </div>
+));
 
 // Memoized phase configuration data
 const mailPhases = [
@@ -594,6 +627,7 @@ const ExamPhases = () => {
       // Clear the flag
       localStorage.removeItem("_wasReloaded");
       // Redirect immediately to landing page
+      router.replace("/");
       return;
     }
 
@@ -650,7 +684,15 @@ function MountedPhasesContent({ subject }) {
     activeExam,
     examCompleted,
     phases,
+    canAccessPhases,
+    hasExamStarted,
   } = examState;
+
+  // Access control check - CRITICAL!
+  const hasAccess = useMemo(() => {
+    // User must have an active exam and permission to access this page
+    return activeExam && hasExamStarted && canAccessPhases;
+  }, [activeExam, hasExamStarted, canAccessPhases]);
 
   // Use refs to avoid stale closures in event handlers and timers
   const timerRef = useRef(null);
@@ -671,6 +713,11 @@ function MountedPhasesContent({ subject }) {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [exitDestination, setExitDestination] = useState("/");
   const [exitMessage, setExitMessage] = useState("");
+
+  // Handle redirect to home
+  const handleReturnHome = useCallback(() => {
+    router.replace("/");
+  }, [router]);
 
   // Memoized functions for optimal performance
   const getPhaseStatus = useCallback(
@@ -829,10 +876,17 @@ function MountedPhasesContent({ subject }) {
     setShowExitDialog(false);
   }, []);
 
-  // Redirect if no active exam
+  // Check access and redirect if needed
+  useEffect(() => {
+    if (!loading && !hasAccess) {
+      // Only show error after initial loading
+      console.log("Access denied to phases page");
+    }
+  }, [hasAccess, loading, router]);
+
+  // Set up data based on subject
   useEffect(() => {
     if (!activeExam) {
-      router.replace("/");
       return;
     }
 
@@ -845,7 +899,7 @@ function MountedPhasesContent({ subject }) {
       setLoading(false);
       setPageAnimated(true);
     }, 300);
-  }, [activeExam, router, subject]);
+  }, [activeExam, subject]);
 
   useEffect(() => {
     // Set current phase index based on completed phases
@@ -1118,6 +1172,16 @@ function MountedPhasesContent({ subject }) {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // If access is denied, show access denied screen
+  if (!hasAccess) {
+    return (
+      <AccessDenied
+        onReturn={handleReturnHome}
+        message="لا يمكن الوصول إلى صفحة المراحل"
+      />
     );
   }
 

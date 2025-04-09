@@ -1,7 +1,7 @@
-// src/app/exams/instructions/page.js - Fixed with proper state initialization
+// src/app/exams/instructions/page.js
 "use client";
 
-import React, { useState, useMemo, memo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import Image from "next/image";
@@ -60,7 +60,7 @@ const subjectInfo = {
 };
 
 // Memoized instruction item component
-const InstructionItem = memo(({ icon, text }) => (
+const InstructionItem = React.memo(({ icon, text }) => (
   <div className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
     <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-xl shadow-sm">
       {icon}
@@ -76,7 +76,8 @@ const ExamInstructions = () => {
   const dispatch = useDispatch();
 
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Generate organization code once when component mounts
   const organizationCode = useMemo(
@@ -109,45 +110,53 @@ const ExamInstructions = () => {
     []
   );
 
-  const handleStartExam = async (e) => {
-    e.preventDefault();
+  // Start exam handling with proper error management and loading states
+  const handleStartExam = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setErrorMessage("");
 
-    if (!name.trim()) {
-      alert("برجاء إدخال الاسم");
-      return;
-    }
+      if (!name.trim()) {
+        setErrorMessage("برجاء إدخال الاسم");
+        return;
+      }
 
-    try {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      // Ensure we have a valid subject
-      const subjectToUse = subject || "mail";
+        // Ensure we have a valid subject
+        const subjectToUse = subject && subjectInfo[subject] ? subject : "mail";
 
-      // Initialize exam in Redux
-      dispatch(
-        initExam({
-          subject: subjectToUse,
-          userName: name,
-          organizationCode,
-        })
-      );
+        // Clear any existing exam state data
+        localStorage.removeItem("_wasReloaded");
 
-      // Store in localStorage as backup for hydration issues
-      localStorage.setItem("currentExamSubject", subjectToUse);
-      localStorage.setItem("currentExamUser", name);
-      localStorage.setItem("currentExamOrgCode", organizationCode);
-      localStorage.setItem("activeExam", "true");
+        // Initialize exam in Redux with clear state
+        dispatch(
+          initExam({
+            subject: subjectToUse,
+            userName: name,
+            organizationCode,
+          })
+        );
 
-      // Increase delay to ensure Redux state is updated before navigation
-      setTimeout(() => {
-        router.replace(`/exams/phases?subject=${subjectToUse}`);
-      }, 3000); // Increased from 100ms
-    } catch (error) {
-      console.error("Error starting exam:", error);
-      setLoading(false);
-      alert("حدث خطأ أثناء بدء الاختبار. يرجى المحاولة مرة أخرى.");
-    }
-  };
+        // Store backup values in localStorage for hydration issues
+        localStorage.setItem("currentExamSubject", subjectToUse);
+        localStorage.setItem("currentExamUser", name);
+        localStorage.setItem("currentExamOrgCode", organizationCode);
+        localStorage.setItem("activeExam", "true");
+
+        // Give Redux time to update state before navigation
+        setTimeout(() => {
+          router.replace(`/exams/phases?subject=${subjectToUse}`);
+        }, 500);
+      } catch (error) {
+        console.error("Error starting exam:", error);
+        setErrorMessage("حدث خطأ أثناء بدء الاختبار. يرجى المحاولة مرة أخرى.");
+        setLoading(false);
+      }
+    },
+    [dispatch, name, organizationCode, router, subject]
+  );
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-2 h-[calc(100vh-4rem)] flex items-center justify-center">
@@ -216,7 +225,7 @@ const ExamInstructions = () => {
           </div>
 
           {/* Form Section */}
-          <div className="space-y-4">
+          <form onSubmit={handleStartExam} className="space-y-4">
             {/* Name Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -226,10 +235,17 @@ const ExamInstructions = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-sm"
+                className={`w-full px-3 py-2 rounded-lg ${
+                  errorMessage && !name.trim()
+                    ? "bg-red-50 border-red-300 focus:border-red-500 focus:ring-red-100"
+                    : "bg-gray-50 border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                } border focus:ring-2 transition-all duration-200 text-sm`}
                 placeholder="ادخل اسمك كما هو مسجل"
                 required
               />
+              {errorMessage && !name.trim() && (
+                <p className="mt-1 text-xs text-red-600">{errorMessage}</p>
+              )}
             </div>
 
             {/* Organization Code */}
@@ -274,9 +290,10 @@ const ExamInstructions = () => {
             {/* Start Button */}
             <button
               type="submit"
-              onClick={handleStartExam}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 group text-sm"
-              disabled={loading} // Disable button while loading
+              disabled={loading}
+              className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 group text-sm ${
+                loading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
             >
               {loading ? (
                 <>
@@ -302,7 +319,7 @@ const ExamInstructions = () => {
                 </>
               )}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>

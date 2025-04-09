@@ -16,6 +16,10 @@ const initialState = {
   breakTime: null,
   examCompleted: false,
   currentResult: null,
+  // New access control flags
+  canAccessPhases: false, // Can only access phases page after instructions or completing a question
+  activeQuestionPhase: null, // The currently active question phase (if any)
+  hasExamStarted: false, // Whether the exam has officially started (after instructions)
 };
 
 export const examSlice = createSlice({
@@ -40,6 +44,11 @@ export const examSlice = createSlice({
       state.breakTime = null;
       state.currentResult = null;
       state.examData = {}; // Clear all question data
+
+      // Reset access control flags
+      state.canAccessPhases = true; // Allow access to phases page after init
+      state.activeQuestionPhase = null; // No active question phase yet
+      state.hasExamStarted = true; // Mark exam as started
 
       // Ensure subPhases is properly initialized
       state.subPhases = {
@@ -73,6 +82,10 @@ export const examSlice = createSlice({
       if (subPhase) {
         state.currentSubPhase = subPhase;
       }
+
+      // Set access control flags
+      state.activeQuestionPhase = fullPhaseId; // Mark this phase as active
+      state.canAccessPhases = false; // Restrict access to phases page while in a question
     },
 
     // Save answers for a phase
@@ -166,6 +179,10 @@ export const examSlice = createSlice({
               state.completedPhases.push(phaseId);
             }
           }
+
+          // Update access control flags
+          state.activeQuestionPhase = null; // No active question phase now
+          state.canAccessPhases = true; // Allow access to phases page after completing a question
         }
       } catch (err) {
         console.error("Error in completePhase reducer:", err);
@@ -222,6 +239,8 @@ export const examSlice = createSlice({
     completeExam: (state) => {
       state.examCompleted = true;
       state.breakTime = null;
+      state.activeQuestionPhase = null; // Clear active question phase
+      state.canAccessPhases = false; // No need to access phases after exam completion
 
       // Store the current result in localStorage for history tracking
       try {
@@ -252,7 +271,6 @@ export const examSlice = createSlice({
       state.examData = {};
     },
 
-    // Set exam results
     // Set exam results
     setExamResults: (state, action) => {
       // Convert any string percentage values to numbers
@@ -307,6 +325,19 @@ export const examSlice = createSlice({
     clearAllQuestions: (state) => {
       state.examData = {};
     },
+
+    // Manually control access to pages
+    setPageAccess: (state, action) => {
+      const { canAccessPhases, activeQuestionPhase } = action.payload;
+
+      if (canAccessPhases !== undefined) {
+        state.canAccessPhases = canAccessPhases;
+      }
+
+      if (activeQuestionPhase !== undefined) {
+        state.activeQuestionPhase = activeQuestionPhase;
+      }
+    },
   },
 });
 
@@ -324,6 +355,7 @@ export const {
   resetExam,
   clearPhaseQuestions,
   clearAllQuestions,
+  setPageAccess,
 } = examSlice.actions;
 
 export default examSlice.reducer;

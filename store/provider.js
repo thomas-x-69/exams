@@ -1,4 +1,4 @@
-// store/provider.js
+// Improved provider.js with better navigation control
 "use client";
 
 import { Provider } from "react-redux";
