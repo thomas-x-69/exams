@@ -1,4 +1,4 @@
-// src/app/exams/questions/page.js - Enhanced with strict access control
+// src/app/exams/questions/page.js - Enhanced with animations
 "use client";
 
 import React, {
@@ -83,42 +83,6 @@ const QuestionOption = memo(
   )
 );
 
-// Access denied component (when user navigates to questions without permission)
-const AccessDenied = memo(({ onReturn }) => (
-  <div className="max-w-3xl mx-auto px-4 py-6 text-center">
-    <div className="bg-white rounded-xl p-8 shadow-lg border border-red-200">
-      <div className="w-20 h-20 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center text-red-500">
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
-      </div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        غير مصرح بالوصول
-      </h2>
-      <p className="text-gray-600 mb-6">
-        لا يمكنك الوصول إلى صفحة الأسئلة مباشرة. يجب عليك بدء المرحلة من صفحة
-        المراحل أولاً.
-      </p>
-      <button
-        onClick={onReturn}
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow"
-      >
-        العودة للمراحل
-      </button>
-    </div>
-  </div>
-));
-
 // Helper function for formatting time
 const formatTime = (seconds) => {
   if (seconds === undefined || seconds === null) return "00:00";
@@ -177,20 +141,6 @@ function MountedQuizContent({ phase }) {
   const examState = useSelector((state) => state.exam);
   const phaseState = phase ? examState.phases[phase] : null;
   const activeExam = examState.activeExam;
-  const activeQuestionPhase = examState.activeQuestionPhase;
-  const hasExamStarted = examState.hasExamStarted;
-
-  // Check access control - CRITICAL!
-  const hasAccess = useMemo(() => {
-    // Check if the user is authorized to access this specific question phase
-    return (
-      hasExamStarted &&
-      activeExam &&
-      activeQuestionPhase === phase &&
-      phaseState &&
-      !phaseState.completed
-    );
-  }, [hasExamStarted, activeExam, activeQuestionPhase, phase, phaseState]);
 
   // Refs for safe timer management
   const timerRef = useRef(null);
@@ -221,11 +171,6 @@ function MountedQuizContent({ phase }) {
     () => (phase ? phase.split("_") : [phase, null]),
     [phase]
   );
-
-  // Handle redirect to phases
-  const handleReturnToPhases = useCallback(() => {
-    router.replace("/exams/phases");
-  }, [router]);
 
   // Handle exit confirmation - memoized
   const handleExit = useCallback(
@@ -269,15 +214,13 @@ function MountedQuizContent({ phase }) {
     setShowExitDialog(false);
   }, []);
 
-  // Redirect if no access permission
+  // Redirect if no active exam
   useEffect(() => {
-    if (!loading && !hasAccess) {
-      // If this is just initial loading, wait for that to complete
-      if (activeExam && !hasAccess) {
-        console.log("Access denied to questions page");
-      }
+    if (!activeExam) {
+      router.push("/");
+      return;
     }
-  }, [hasAccess, activeExam, loading, router]);
+  }, [activeExam, router]);
 
   // Handle browser navigation events
   useEffect(() => {
@@ -404,7 +347,7 @@ function MountedQuizContent({ phase }) {
 
   // Initialize exam phase
   useEffect(() => {
-    if (!phase || !activeExam || !hasAccess) return;
+    if (!phase || !activeExam) return;
 
     // Reset navigation flag when phase changes
     navigatingRef.current = false;
@@ -444,8 +387,33 @@ function MountedQuizContent({ phase }) {
       }
     };
 
-    // Resume from existing state
-    if (phaseState) {
+    // Initialize or resume phase state
+    if (!phaseState) {
+      // Determine phase duration based on phase type
+      let phaseDuration = 600; // Default to 10 minutes (in seconds)
+
+      // Adjust duration based on phase
+      if (phase === "behavioral") {
+        phaseDuration = 25 * 60; // 25 minutes
+      } else if (phase.startsWith("language_")) {
+        phaseDuration = 10 * 60; // 10 minutes
+      } else if (phase.startsWith("knowledge_")) {
+        phaseDuration = 5 * 60; // 5 minutes
+      } else if (phase === "specialization" || phase === "education") {
+        phaseDuration = 15 * 60; // 15 minutes
+      }
+
+      // Start a new phase if not already started
+      dispatch(
+        startPhase({
+          phaseId: mainPhase,
+          subPhase: subPhase,
+          duration: phaseDuration,
+        })
+      );
+      fetchQuestions();
+    } else {
+      // Resume from existing state
       if (phaseState.answers) {
         setSelectedAnswers(phaseState.answers);
       }
@@ -465,13 +433,6 @@ function MountedQuizContent({ phase }) {
       }
 
       fetchQuestions();
-    } else {
-      // Should not happen with proper access control, but handle it gracefully
-      console.error(
-        "Attempting to access question phase that doesn't exist:",
-        phase
-      );
-      handleReturnToPhases();
     }
 
     // Clean up any timer on unmount
@@ -490,14 +451,11 @@ function MountedQuizContent({ phase }) {
     subPhase,
     getPhaseQuestions,
     activeExam,
-    handleReturnToPhases,
-    hasAccess,
   ]);
 
   // Timer effect - improved version with ref to prevent memory leaks
   useEffect(() => {
-    if (loading || navigatingRef.current || remainingTime <= 0 || !hasAccess)
-      return;
+    if (loading || navigatingRef.current || remainingTime <= 0) return;
 
     // Clear any existing timer
     if (timerRef.current) {
@@ -537,15 +495,15 @@ function MountedQuizContent({ phase }) {
         timerRef.current = null;
       }
     };
-  }, [remainingTime, loading, handleSubmit, isTimeRunningLow, hasAccess]);
+  }, [remainingTime, loading, handleSubmit, isTimeRunningLow]);
 
   // Handle time expiration on initial load
   useEffect(() => {
     // If time is already expired after loading
-    if (!loading && remainingTime <= 0 && !navigatingRef.current && hasAccess) {
+    if (!loading && remainingTime <= 0 && !navigatingRef.current) {
       handleSubmit();
     }
-  }, [loading, remainingTime, handleSubmit, hasAccess]);
+  }, [loading, remainingTime, handleSubmit]);
 
   // Handle answer selection - memoized
   const handleAnswerSelect = useCallback(
@@ -617,11 +575,6 @@ function MountedQuizContent({ phase }) {
     handleSubmit,
     isTransitioning,
   ]);
-
-  // If access is denied, show access denied screen
-  if (!hasAccess && !loading) {
-    return <AccessDenied onReturn={handleReturnToPhases} />;
-  }
 
   // Display a loading state while fetching questions
   if (loading) {

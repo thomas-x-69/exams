@@ -881,8 +881,62 @@ function MountedPhasesContent({ subject }) {
     if (!loading && !hasAccess) {
       // Only show error after initial loading
       console.log("Access denied to phases page");
+      // Redirect to home after a short delay
+      const timer = setTimeout(() => {
+        router.replace("/");
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [hasAccess, loading, router]);
+
+  // Handle browser navigation events
+  useEffect(() => {
+    // Handle popstate (back button, etc.)
+    const handlePopState = (e) => {
+      // If we're in an active exam, prevent navigation unless completed
+      if (activeExam && !examCompleted && completedPhases.length > 0) {
+        // Prevent default navigation
+        e.preventDefault();
+        window.history.pushState(null, "", window.location.href);
+
+        // Show confirmation dialog
+        handleExit(
+          "/",
+          "سيتم فقدان تقدمك في الاختبار إذا عدت للخلف. هل أنت متأكد؟"
+        );
+        return;
+      }
+    };
+
+    // Handle beforeunload (page refresh, close tab)
+    const handleBeforeUnload = (e) => {
+      if (activeExam && !examCompleted && completedPhases.length > 0) {
+        // Standard browser confirmation for reload/close
+        const message = "هل أنت متأكد من الخروج؟ سيتم فقدان تقدمك في الاختبار.";
+        e.preventDefault();
+        e.returnValue = message;
+
+        // Set flag to detect reload - crucial for redirect after reload
+        localStorage.setItem("_wasReloaded", "true");
+
+        return message;
+      }
+    };
+
+    // Prevent navigation through history manipulation
+    if (activeExam && !examCompleted && completedPhases.length > 0) {
+      window.history.pushState(null, "", window.location.href);
+    }
+
+    // Add event listeners
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [activeExam, examCompleted, completedPhases, handleExit]);
 
   // Set up data based on subject
   useEffect(() => {

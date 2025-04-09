@@ -16,10 +16,11 @@ const initialState = {
   breakTime: null,
   examCompleted: false,
   currentResult: null,
-  // New access control flags
+  // Access control flags - enhanced with more detailed comments
   canAccessPhases: false, // Can only access phases page after instructions or completing a question
   activeQuestionPhase: null, // The currently active question phase (if any)
   hasExamStarted: false, // Whether the exam has officially started (after instructions)
+  lastNavigationTimestamp: null, // Tracks when last navigation occurred to prevent URL manipulation
 };
 
 export const examSlice = createSlice({
@@ -49,6 +50,7 @@ export const examSlice = createSlice({
       state.canAccessPhases = true; // Allow access to phases page after init
       state.activeQuestionPhase = null; // No active question phase yet
       state.hasExamStarted = true; // Mark exam as started
+      state.lastNavigationTimestamp = Date.now(); // Set navigation timestamp
 
       // Ensure subPhases is properly initialized
       state.subPhases = {
@@ -86,6 +88,7 @@ export const examSlice = createSlice({
       // Set access control flags
       state.activeQuestionPhase = fullPhaseId; // Mark this phase as active
       state.canAccessPhases = false; // Restrict access to phases page while in a question
+      state.lastNavigationTimestamp = Date.now(); // Update navigation timestamp
     },
 
     // Save answers for a phase
@@ -183,6 +186,7 @@ export const examSlice = createSlice({
           // Update access control flags
           state.activeQuestionPhase = null; // No active question phase now
           state.canAccessPhases = true; // Allow access to phases page after completing a question
+          state.lastNavigationTimestamp = Date.now(); // Update navigation timestamp
         }
       } catch (err) {
         console.error("Error in completePhase reducer:", err);
@@ -197,11 +201,15 @@ export const examSlice = createSlice({
         startTime: Date.now(),
         duration,
       };
+      // During break, users should still be on phases page
+      state.canAccessPhases = true;
+      state.lastNavigationTimestamp = Date.now();
     },
 
     // End break time
     endBreak: (state) => {
       state.breakTime = null;
+      state.lastNavigationTimestamp = Date.now();
     },
 
     // Set current question index
@@ -241,6 +249,7 @@ export const examSlice = createSlice({
       state.breakTime = null;
       state.activeQuestionPhase = null; // Clear active question phase
       state.canAccessPhases = false; // No need to access phases after exam completion
+      state.lastNavigationTimestamp = Date.now();
 
       // Store the current result in localStorage for history tracking
       try {
@@ -307,6 +316,7 @@ export const examSlice = createSlice({
 
       state.currentResult = results;
     },
+
     // Reset the entire exam state
     resetExam: () => initialState,
 
@@ -328,7 +338,8 @@ export const examSlice = createSlice({
 
     // Manually control access to pages
     setPageAccess: (state, action) => {
-      const { canAccessPhases, activeQuestionPhase } = action.payload;
+      const { canAccessPhases, activeQuestionPhase, hasExamStarted } =
+        action.payload;
 
       if (canAccessPhases !== undefined) {
         state.canAccessPhases = canAccessPhases;
@@ -336,6 +347,40 @@ export const examSlice = createSlice({
 
       if (activeQuestionPhase !== undefined) {
         state.activeQuestionPhase = activeQuestionPhase;
+      }
+
+      if (hasExamStarted !== undefined) {
+        state.hasExamStarted = hasExamStarted;
+      }
+
+      state.lastNavigationTimestamp = Date.now();
+    },
+
+    // Recovery action to restore access if user somehow gets into an invalid state
+    recoverExamAccess: (state) => {
+      // This action checks localStorage for exam data and restores access if valid data exists
+      try {
+        const activeExam = localStorage.getItem("activeExam") === "true";
+
+        if (activeExam && !state.hasExamStarted) {
+          const subject = localStorage.getItem("currentExamSubject");
+          const userName = localStorage.getItem("currentExamUser");
+          const orgCode = localStorage.getItem("currentExamOrgCode");
+
+          if (subject && userName && orgCode) {
+            state.activeExam = {
+              subject,
+              userName,
+              organizationCode: orgCode,
+              startTime: Date.now(),
+            };
+            state.hasExamStarted = true;
+            state.canAccessPhases = true;
+            console.log("Recovered exam access from localStorage data");
+          }
+        }
+      } catch (error) {
+        console.error("Error in exam access recovery:", error);
       }
     },
   },
@@ -356,6 +401,7 @@ export const {
   clearPhaseQuestions,
   clearAllQuestions,
   setPageAccess,
+  recoverExamAccess,
 } = examSlice.actions;
 
 export default examSlice.reducer;

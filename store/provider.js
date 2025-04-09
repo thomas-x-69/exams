@@ -1,9 +1,10 @@
-// Improved provider.js with better navigation control
+// store/provider.js
 "use client";
 
 import { Provider } from "react-redux";
 import { useRef, useState, useEffect } from "react";
 import { store } from "./store";
+import { recoverExamAccess } from "./examSlice";
 
 export function Providers({ children }) {
   const [mounted, setMounted] = useState(false);
@@ -38,6 +39,13 @@ export function Providers({ children }) {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
+    // Try to recover exam access if needed
+    try {
+      storeRef.current.dispatch(recoverExamAccess());
+    } catch (e) {
+      console.error("Failed to recover exam access:", e);
+    }
+
     // Wait until after client-side hydration to mount
     setMounted(true);
 
@@ -45,6 +53,38 @@ export function Providers({ children }) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
+
+  // Block navigation attempts via browser back/forward buttons during active phases
+  useEffect(() => {
+    if (!mounted) return;
+
+    const handlePopState = (event) => {
+      const state = storeRef.current.getState();
+      const pathname = window.location.pathname;
+
+      // If we're in an active question phase, prevent navigation
+      if (state.exam.activeQuestionPhase && pathname !== "/exams/questions") {
+        event.preventDefault();
+        // Push back to questions page to override the navigation
+        window.history.pushState(null, "", "/exams/questions");
+        return;
+      }
+
+      // If we're during a break and trying to leave phases page
+      if (state.exam.breakTime && pathname !== "/exams/phases") {
+        event.preventDefault();
+        // Push back to phases page to override the navigation
+        window.history.pushState(null, "", "/exams/phases");
+        return;
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [mounted]);
 
   // Use the suppressHydrationWarning on the div to prevent issues
   if (!mounted) {
