@@ -724,13 +724,11 @@ export default function Home() {
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-amber-600/10 opacity-70"></div>
 
+              {/* Simple glow effect (ADDED) */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-yellow-600 rounded-xl opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-500"></div>
+
               {/* Animated shine effect */}
               <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-
-              {/* VIP Badge */}
-              <div className="absolute -top-3 -right-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-1 rounded-lg shadow-lg text-sm font-bold transform rotate-3 z-10">
-                حصري
-              </div>
 
               <div className="glass-card p-4 sm:p-6 bg-transparent relative z-10">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
