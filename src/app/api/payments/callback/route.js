@@ -59,8 +59,6 @@ export async function POST(req) {
     // Verify transaction success
     if (success === true && is_refunded === false) {
       // Payment successful
-      // Here you should implement your database update logic
-      // For example, update user's premium status, record transaction, etc.
       console.log(
         "Payment successful for order:",
         order_id,
@@ -69,11 +67,8 @@ export async function POST(req) {
         "EGP"
       );
 
-      // Here you'd typically:
-      // 1. Activate the user's premium subscription
-      // 2. Record the transaction in your database
-      // 3. Send confirmation email to the user
-
+      // In a real implementation, you'd store this info in a database
+      // For now, we'll just return success
       return NextResponse.json({ success: true });
     } else if (pending === true) {
       // Payment is pending (e.g., Fawry)
@@ -85,14 +80,10 @@ export async function POST(req) {
         "EGP"
       );
 
-      // You might want to record this state in your database
-
       return NextResponse.json({ success: true, status: "pending" });
     } else {
       // Payment failed or was refunded
       console.log("Payment failed/refunded for order:", order_id);
-
-      // Record the failed transaction
 
       return NextResponse.json({ success: false, status: "failed" });
     }
@@ -124,7 +115,7 @@ export async function GET(req) {
     if (success === "true") {
       // Successful payment - redirect to success page
       // In a real implementation, you'd verify this payment server-side first
-      return NextResponse.redirect(new URL("/premium?status=success", req.url));
+      return NextResponse.redirect(new URL(`/premium?status=success`, req.url));
     } else {
       // Failed payment - redirect to error page
       return NextResponse.redirect(new URL("/premium?status=error", req.url));

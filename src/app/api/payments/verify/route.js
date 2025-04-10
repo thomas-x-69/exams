@@ -38,6 +38,17 @@ export async function POST(req) {
       body: JSON.stringify({ api_key: apiKey }),
     });
 
+    if (!authResponse.ok) {
+      console.error("Paymob auth API error:", await authResponse.text());
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to authenticate with payment provider",
+        },
+        { status: 500 }
+      );
+    }
+
     const authData = await authResponse.json();
     if (!authData.token) {
       console.error("Failed to authenticate with Paymob:", authData);
@@ -65,6 +76,14 @@ export async function POST(req) {
       }
     );
 
+    if (!orderResponse.ok) {
+      console.error("Paymob order API error:", await orderResponse.text());
+      return NextResponse.json(
+        { success: false, message: "Failed to verify payment" },
+        { status: 500 }
+      );
+    }
+
     const orderData = await orderResponse.json();
 
     if (!orderData || !orderData.id) {
@@ -79,6 +98,14 @@ export async function POST(req) {
     const isPaid = orderData.paid_amount_cents > 0;
     const isDelivered = orderData.is_payment_delivered;
 
+    console.log("Order verification results:", {
+      orderId,
+      isPaid,
+      isDelivered,
+      paidAmount: orderData.paid_amount_cents / 100,
+      amountCents: orderData.amount_cents / 100,
+    });
+
     if (isPaid) {
       // Order is paid, retrieve transaction details
       if (orderData.transactions && orderData.transactions.length > 0) {
@@ -90,10 +117,6 @@ export async function POST(req) {
 
         if (isSuccessful) {
           // Payment is confirmed successful
-
-          // Set premium status for user (in a real implementation, you'd use a database)
-          // This is a client-side workaround for demo purposes
-
           return NextResponse.json({
             success: true,
             message: "Payment verified successfully",

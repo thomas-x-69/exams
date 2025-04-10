@@ -6,9 +6,14 @@ import { handleSuccessfulPayment } from "../utils/premiumService";
 const PaymentStatusModal = ({ isOpen, status, onClose }) => {
   const router = useRouter();
 
-  // Handle successful payment automatically
+  // Handle successful payment
   useEffect(() => {
-    if (isOpen && status?.status === "success") {
+    if (
+      isOpen &&
+      status?.status === "success" &&
+      status?.verifiedByServer === true
+    ) {
+      // Only activate premium if payment was verified by the server
       const result = handleSuccessfulPayment({ id: "lifetime" });
       if (result.success) {
         // Set a timer to redirect to premium content
@@ -90,11 +95,17 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
   };
 
   const handleAction = () => {
-    if (status.status === "success") {
+    if (status.status === "success" && status.verifiedByServer === true) {
       // Navigate to premium content or dashboard
       router.push("/premium-exams");
+    } else if (status.status === "pending") {
+      // For pending payments with reference number
+      if (status.referenceNumber) {
+        navigator.clipboard.writeText(status.referenceNumber);
+        alert("تم نسخ رقم المرجع: " + status.referenceNumber);
+      }
     } else {
-      // Close the modal
+      // Close the modal for errors
       onClose();
     }
   };
@@ -140,7 +151,19 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
 
         <p className="text-gray-600 mb-6 text-lg">{status.message}</p>
 
-        {status.status === "success" && (
+        {status.status === "pending" && status.referenceNumber && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-blue-800 font-medium text-sm">رقم المرجع:</p>
+            <p className="text-xl font-bold text-blue-900">
+              {status.referenceNumber}
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              اضغط على الزر أدناه لنسخ الرقم
+            </p>
+          </div>
+        )}
+
+        {status.status === "success" && status.verifiedByServer === true && (
           <>
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-6">
               <div
@@ -164,8 +187,10 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
               : "bg-gradient-to-r from-blue-500 to-indigo-600"
           } transition-colors shadow-lg`}
         >
-          {status.status === "success"
+          {status.status === "success" && status.verifiedByServer === true
             ? "استعرض المحتوى المميز"
+            : status.status === "pending" && status.referenceNumber
+            ? "نسخ رقم المرجع"
             : status.status === "error"
             ? "حاول مرة أخرى"
             : "انتظار..."}

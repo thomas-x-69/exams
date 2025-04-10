@@ -42,6 +42,18 @@ export const activatePremium = (duration = 365) => {
     expiryDate.setDate(expiryDate.getDate() + duration);
     localStorage.setItem("premiumExpiry", expiryDate.toISOString());
 
+    // Set username from temporary storage if available
+    const userName = localStorage.getItem("tempUserName");
+    if (userName) {
+      localStorage.setItem("userName", userName);
+    }
+
+    // Clear temp user info
+    localStorage.removeItem("tempUserName");
+    localStorage.removeItem("tempUserEmail");
+    localStorage.removeItem("tempUserPhone");
+    localStorage.removeItem("currentOrderId");
+
     // Return success with expiry info
     return {
       success: true,

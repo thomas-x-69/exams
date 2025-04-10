@@ -1,5 +1,7 @@
 // components/PremiumSubscription.js
-import React, { useState, useEffect } from "react";
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import PaymentStatusModal from "./PaymentStatusModal";
@@ -11,9 +13,12 @@ const PremiumSubscription = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
-  const [activeTab, setActiveTab] = useState("cashPayment"); // 'cashPayment' or 'cardPayment'
+  const [activeTab, setActiveTab] = useState("cardPayment"); // Default to card payments
+  const [showIframe, setShowIframe] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState("");
+  const iframeRef = useRef(null);
 
-  // Pricing plan - now with more attractive presentation
+  // Pricing plan
   const plan = {
     id: "lifetime",
     name: "اشتراك مدى الحياة",
@@ -29,50 +34,18 @@ const PremiumSubscription = () => {
       "اشتراك لمرة واحدة فقط - بدون رسوم متكررة",
       "وصول VIP للمحتوى الحصري والإضافات المستقبلية",
     ],
-    testimonials: [
-      { name: "أحمد م.", text: "اختبارات حقيقية ساعدتني في النجاح" },
-      { name: "سارة ع.", text: "أفضل استثمار للتحضير للاختبار" },
-      { name: "محمد خ.", text: "وفر علي وقت وجهد كبير" },
-    ],
   };
 
-  // Payment methods - enhanced presentation
+  // Payment methods - simplified to just card payment for now
   const paymentMethods = [
-    {
-      id: "fawry",
-      name: "فوري",
-      description: "الدفع من خلال أي فرع فوري",
-      icon: "fawry.png",
-      integrationId: process.env.NEXT_PUBLIC_PAYMOB_INTEGRATION_ID_FAWRY,
-      type: "cashPayment",
-      steps: [
-        "توجه لأقرب منفذ فوري",
-        "اطلب دفع فاتورة Accept",
-        "أدخل رقم الفاتورة الذي سيظهر لك بعد تأكيد الطلب",
-        "ادفع المبلغ واحتفظ بالإيصال",
-      ],
-    },
-    {
-      id: "wallet",
-      name: "محفظة إلكترونية",
-      description: "فودافون كاش، اتصالات كاش، أورانج كاش، وي باي",
-      icon: "wallet.png",
-      integrationId: process.env.NEXT_PUBLIC_PAYMOB_INTEGRATION_ID_WALLET,
-      type: "cashPayment",
-      steps: [
-        "اختر محفظتك الإلكترونية المفضلة",
-        "أكد موافقتك على الدفع",
-        "ستصلك رسالة للتأكيد على هاتفك",
-        "أدخل رقم PIN الخاص بمحفظتك",
-      ],
-    },
     {
       id: "credit",
       name: "بطاقة ائتمان",
       description: "فيزا، ماستركارد، ميزة",
       icon: "credit.png",
-      integrationId: process.env.NEXT_PUBLIC_PAYMOB_INTEGRATION_ID_CARD,
+      integrationId: 5034950, // Hardcoded integration ID from your screenshot
       type: "cardPayment",
+      iframeId: 911567, // From your screenshot
       steps: [
         "أدخل بيانات البطاقة",
         "تأكد من صحة البيانات",
@@ -81,6 +54,37 @@ const PremiumSubscription = () => {
       ],
     },
   ];
+
+  // Handle iframe message events for payment status
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data.type === "PAYMENT_STATUS") {
+        if (event.data.status === "SUCCESS") {
+          // Payment was successful
+          setShowIframe(false);
+          setPaymentStatus({
+            status: "success",
+            message: "تم الدفع بنجاح! جاري تفعيل اشتراكك.",
+            verifiedByServer: true,
+          });
+          setShowPaymentModal(true);
+        } else if (event.data.status === "ERROR") {
+          // Payment failed
+          setShowIframe(false);
+          setPaymentStatus({
+            status: "error",
+            message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
+          });
+          setShowPaymentModal(true);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   const handleSelectPaymentMethod = (methodId) => {
     setSelectedPaymentMethod(methodId);
@@ -95,55 +99,62 @@ const PremiumSubscription = () => {
     setIsLoading(true);
 
     try {
-      // Get selected payment method details
+      // Get selected payment method
       const paymentMethod = paymentMethods.find(
         (method) => method.id === selectedPaymentMethod
       );
 
-      // Call the API to create a payment
+      console.log("Selected payment method:", paymentMethod);
+
+      // Get user info
+      const userName = localStorage.getItem("tempUserName") || "Guest User";
+      const userEmail =
+        localStorage.getItem("tempUserEmail") || "guest@example.com";
+      const userPhone = localStorage.getItem("tempUserPhone") || "01000000000";
+
+      // Create payment directly with iframe approach
       const response = await fetch("/api/payments/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: plan.price * 100, // In piasters
+          amount: plan.price * 100,
           planId: plan.id,
           integrationId: paymentMethod.integrationId,
+          iframeId: paymentMethod.iframeId,
           paymentMethodId: paymentMethod.id,
+          userInfo: {
+            name: userName,
+            email: userEmail,
+            phone: userPhone,
+          },
         }),
       });
 
       const data = await response.json();
+      console.log("Payment creation response:", data);
 
       if (data.success) {
-        // Store the order details
+        // Store order details
         setOrderDetails(data.order);
+        localStorage.setItem("currentOrderId", data.order.id);
 
-        // Redirect to payment page or show iframe depending on payment method
-        if (data.redirectUrl) {
-          window.location.href = data.redirectUrl;
+        if (data.iframeUrl) {
+          // Show iframe for payment
+          setIframeUrl(data.iframeUrl);
+          setShowIframe(true);
         } else {
-          // Handle iframe payment methods
-          setShowPaymentModal(true);
-          setPaymentStatus({
-            status: "pending",
-            message: "جاري تحويلك إلى صفحة الدفع...",
-          });
-
-          // Redirect after a short delay
-          setTimeout(() => {
-            window.location.href = data.paymentUrl;
-          }, 1500);
+          throw new Error("لم يتم الحصول على رابط الدفع");
         }
       } else {
         throw new Error(data.message || "حدث خطأ أثناء إنشاء عملية الدفع");
       }
     } catch (error) {
-      console.error("Payment initialization error:", error);
+      console.error("Complete payment initialization error:", error);
       setPaymentStatus({
         status: "error",
-        message: error.message || "حدث خطأ أثناء الدفع، يرجى المحاولة مرة أخرى",
+        message: `حدث خطأ أثناء الدفع: ${error.message}`,
       });
       setShowPaymentModal(true);
     } finally {
@@ -156,35 +167,85 @@ const PremiumSubscription = () => {
     setPaymentStatus(null);
   };
 
-  // Check for payment status on component mount (for handling callbacks)
+  // Handle URL query params for payment status
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get("status");
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const status = urlParams.get("status");
 
-    if (status === "success") {
-      setPaymentStatus({
-        status: "success",
-        message: "تم الدفع بنجاح! جاري تفعيل اشتراكك.",
-      });
-      setShowPaymentModal(true);
+      if (status === "success") {
+        setPaymentStatus({
+          status: "success",
+          message: "تم الدفع بنجاح! جاري تفعيل اشتراكك.",
+          verifiedByServer: true,
+        });
+        setShowPaymentModal(true);
 
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (status === "error") {
-      setPaymentStatus({
-        status: "error",
-        message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
-      });
-      setShowPaymentModal(true);
+        // Clean up URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      } else if (status === "error") {
+        setPaymentStatus({
+          status: "error",
+          message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
+        });
+        setShowPaymentModal(true);
 
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+        // Clean up URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      }
     }
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Premium Package Display - Enhanced with better layout */}
+    <div className="max-w-6xl mx-auto relative">
+      {/* Iframe Modal */}
+      {showIframe && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-3xl bg-white rounded-lg overflow-hidden shadow-2xl">
+            <div className="absolute top-4 right-4 z-10">
+              <button
+                onClick={() => setShowIframe(false)}
+                className="bg-gray-200 p-2 rounded-full text-gray-600 hover:bg-gray-300"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="w-full h-[600px] bg-white">
+              <iframe
+                ref={iframeRef}
+                src={iframeUrl}
+                className="w-full h-full border-0"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Package Display */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-10">
         {/* Left Column - Package Info */}
         <div className="lg:col-span-2">
@@ -240,7 +301,7 @@ const PremiumSubscription = () => {
               </span>
             </div>
 
-            {/* Features List - Enhanced design */}
+            {/* Features List */}
             <div className="mb-6">
               <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
                 <svg
@@ -289,151 +350,93 @@ const PremiumSubscription = () => {
               اختر طريقة الدفع المفضلة
             </h3>
 
-            {/* Payment Methods Tabs */}
-            <div className="flex mb-6 border-b border-white/10">
-              <button
-                className={`pb-3 px-6 text-sm font-medium relative ${
-                  activeTab === "cashPayment"
-                    ? "text-amber-400"
-                    : "text-white/70 hover:text-white"
-                }`}
-                onClick={() => setActiveTab("cashPayment")}
-              >
-                دفع نقدي / محافظ إلكترونية
-                {activeTab === "cashPayment" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-500"></span>
-                )}
-              </button>
-              <button
-                className={`pb-3 px-6 text-sm font-medium relative ${
-                  activeTab === "cardPayment"
-                    ? "text-amber-400"
-                    : "text-white/70 hover:text-white"
-                }`}
-                onClick={() => setActiveTab("cardPayment")}
-              >
-                بطاقات ائتمان
-                {activeTab === "cardPayment" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-500"></span>
-                )}
-              </button>
-            </div>
-
-            {/* Payment Methods Grid */}
+            {/* Payment Methods Grid - Simplified to just card payment */}
             <div className="grid grid-cols-1 gap-4 mb-6">
-              {paymentMethods
-                .filter((method) => method.type === activeTab)
-                .map((method) => (
-                  <div
-                    key={method.id}
-                    onClick={() => handleSelectPaymentMethod(method.id)}
-                    className={`
-                      relative p-4 rounded-xl border transition-all duration-300 cursor-pointer
-                      ${
-                        selectedPaymentMethod === method.id
-                          ? "bg-gradient-to-br from-amber-500/20 to-yellow-600/10 border-amber-500/50 shadow-lg shadow-amber-500/10"
-                          : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
-                      }
-                    `}
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Payment Method Icon */}
-                      <div className="w-16 h-16 bg-white rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0">
-                        {method.id === "fawry" && (
-                          <Image
-                            src="https://upload.wikimedia.org/wikipedia/ar/d/db/%D9%81%D9%88%D8%B1%D9%8A.png"
-                            alt="فوري"
-                            width={48}
-                            height={48}
-                            className="object-contain"
-                          />
-                        )}
-                        {method.id === "wallet" && (
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <svg
-                              className="w-6 h-6 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                              />
-                            </svg>
-                          </div>
-                        )}
-                        {method.id === "credit" && (
-                          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                            <svg
-                              className="w-6 h-6 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                              />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Payment Method Details */}
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white mb-1 flex items-center justify-between">
-                          {method.name}
-
-                          {selectedPaymentMethod === method.id && (
-                            <div className="bg-green-500 rounded-full w-5 h-5 flex items-center justify-center">
-                              <svg
-                                className="w-3 h-3 text-white"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            </div>
-                          )}
-                        </h4>
-                        <p className="text-white/70 text-sm mb-3">
-                          {method.description}
-                        </p>
-
-                        {/* Payment Steps */}
-                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                          <h5 className="text-xs font-medium text-white/90 mb-2">
-                            خطوات الدفع:
-                          </h5>
-                          <ol className="space-y-1 pr-2">
-                            {method.steps.map((step, idx) => (
-                              <li
-                                key={idx}
-                                className="text-white/70 text-xs flex items-start gap-2"
-                              >
-                                <span className="inline-block w-4 h-4 bg-white/10 rounded-full text-center flex-shrink-0 text-[10px] leading-4">
-                                  {idx + 1}
-                                </span>
-                                <span>{step}</span>
-                              </li>
-                            ))}
-                          </ol>
+              {paymentMethods.map((method) => (
+                <div
+                  key={method.id}
+                  onClick={() => handleSelectPaymentMethod(method.id)}
+                  className={`
+                    relative p-4 rounded-xl border transition-all duration-300 cursor-pointer
+                    ${
+                      selectedPaymentMethod === method.id
+                        ? "bg-gradient-to-br from-amber-500/20 to-yellow-600/10 border-amber-500/50 shadow-lg shadow-amber-500/10"
+                        : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
+                    }
+                  `}
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Payment Method Icon */}
+                    <div className="w-16 h-16 bg-white rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0">
+                      {method.id === "credit" && (
+                        <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                          <svg
+                            className="w-6 h-6 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                            />
+                          </svg>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Payment Method Details */}
+                    <div className="flex-1">
+                      <h4 className="font-bold text-white mb-1 flex items-center justify-between">
+                        {method.name}
+
+                        {selectedPaymentMethod === method.id && (
+                          <div className="bg-green-500 rounded-full w-5 h-5 flex items-center justify-center">
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </h4>
+                      <p className="text-white/70 text-sm mb-3">
+                        {method.description}
+                      </p>
+
+                      {/* Payment Steps */}
+                      <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                        <h5 className="text-xs font-medium text-white/90 mb-2">
+                          خطوات الدفع:
+                        </h5>
+                        <ol className="space-y-1 pr-2">
+                          {method.steps.map((step, idx) => (
+                            <li
+                              key={idx}
+                              className="text-white/70 text-xs flex items-start gap-2"
+                            >
+                              <span className="inline-block w-4 h-4 bg-white/10 rounded-full text-center flex-shrink-0 text-[10px] leading-4">
+                                {idx + 1}
+                              </span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ol>
                       </div>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
 
             {/* Order Summary */}
