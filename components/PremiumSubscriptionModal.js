@@ -13,7 +13,6 @@ const PremiumSubscriptionModal = ({ isOpen, onClose }) => {
   });
   const [errors, setErrors] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const modalRef = useRef(null);
 
   // Handle click outside modal
@@ -88,7 +87,7 @@ const PremiumSubscriptionModal = ({ isOpen, onClose }) => {
       localStorage.setItem("tempUserEmail", formData.email);
       localStorage.setItem("tempUserPhone", formData.phone);
 
-      // Instead of simulating, redirect to the premium page to start actual payment
+      // Redirect to the premium page to start actual payment
       setIsProcessing(false);
       onClose();
       router.push("/premium");
@@ -105,7 +104,6 @@ const PremiumSubscriptionModal = ({ isOpen, onClose }) => {
     onClose();
     // Reset state after a delay to allow fade-out animation
     setTimeout(() => {
-      setIsSuccess(false);
       setFormData({ name: "", email: "", phone: "" });
       setErrors({});
     }, 300);
@@ -140,7 +138,7 @@ const PremiumSubscriptionModal = ({ isOpen, onClose }) => {
             <div>
               <h2 className="text-xl font-bold text-white">العضوية المميزة</h2>
               <p className="text-white/80 text-sm">
-                اشتراك لمرة واحدة - 90 جنيه
+                اشتراك شهري - 99 جنيه / شهر
               </p>
             </div>
           </div>
@@ -205,7 +203,7 @@ const PremiumSubscriptionModal = ({ isOpen, onClose }) => {
                   />
                 </svg>
                 <span className="text-white/90">
-                  وصول دائم لكل التحديثات المستقبلية
+                  صلاحية استخدام لمدة شهر كامل
                 </span>
               </li>
             </ul>
@@ -272,9 +270,11 @@ const PremiumSubscriptionModal = ({ isOpen, onClose }) => {
             {/* Payment Info */}
             <div className="bg-slate-700 rounded-lg p-3 border border-slate-600">
               <div className="text-white/90 text-sm mb-1">سعر الاشتراك:</div>
-              <div className="text-amber-500 font-bold text-2xl">90 جنيه</div>
+              <div className="text-amber-500 font-bold text-2xl">
+                99 جنيه / شهر
+              </div>
               <div className="text-white/60 text-xs">
-                دفعة واحدة - وصول مدى الحياة
+                دفعة واحدة لمدة شهر كامل
               </div>
             </div>
 
@@ -295,7 +295,7 @@ const PremiumSubscriptionModal = ({ isOpen, onClose }) => {
             </button>
 
             <p className="text-white/50 text-xs text-center">
-              يتم الاشتراك مرة واحدة فقط بدون رسوم متكررة
+              اشتراك صالح لمدة شهر واحد - يحتاج إلى تجديد يدوي بعد انتهاء المدة
             </p>
           </form>
         </div>

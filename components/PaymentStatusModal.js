@@ -14,7 +14,7 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
       status?.verifiedByServer === true
     ) {
       // Only activate premium if payment was verified by the server
-      const result = handleSuccessfulPayment({ id: "lifetime" });
+      const result = handleSuccessfulPayment({ id: "monthly" }); // Changed from lifetime to monthly
       if (result.success) {
         // Set a timer to redirect to premium content
         const timer = setTimeout(() => {
@@ -143,7 +143,7 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
 
         <h3 className="text-2xl font-bold text-gray-800 mb-3">
           {status.status === "success"
-            ? "تم الدفع بنجاح!"
+            ? "تم الاشتراك بنجاح!"
             : status.status === "error"
             ? "حدث خطأ!"
             : "جاري معالجة الدفع"}
@@ -173,6 +173,9 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
             </div>
             <p className="text-gray-500 mb-4 text-sm">
               جاري تحويلك للمحتوى المميز خلال ثواني...
+            </p>
+            <p className="text-gray-500 mb-4 text-sm">
+              بدأ اشتراكك الشهري بنجاح وسيكون صالحاً لمدة شهر كامل.
             </p>
           </>
         )}

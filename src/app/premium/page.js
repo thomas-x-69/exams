@@ -102,7 +102,7 @@ export default function PremiumPage() {
           <div className="max-w-4xl mx-auto text-center mb-6">
             {/* Limited Time Offer Tag */}
             <div className="inline-block bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg mb-6">
-              عرض خاص لفترة محدودة - ينتهي خلال 7 أيام
+              عرض خاص لفترة محدودة - خصم 35%
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
@@ -141,7 +141,9 @@ export default function PremiumPage() {
 
               <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
                 <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse"></div>
-                <span className="text-white/80 text-sm">اشتراك مدى الحياة</span>
+                <span className="text-white/80 text-sm">
+                  اشتراك شهري بدفعة واحدة
+                </span>
               </div>
             </div>
           </div>
@@ -158,7 +160,7 @@ export default function PremiumPage() {
             </div>
 
             {/* Premium Card with Shine Effect */}
-            <div className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 shadow-2xl  shadow-amber-500/20">
+            <div className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 shadow-2xl shadow-amber-500/20">
               {/* Animated Shine Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shine z-10 pointer-events-none"></div>
 
@@ -320,7 +322,7 @@ export default function PremiumPage() {
                 </p>
               </div>
 
-              {/* Feature 6 - Payment/Lifetime Icon */}
+              {/* Feature 6 - Payment/Monthly Icon */}
               <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
                   <svg
@@ -333,16 +335,16 @@ export default function PremiumPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={1.5}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
                     />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
-                  اشتراك لمرة واحدة
+                  اشتراك شهري
                 </h3>
                 <p className="text-white/70">
-                  ادفع مرة واحدة فقط للحصول على وصول مدى الحياة، بدون اشتراكات
-                  شهرية أو رسوم مخفية، مع تحديثات مجانية مستمرة.
+                  اشتراك شهري بدفعة واحدة، صالح لمدة شهر كامل بسعر منافس، بعدها
+                  يمكنك تجديد الاشتراك إذا رغبت في ذلك.
                 </p>
               </div>
             </div>
@@ -571,20 +573,20 @@ export default function PremiumPage() {
                 <p className="text-white/80 text-sm">
                   العضوية الذهبية توفر لك الوصول إلى أكثر من 30 اختباراً حقيقياً
                   من الامتحانات السابقة، مع تحليل مفصل لأدائك، وشهادات إتمام
-                  مخصصة، ودعم فني متميز، وتحديثات مستمرة مدى الحياة - كل ذلك
-                  بدفعة واحدة فقط وبدون اشتراكات شهرية.
+                  مخصصة، ودعم فني متميز، وتحديثات مستمرة بسعر شهري مناسب مع
+                  إمكانية الإلغاء في أي وقت.
                 </p>
               </div>
 
               {/* FAQ Item 2 */}
               <div className="border-b border-white/10 pb-4 mb-4">
                 <h3 className="text-xl font-bold text-amber-400 mb-2">
-                  هل الاشتراك دفعة واحدة أم شهري؟
+                  هل الاشتراك شهري أم سنوي؟
                 </h3>
                 <p className="text-white/80 text-sm">
-                  الاشتراك دفعة واحدة فقط (99 جنيه) ويمنحك وصولاً مدى الحياة
-                  لجميع المميزات الحالية والمستقبلية دون الحاجة لأي دفعات إضافية
-                  أو اشتراكات شهرية. استثمار واحد يدوم معك طوال مسيرتك المهنية.
+                  الاشتراك شهري بقيمة 99 جنيه شهرياً، دفعة واحدة لمدة شهر كامل.
+                  بعد انتهاء المدة، يمكنك تجديد الاشتراك مرة أخرى إذا رغبت في
+                  ذلك. لا يتم التجديد تلقائياً.
                 </p>
               </div>
 
@@ -594,10 +596,9 @@ export default function PremiumPage() {
                   كيف أدفع ثمن الاشتراك؟
                 </h3>
                 <p className="text-white/80 text-sm">
-                  يمكنك الدفع عبر ثلاث طرق مختلفة: فوري، المحافظ الإلكترونية
-                  (فودافون كاش، اتصالات كاش، أورانج كاش، وي باي)، أو عبر بطاقات
-                  الائتمان (فيزا، ماستركارد، ميزة). جميع طرق الدفع آمنة ومشفرة
-                  بالكامل.
+                  يمكنك الدفع عبر بطاقات الائتمان (فيزا، ماستركارد، ميزة). جميع
+                  طرق الدفع آمنة ومشفرة بالكامل ويتم التعامل معها من خلال بوابات
+                  دفع موثوقة.
                 </p>
               </div>
 
@@ -636,7 +637,7 @@ export default function PremiumPage() {
                     <div className="flex items-end gap-1">
                       <span className="text-3xl font-bold text-white">99</span>
                       <span className="text-lg text-white/80 mb-1">
-                        جنيه فقط
+                        جنيه / شهر
                       </span>
                     </div>
                   </div>
@@ -656,7 +657,7 @@ export default function PremiumPage() {
                 </button>
 
                 <p className="text-white/60 text-sm mt-3 relative z-10">
-                  دفعة واحدة فقط - بدون اشتراكات شهرية - وصول مدى الحياة
+                  اشتراك شهري - دفعة واحدة - صالح لمدة شهر كامل
                 </p>
               </div>
             </div>

@@ -12,40 +12,36 @@ const PremiumSubscription = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
-  const [orderDetails, setOrderDetails] = useState(null);
   const [activeTab, setActiveTab] = useState("cardPayment"); // Default to card payments
-  const [showIframe, setShowIframe] = useState(false);
-  const [iframeUrl, setIframeUrl] = useState("");
-  const iframeRef = useRef(null);
 
-  // Pricing plan
+  // Pricing plan - one-time monthly subscription
   const plan = {
-    id: "lifetime",
-    name: "اشتراك مدى الحياة",
+    id: "monthly",
+    name: "اشتراك شهري",
     price: 99,
     originalPrice: 150,
     features: [
       "الوصول لجميع الاختبارات التدريبية",
-      "أكثر من 100 نموذج امتحان حقيقي سابق",
+      "أكثر من 30 نموذج امتحان حقيقي سابق",
       "تحليل مفصل للأداء ونقاط القوة والضعف",
       "شهادات إتمام الاختبارات بتصميم احترافي",
       "دعم فني على مدار الساعة",
       "تحديثات مستمرة بأحدث الامتحانات",
-      "اشتراك لمرة واحدة فقط - بدون رسوم متكررة",
-      "وصول VIP للمحتوى الحصري والإضافات المستقبلية",
+      "دفع شهري لمرة واحدة",
+      "صلاحية استخدام لمدة شهر كامل",
     ],
   };
 
-  // Payment methods - simplified to just card payment for now
+  // Payment methods - simplified to just card payment
   const paymentMethods = [
     {
       id: "credit",
       name: "بطاقة ائتمان",
       description: "فيزا، ماستركارد، ميزة",
       icon: "credit.png",
-      integrationId: 5034950, // Hardcoded integration ID from your screenshot
+      integrationId: 5034950,
       type: "cardPayment",
-      iframeId: 911567, // From your screenshot
+      iframeId: 911567,
       steps: [
         "أدخل بيانات البطاقة",
         "تأكد من صحة البيانات",
@@ -54,37 +50,6 @@ const PremiumSubscription = () => {
       ],
     },
   ];
-
-  // Handle iframe message events for payment status
-  useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data.type === "PAYMENT_STATUS") {
-        if (event.data.status === "SUCCESS") {
-          // Payment was successful
-          setShowIframe(false);
-          setPaymentStatus({
-            status: "success",
-            message: "تم الدفع بنجاح! جاري تفعيل اشتراكك.",
-            verifiedByServer: true,
-          });
-          setShowPaymentModal(true);
-        } else if (event.data.status === "ERROR") {
-          // Payment failed
-          setShowIframe(false);
-          setPaymentStatus({
-            status: "error",
-            message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
-          });
-          setShowPaymentModal(true);
-        }
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
 
   const handleSelectPaymentMethod = (methodId) => {
     setSelectedPaymentMethod(methodId);
@@ -99,65 +64,43 @@ const PremiumSubscription = () => {
     setIsLoading(true);
 
     try {
-      // Get selected payment method
-      const paymentMethod = paymentMethods.find(
-        (method) => method.id === selectedPaymentMethod
-      );
-
-      console.log("Selected payment method:", paymentMethod);
-
       // Get user info
       const userName = localStorage.getItem("tempUserName") || "Guest User";
       const userEmail =
         localStorage.getItem("tempUserEmail") || "guest@example.com";
       const userPhone = localStorage.getItem("tempUserPhone") || "01000000000";
 
-      // Create payment directly with iframe approach
-      const response = await fetch("/api/payments/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: plan.price * 100,
-          planId: plan.id,
-          integrationId: paymentMethod.integrationId,
-          iframeId: paymentMethod.iframeId,
-          paymentMethodId: paymentMethod.id,
-          userInfo: {
-            name: userName,
-            email: userEmail,
-            phone: userPhone,
-          },
-        }),
-      });
+      // In a real implementation, this would make an API call to your backend
+      // to initialize the subscription payment process
 
-      const data = await response.json();
-      console.log("Payment creation response:", data);
+      // Set a brief timeout to simulate server communication
+      setTimeout(() => {
+        // Redirecting to a backend payment processing page would happen here
+        // For now, we'll just show a loading state
 
-      if (data.success) {
-        // Store order details
-        setOrderDetails(data.order);
-        localStorage.setItem("currentOrderId", data.order.id);
+        // After the backend handles the payment, you would redirect the user to a success page
+        // or handle the subscription activation
 
-        if (data.iframeUrl) {
-          // Show iframe for payment
-          setIframeUrl(data.iframeUrl);
-          setShowIframe(true);
-        } else {
-          throw new Error("لم يتم الحصول على رابط الدفع");
-        }
-      } else {
-        throw new Error(data.message || "حدث خطأ أثناء إنشاء عملية الدفع");
-      }
+        setIsLoading(false);
+
+        // Show success message (in real implementation, this would only happen after
+        // successful backend confirmation)
+        setPaymentStatus({
+          status: "pending",
+          message: "جاري تحويلك إلى صفحة الدفع...",
+        });
+        setShowPaymentModal(true);
+
+        // In a real implementation, this would redirect to your payment gateway
+        // window.location.href = "/api/subscription/create";
+      }, 1500);
     } catch (error) {
-      console.error("Complete payment initialization error:", error);
+      console.error("Payment initialization error:", error);
       setPaymentStatus({
         status: "error",
-        message: `حدث خطأ أثناء الدفع: ${error.message}`,
+        message: "حدث خطأ أثناء الدفع. يرجى المحاولة مرة أخرى.",
       });
       setShowPaymentModal(true);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -167,84 +110,8 @@ const PremiumSubscription = () => {
     setPaymentStatus(null);
   };
 
-  // Handle URL query params for payment status
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const status = urlParams.get("status");
-
-      if (status === "success") {
-        setPaymentStatus({
-          status: "success",
-          message: "تم الدفع بنجاح! جاري تفعيل اشتراكك.",
-          verifiedByServer: true,
-        });
-        setShowPaymentModal(true);
-
-        // Clean up URL
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-      } else if (status === "error") {
-        setPaymentStatus({
-          status: "error",
-          message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
-        });
-        setShowPaymentModal(true);
-
-        // Clean up URL
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-      }
-    }
-  }, []);
-
   return (
     <div className="max-w-6xl mx-auto relative">
-      {/* Iframe Modal */}
-      {showIframe && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-3xl bg-white rounded-lg overflow-hidden shadow-2xl">
-            <div className="absolute top-4 right-4 z-10">
-              <button
-                onClick={() => setShowIframe(false)}
-                className="bg-gray-200 p-2 rounded-full text-gray-600 hover:bg-gray-300"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="w-full h-[600px] bg-white">
-              <iframe
-                ref={iframeRef}
-                src={iframeUrl}
-                className="w-full h-full border-0"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Premium Package Display */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-10">
         {/* Left Column - Package Info */}
@@ -270,7 +137,7 @@ const PremiumSubscription = () => {
                 <span className="text-amber-400 line-through text-lg">
                   {plan.originalPrice}
                 </span>
-                <span className="text-white/80 text-sm">جنيه مصري</span>
+                <span className="text-white/80 text-sm">جنيه مصري / شهر</span>
               </div>
               <div className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded-lg border border-green-500/30 mr-2">
                 خصم{" "}
@@ -281,7 +148,7 @@ const PremiumSubscription = () => {
               </div>
             </div>
 
-            {/* Lifetime Badge */}
+            {/* Monthly Badge */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 p-2 rounded-lg border border-amber-500/30 mb-6">
               <svg
                 className="w-5 h-5 text-amber-400"
@@ -297,7 +164,7 @@ const PremiumSubscription = () => {
                 />
               </svg>
               <span className="text-amber-300 font-bold">
-                اشتراك لمرة واحدة - وصول مدى الحياة
+                اشتراك شهري - دفع مرة واحدة
               </span>
             </div>
 
@@ -447,7 +314,9 @@ const PremiumSubscription = () => {
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                  <span className="text-white/70">العضوية الذهبية</span>
+                  <span className="text-white/70">
+                    العضوية الذهبية (شهرياً)
+                  </span>
                   <span className="text-white">{plan.price} جنيه</span>
                 </div>
 
@@ -459,7 +328,9 @@ const PremiumSubscription = () => {
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-white font-semibold">الإجمالي</span>
+                  <span className="text-white font-semibold">
+                    الإجمالي (شهرياً)
+                  </span>
                   <div className="text-xl font-bold text-amber-400">
                     {plan.price} جنيه
                   </div>
@@ -486,8 +357,8 @@ const PremiumSubscription = () => {
                       دفع آمن ومضمون
                     </span>
                     <span>
-                      اشتراك لمرة واحدة فقط بدون رسوم متكررة أو تجديد تلقائي.
-                      وصول مدى الحياة لجميع المميزات.
+                      اشتراك شهري بدفعة واحدة. بعد انتهاء الشهر، يمكنك تجديد
+                      الاشتراك مرة أخرى إذا رغبت في ذلك.
                     </span>
                   </div>
                 </div>
@@ -547,7 +418,7 @@ const PremiumSubscription = () => {
                         d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                       />
                     </svg>
-                    <span>إتمام الدفع الآن</span>
+                    <span>اشترك الآن</span>
                   </div>
                 )}
               </button>
@@ -590,7 +461,7 @@ const PremiumSubscription = () => {
                     />
                   </svg>
                 </div>
-                <span className="text-white/60 text-xs">ضمان استرداد</span>
+                <span className="text-white/60 text-xs">اشتراك موثوق</span>
               </div>
 
               <div className="text-center">

@@ -32,12 +32,12 @@ export const checkPremiumStatus = () => {
 };
 
 // Grant premium access to a user
-export const activatePremium = (duration = 365) => {
+export const activatePremium = (duration = 30) => {
   try {
     // Set premium flag
     localStorage.setItem("premiumUser", "true");
 
-    // Set expiry date (default: 365 days / 1 year)
+    // Set expiry date (default: 30 days / 1 month)
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + duration);
     localStorage.setItem("premiumExpiry", expiryDate.toISOString());
@@ -132,14 +132,16 @@ export const getPremiumExpiryInfo = () => {
 // Handle successful payment
 export const handleSuccessfulPayment = (planInfo) => {
   try {
-    // Determine duration based on plan
-    let duration = 30; // Default: 30 days (monthly)
+    // Default to 30 days (monthly)
+    let duration = 30;
 
     if (planInfo) {
-      if (planInfo.id === "yearly") {
+      if (planInfo.id === "monthly") {
+        duration = 30; // 1 month
+      } else if (planInfo.id === "quarterly") {
+        duration = 90; // 3 months
+      } else if (planInfo.id === "yearly") {
         duration = 365; // 1 year
-      } else if (planInfo.id === "lifetime") {
-        duration = 36500; // 100 years (effectively lifetime)
       }
     }
 

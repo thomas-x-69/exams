@@ -53,8 +53,25 @@ export async function POST(req) {
       is_refunded,
       is_capture,
       pending,
+      integration_id,
+      special_reference,
+      token,
       data,
     } = body;
+
+    // Store payment information in database (implement this later)
+    // For now, we'll just log it
+    console.log("Payment data to store:", {
+      orderId: order_id,
+      amount: amount_cents / 100,
+      success,
+      isRefunded: is_refunded,
+      isCapture: is_capture,
+      pending,
+      integrationId: integration_id,
+      specialReference: special_reference,
+      token: token, // This will be the saved card token if user opted to save card
+    });
 
     // Verify transaction success
     if (success === true && is_refunded === false) {
@@ -106,16 +123,21 @@ export async function GET(req) {
     const searchParams = req.nextUrl.searchParams;
     const success = searchParams.get("success");
     const orderId = searchParams.get("order_id");
+    const intentionId = searchParams.get("intention_id");
 
     // Validate the callback
-    if (!orderId) {
+    if (!orderId && !intentionId) {
       return NextResponse.redirect(new URL("/premium?status=error", req.url));
     }
 
     if (success === "true") {
       // Successful payment - redirect to success page
-      // In a real implementation, you'd verify this payment server-side first
-      return NextResponse.redirect(new URL(`/premium?status=success`, req.url));
+      return NextResponse.redirect(
+        new URL(
+          `/premium?status=success&order_id=${orderId || intentionId}`,
+          req.url
+        )
+      );
     } else {
       // Failed payment - redirect to error page
       return NextResponse.redirect(new URL("/premium?status=error", req.url));
