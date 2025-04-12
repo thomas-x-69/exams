@@ -5,17 +5,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../../../components/Header";
 import PremiumSubscription from "../../../components/PremiumSubscription";
-import AuthModal from "../../../components/AuthModal";
 import PaymentStatusModal from "../../../components/PaymentStatusModal";
-import { useAuth } from "../../../context/ClientAuthContext";
+import { useClientAuth } from "../../../context/ClientAuthContext";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function PremiumPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, userProfile, isPremium, activatePremium, loading } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, userProfile, isPremium, activatePremium, loading } =
+    useClientAuth();
   const [pageLoading, setPageLoading] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -37,15 +36,9 @@ export default function PremiumPage() {
       if (isPremium) {
         router.replace("/premium-exams");
       }
-
-      // If not authenticated, show auth modal
-      if (!user && !loading) {
-        setShowAuthModal(true);
-      }
-
       setPageLoading(false);
     }
-  }, [isPremium, user, loading, router]);
+  }, [isPremium, loading, router]);
 
   // Handle payment callback from payment gateway
   const handlePaymentCallback = async (status, orderId) => {
@@ -119,11 +112,6 @@ export default function PremiumPage() {
       });
       setShowPaymentModal(true);
     }
-  };
-
-  // Handle successful authentication
-  const handleAuthenticated = (authUser, profile) => {
-    setShowAuthModal(false);
   };
 
   // Loading state
@@ -239,7 +227,7 @@ export default function PremiumPage() {
             </div>
           </div>
 
-          {/* Premium Subscription Component */}
+          {/* Premium Subscription Component - Always visible for all users */}
           <div className="max-w-6xl mx-auto relative mt-16">
             {/* Spotlight Effect - Premium Highlight Banner */}
             <div className="absolute inset-x-0 -top-8 flex justify-center">
@@ -256,57 +244,10 @@ export default function PremiumPage() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shine z-10 pointer-events-none"></div>
 
               {/* Card Content */}
-              <div className="glass-card rounded-3xl overflow-hidden backdrop-blur-xl bg-slate-900/80 ">
+              <div className="glass-card rounded-3xl overflow-hidden backdrop-blur-xl bg-slate-900/80">
                 <div className="p-6 sm:p-10">
-                  {user ? (
-                    <PremiumSubscription userData={userProfile} />
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg
-                          className="w-12 h-12 text-amber-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                          />
-                        </svg>
-                      </div>
-                      <h2 className="text-2xl font-bold text-white mb-4">
-                        تسجيل الدخول مطلوب
-                      </h2>
-                      <p className="text-white/70 max-w-xl mx-auto mb-8">
-                        يرجى تسجيل الدخول أو إنشاء حساب جديد للاشتراك في العضوية
-                        المميزة والوصول إلى الامتحانات الحقيقية.
-                      </p>
-                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <button
-                          onClick={() => setShowAuthModal(true)}
-                          className="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl font-bold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-amber-500/20"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                            />
-                          </svg>
-                          <span>تسجيل الدخول / إنشاء حساب</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  {/* Always render the PremiumSubscription component */}
+                  <PremiumSubscription userData={userProfile} />
                 </div>
               </div>
             </div>
@@ -519,23 +460,14 @@ export default function PremiumPage() {
                   </div>
                 </div>
 
-                {!user ? (
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                  >
-                    سجل الآن واشترك في العضوية الذهبية
-                  </button>
-                ) : (
-                  <button
-                    onClick={() =>
-                      window.scrollTo({ top: 0, behavior: "smooth" })
-                    }
-                    className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                  >
-                    اشترك الآن في العضوية الذهبية
-                  </button>
-                )}
+                <button
+                  onClick={() =>
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }
+                  className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
+                  الاشتراك في العضوية الذهبية الآن
+                </button>
 
                 <p className="text-white/60 text-sm mt-3 relative z-10">
                   اشتراك شهري - دفعة واحدة - صالح لمدة شهر كامل
@@ -544,14 +476,6 @@ export default function PremiumPage() {
             </div>
           </div>
         </div>
-
-        {/* Authentication Modal */}
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          onAuthenticated={handleAuthenticated}
-          mode="register"
-        />
 
         {/* Payment Status Modal */}
         <PaymentStatusModal

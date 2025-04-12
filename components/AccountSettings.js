@@ -2,14 +2,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "../context/ClientAuthContext";
+import { useClientAuth } from "../context/ClientAuthContext"; // Fixed import
 import { signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { getPremiumExpiryInfo } from "../utils/premiumService";
 
 const AccountSettings = ({ isOpen, onClose }) => {
   const { user, userProfile, updateProfile, isPremium, premiumExpiryDate } =
-    useAuth();
+    useClientAuth(); // Fixed hook usage
   const [activeTab, setActiveTab] = useState("profile");
   const [name, setName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");

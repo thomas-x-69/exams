@@ -1,21 +1,10 @@
-// components/PhoneAuth.js
+// components/SimplePhoneAuth.js
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../context/ClientAuthContext";
-import {
-  auth,
-  createRecaptchaVerifier,
-  signInWithPhone,
-  verifyCode,
-} from "../lib/firebase";
-import { signOut } from "firebase/auth";
 
-const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
-  const { user, userProfile, createProfile, loading, error, setError } =
-    useAuth();
-
-  const [step, setStep] = useState(user ? "profile" : "phone");
+const SimplePhoneAuth = ({ onComplete, isProcessingPayment }) => {
+  const [step, setStep] = useState("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [name, setName] = useState("");
@@ -24,20 +13,6 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
-
-  // Handle existing user detection
-  useEffect(() => {
-    if (user && !loading) {
-      if (userProfile) {
-        // User already has a profile, consider them fully registered
-        setStep("profile");
-        if (onAuthenticated) onAuthenticated(user, userProfile);
-      } else {
-        // User is authenticated but doesn't have a profile yet
-        setStep("profile-setup");
-      }
-    }
-  }, [user, userProfile, loading, onAuthenticated]);
 
   // Handle countdown for resending verification code
   useEffect(() => {
@@ -48,17 +23,11 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  // Validate phone number format
+  // Validate phone number format - Egyptian numbers
   const validatePhoneNumber = (phone) => {
     // Check for Egyptian phone number format (starts with 01 followed by 9 digits)
     const phoneRegex = /^01[0125][0-9]{8}$/;
     return phoneRegex.test(phone);
-  };
-
-  // Format phone number for Firebase (add +2 country code for Egypt)
-  const formatPhoneNumber = (phone) => {
-    if (phone.startsWith("+2")) return phone;
-    return `+2${phone}`;
   };
 
   // Handle phone number submission
@@ -72,34 +41,27 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
       // Validate phone number
       if (!phoneNumber.trim()) {
         setValidationErrors({ phone: "يرجى إدخال رقم الهاتف" });
+        setIsProcessing(false);
         return;
       }
 
       if (!validatePhoneNumber(phoneNumber)) {
         setValidationErrors({ phone: "يرجى إدخال رقم هاتف مصري صحيح" });
+        setIsProcessing(false);
         return;
       }
 
-      // Create invisible reCAPTCHA
-      const recaptchaVerifier = createRecaptchaVerifier(
-        "recaptcha-container",
-        () => {
-          console.log("reCAPTCHA solved");
-        }
-      );
-
-      // Send verification code
-      const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
-      await signInWithPhone(formattedPhoneNumber, recaptchaVerifier);
-
-      // Move to verification code step
-      setStep("verification");
-      setCountdown(60); // Start countdown for resend (60 seconds)
+      // Simulate sending code - In a real app, you would call your API here
+      // This is client-side only for demo purposes
+      setTimeout(() => {
+        // Move to verification code step
+        setStep("verification");
+        setCountdown(60); // Start countdown for resend (60 seconds)
+        setIsProcessing(false);
+      }, 1500);
     } catch (error) {
       console.error("Error sending verification code:", error);
-      setError("فشل في إرسال رمز التحقق. يرجى المحاولة مرة أخرى.");
       setValidationErrors({ phone: "حدث خطأ أثناء إرسال رمز التحقق" });
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -114,30 +76,29 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
 
       if (!verificationCode.trim()) {
         setValidationErrors({ code: "يرجى إدخال رمز التحقق" });
+        setIsProcessing(false);
         return;
       }
 
-      // Verify code
-      const result = await verifyCode(verificationCode);
-
-      if (result.user) {
-        // Check if user has a profile
-        const existingProfile = userProfile;
-
-        if (existingProfile) {
-          // User already has a profile, move to success
-          setStep("success");
-          if (onAuthenticated) onAuthenticated(result.user, existingProfile);
-        } else {
-          // User needs to complete profile
-          setStep("profile-setup");
-        }
+      // Validate code format
+      if (!/^\d{6}$/.test(verificationCode)) {
+        setValidationErrors({ code: "يجب أن يكون رمز التحقق 6 أرقام" });
+        setIsProcessing(false);
+        return;
       }
+
+      // For demo purposes, we'll accept any 6-digit code
+      // In a real app, you would validate this with your backend
+
+      // For this demo, let's consider the verification successful
+      setTimeout(() => {
+        // User needs to complete profile
+        setStep("profile-setup");
+        setIsProcessing(false);
+      }, 1500);
     } catch (error) {
       console.error("Error verifying code:", error);
-      setError("رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.");
       setValidationErrors({ code: "رمز التحقق غير صحيح" });
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -169,25 +130,32 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
 
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
+        setIsProcessing(false);
         return;
       }
 
-      // Create user profile
-      await createProfile({
+      // Create user profile - In a real app, you'd save this to your backend
+      const userProfile = {
         name,
         phone: phoneNumber,
-        password: password, // Note: In a real app, you should hash this password
-        isPremium: false,
-        createdAt: new Date().toISOString(),
-      });
+        password, // Note: In a real app, you should never store plain text passwords
+      };
 
-      // Move to success step
-      setStep("success");
-      if (onAuthenticated) onAuthenticated(user, { name, phone: phoneNumber });
+      // Simulate API call
+      setTimeout(() => {
+        // Save to localStorage for demo purposes
+        localStorage.setItem("userName", name);
+        localStorage.setItem("userPhone", phoneNumber);
+
+        if (onComplete) {
+          onComplete(userProfile);
+        }
+
+        setStep("success");
+        setIsProcessing(false);
+      }, 1500);
     } catch (error) {
       console.error("Error creating profile:", error);
-      setError("حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى.");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -199,35 +167,14 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
     try {
       setIsProcessing(true);
 
-      // Create new reCAPTCHA
-      const recaptchaVerifier = createRecaptchaVerifier(
-        "recaptcha-container",
-        () => {
-          console.log("reCAPTCHA solved for resend");
-        }
-      );
-
-      // Resend verification code
-      const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
-      await signInWithPhone(formattedPhoneNumber, recaptchaVerifier);
-
-      // Reset countdown
-      setCountdown(60);
+      // Simulate resending code
+      setTimeout(() => {
+        setCountdown(60);
+        setIsProcessing(false);
+      }, 1500);
     } catch (error) {
       console.error("Error resending verification code:", error);
-      setError("فشل في إعادة إرسال رمز التحقق. يرجى المحاولة مرة أخرى.");
-    } finally {
       setIsProcessing(false);
-    }
-  };
-
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setStep("phone");
-    } catch (error) {
-      console.error("Error signing out:", error);
     }
   };
 
@@ -261,8 +208,6 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
           )}
         </div>
 
-        <div id="recaptcha-container"></div>
-
         <button
           type="submit"
           disabled={isProcessing}
@@ -288,7 +233,7 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
         التحقق من رقم الهاتف
       </h2>
       <p className="text-white/70 text-sm mb-4">
-        تم إرسال رمز التحقق إلى {formatPhoneNumber(phoneNumber)}
+        تم إرسال رمز التحقق إلى {"+2" + phoneNumber}
       </p>
 
       <form onSubmit={handleVerificationSubmit} className="space-y-4">
@@ -297,7 +242,13 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
           <input
             type="text"
             value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value)}
+            onChange={(e) => {
+              // Only allow digits
+              const value = e.target.value.replace(/\D/g, "");
+              if (value.length <= 6) {
+                setVerificationCode(value);
+              }
+            }}
             className={`w-full bg-slate-700 border ${
               validationErrors.code ? "border-red-500" : "border-slate-600"
             } rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500`}
@@ -355,9 +306,9 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
   // Render profile setup step
   const renderProfileSetupStep = () => (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white mb-2">إكمال الحساب</h2>
+      <h2 className="text-xl font-bold text-white mb-2">إكمال بيانات الحساب</h2>
       <p className="text-white/70 text-sm mb-4">
-        يرجى إكمال بيانات حسابك للاستمرار
+        يرجى إكمال بيانات حسابك للاستمرار بالدفع
       </p>
 
       <form onSubmit={handleProfileSetup} className="space-y-4">
@@ -433,7 +384,7 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
               <span>جاري الإنشاء...</span>
             </>
           ) : (
-            <span>إنشاء الحساب</span>
+            <span>إكمال بيانات الحساب والمتابعة للدفع</span>
           )}
         </button>
       </form>
@@ -460,87 +411,25 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
       </div>
 
       <h2 className="text-xl font-bold text-white mb-2">
-        تم تسجيل الدخول بنجاح!
+        تم تسجيل البيانات بنجاح!
       </h2>
       <p className="text-white/70 mb-4">
-        أهلاً بك {userProfile?.name || name} في منصة الاختبارات المصرية
+        أهلاً بك {name} في منصة الاختبارات المصرية
       </p>
-
-      {isModal ? (
-        <button
-          onClick={onClose}
-          className="bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-6 rounded-lg font-bold transition-colors shadow-md"
-        >
-          استمرار
-        </button>
-      ) : (
-        <div className="space-y-3">
-          <button
-            onClick={onClose || (() => window.location.reload())}
-            className="bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-6 rounded-lg font-bold transition-colors shadow-md w-full"
-          >
-            استمرار
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="text-white/60 hover:text-white text-sm"
-          >
-            تسجيل الخروج
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // Render profile step (already logged in)
-  const renderProfileStep = () => (
-    <div className="text-center">
-      <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg
-          className="w-10 h-10 text-blue-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      </div>
-
-      <h2 className="text-xl font-bold text-white mb-2">مرحبًا بعودتك!</h2>
       <p className="text-white/70 mb-4">
-        أهلاً {userProfile?.name || "المستخدم"} في منصة الاختبارات المصرية
+        يمكنك الآن المتابعة لإتمام الاشتراك الذهبي
       </p>
 
-      {isModal ? (
-        <button
-          onClick={onClose}
-          className="bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-6 rounded-lg font-bold transition-colors shadow-md"
-        >
-          استمرار
-        </button>
-      ) : (
-        <div className="space-y-3">
-          <button
-            onClick={onClose || (() => window.location.reload())}
-            className="bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-6 rounded-lg font-bold transition-colors shadow-md w-full"
-          >
-            استمرار
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="text-white/60 hover:text-white text-sm"
-          >
-            تسجيل الخروج
-          </button>
-        </div>
-      )}
+      <button
+        onClick={() => {
+          if (onComplete) {
+            onComplete({ name, phone: phoneNumber });
+          }
+        }}
+        className="bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-6 rounded-lg font-bold transition-colors shadow-md"
+      >
+        متابعة لإتمام الاشتراك
+      </button>
     </div>
   );
 
@@ -555,20 +444,20 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
         return renderProfileSetupStep();
       case "success":
         return renderSuccessStep();
-      case "profile":
-        return renderProfileStep();
       default:
         return renderPhoneStep();
     }
   };
 
-  // Display error message if any
+  // Display error message if there's a validation error
   const renderError = () => {
-    if (!error) return null;
+    const errorValues = Object.values(validationErrors);
+    if (errorValues.length === 0) return null;
 
+    // Just display an error message at the top for all validation errors
     return (
       <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-4">
-        <p className="text-red-400 text-sm">{error}</p>
+        <p className="text-red-400 text-sm">{errorValues[0]}</p>
       </div>
     );
   };
@@ -581,4 +470,4 @@ const PhoneAuth = ({ onAuthenticated, isModal = false, onClose }) => {
   );
 };
 
-export default PhoneAuth;
+export default SimplePhoneAuth;

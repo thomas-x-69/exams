@@ -1,11 +1,11 @@
 // components/PaymentStatusModal.js
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../context/ClientAuthContext";
+import { useClientAuth } from "../context/ClientAuthContext"; // Fixed import
 
 const PaymentStatusModal = ({ isOpen, status, onClose }) => {
   const router = useRouter();
-  const { activatePremium } = useAuth();
+  const { activatePremium } = useClientAuth(); // Fixed hook usage
 
   // Handle successful payment
   useEffect(() => {
