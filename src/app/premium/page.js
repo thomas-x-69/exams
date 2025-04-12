@@ -2,41 +2,132 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../../../components/Header";
 import PremiumSubscription from "../../../components/PremiumSubscription";
+import AuthModal from "../../../components/AuthModal";
+import PaymentStatusModal from "../../../components/PaymentStatusModal";
+import { useAuth } from "../../../context/ClientAuthContext";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function PremiumPage() {
   const router = useRouter();
-  const [isPremiumUser, setIsPremiumUser] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const { user, userProfile, isPremium, activatePremium, loading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // Check payment status from URL parameters
+  useEffect(() => {
+    const status = searchParams.get("status");
+    const orderId = searchParams.get("order_id");
+
+    if (status && orderId) {
+      handlePaymentCallback(status, orderId);
+    }
+  }, [searchParams]);
 
   // Check premium status on initial load
   useEffect(() => {
-    // Simulate loading
-    const loadTimer = setTimeout(() => {
-      try {
-        const isPremium = localStorage.getItem("premiumUser") === "true";
-        setIsPremiumUser(isPremium);
-        setLoading(false);
-
-        // If already premium, redirect to premium content
-        if (isPremium) {
-          router.replace("/premium-exams");
-        }
-      } catch (error) {
-        console.error("Error checking premium status:", error);
-        setLoading(false);
+    if (!loading) {
+      // If already premium, redirect to premium content
+      if (isPremium) {
+        router.replace("/premium-exams");
       }
-    }, 1000);
 
-    return () => clearTimeout(loadTimer);
-  }, [router]);
+      // If not authenticated, show auth modal
+      if (!user && !loading) {
+        setShowAuthModal(true);
+      }
+
+      setPageLoading(false);
+    }
+  }, [isPremium, user, loading, router]);
+
+  // Handle payment callback from payment gateway
+  const handlePaymentCallback = async (status, orderId) => {
+    try {
+      if (status === "success" && orderId) {
+        // Verify payment with backend
+        const response = await fetch("/api/payments/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ orderId }),
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.status === "paid") {
+          // Activate premium subscription
+          const result = await activatePremium(30); // 30 days subscription
+
+          if (result.success) {
+            setPaymentStatus({
+              status: "success",
+              message: "تم تفعيل العضوية المميزة بنجاح!",
+              verifiedByServer: true,
+            });
+            setShowPaymentModal(true);
+          } else {
+            setPaymentStatus({
+              status: "error",
+              message:
+                "تم الدفع بنجاح ولكن حدث خطأ أثناء تفعيل العضوية. يرجى التواصل مع الدعم الفني.",
+            });
+            setShowPaymentModal(true);
+          }
+        } else if (data.status === "pending") {
+          setPaymentStatus({
+            status: "pending",
+            message:
+              "الدفع قيد المعالجة. سيتم تفعيل العضوية المميزة بمجرد تأكيد الدفع.",
+            referenceNumber: data.referenceNumber || orderId,
+          });
+          setShowPaymentModal(true);
+        } else {
+          setPaymentStatus({
+            status: "error",
+            message:
+              "فشل التحقق من الدفع. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.",
+          });
+          setShowPaymentModal(true);
+        }
+      } else if (status === "error") {
+        setPaymentStatus({
+          status: "error",
+          message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
+        });
+        setShowPaymentModal(true);
+      }
+
+      // Clean URL parameters
+      const url = new URL(window.location.href);
+      url.searchParams.delete("status");
+      url.searchParams.delete("order_id");
+      window.history.replaceState({}, "", url.toString());
+    } catch (error) {
+      console.error("Error handling payment callback:", error);
+      setPaymentStatus({
+        status: "error",
+        message:
+          "حدث خطأ أثناء معالجة نتيجة الدفع. يرجى التواصل مع الدعم الفني.",
+      });
+      setShowPaymentModal(true);
+    }
+  };
+
+  // Handle successful authentication
+  const handleAuthenticated = (authUser, profile) => {
+    setShowAuthModal(false);
+  };
 
   // Loading state
-  if (loading) {
+  if (pageLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center">
@@ -167,7 +258,55 @@ export default function PremiumPage() {
               {/* Card Content */}
               <div className="glass-card rounded-3xl overflow-hidden backdrop-blur-xl bg-slate-900/80 ">
                 <div className="p-6 sm:p-10">
-                  <PremiumSubscription />
+                  {user ? (
+                    <PremiumSubscription userData={userProfile} />
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg
+                          className="w-12 h-12 text-amber-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-white mb-4">
+                        تسجيل الدخول مطلوب
+                      </h2>
+                      <p className="text-white/70 max-w-xl mx-auto mb-8">
+                        يرجى تسجيل الدخول أو إنشاء حساب جديد للاشتراك في العضوية
+                        المميزة والوصول إلى الامتحانات الحقيقية.
+                      </p>
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button
+                          onClick={() => setShowAuthModal(true)}
+                          className="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl font-bold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-amber-500/20"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                            />
+                          </svg>
+                          <span>تسجيل الدخول / إنشاء حساب</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -350,273 +489,6 @@ export default function PremiumPage() {
             </div>
           </div>
 
-          {/* Compare Before and After Section */}
-          <div className="max-w-5xl mx-auto mt-20 px-4 relative z-10">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
-                  قبل وبعد
-                </span>{" "}
-                العضوية الذهبية
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Before - Free Plan */}
-              <div className="glass-card p-6 rounded-2xl border border-white/10">
-                <div className="bg-white/10 rounded-xl px-4 py-2 mb-6 inline-block">
-                  <span className="text-white font-medium">
-                    بدون العضوية الذهبية
-                  </span>
-                </div>
-
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    <span className="text-white/70">
-                      تدريب على أسئلة عامة فقط لا تعكس مستوى الصعوبة الحقيقي
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    <span className="text-white/70">
-                      عدم التعرف على نوعية الأسئلة الحقيقية في الاختبارات
-                      الرسمية
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    <span className="text-white/70">
-                      تحليل محدود للنتائج بدون توصيات مخصصة للتحسين
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    <span className="text-white/70">
-                      احتمالية المفاجأة بأنماط جديدة من الأسئلة في الاختبار
-                      الفعلي
-                    </span>
-                  </li>
-                </ul>
-
-                <div className="mt-8 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-                  <p className="text-white/80 text-sm">
-                    <strong className="text-red-400">النتيجة:</strong> استعداد
-                    غير كافٍ مع مخاطرة أكبر بعدم تحقيق الدرجات المطلوبة في
-                    الاختبار الرسمي.
-                  </p>
-                </div>
-              </div>
-
-              {/* After - Premium Plan */}
-              <div className="glass-card p-6 rounded-2xl border-2 border-yellow-500/30 shadow-lg shadow-yellow-500/10">
-                <div className="bg-gradient-to-r from-amber-500 to-yellow-600 rounded-xl px-4 py-2 mb-6 inline-block">
-                  <span className="text-white font-medium">
-                    مع العضوية الذهبية
-                  </span>
-                </div>
-
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-white/90">
-                      تدرب على أكثر من 30 نموذج امتحان حقيقي من الدفعات السابقة
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-white/90">
-                      خوض تجربة مماثلة تماماً للاختبار الرسمي من حيث الصعوبة
-                      والأسلوب
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-white/90">
-                      تحليل متقدم للنتائج مع توصيات مخصصة لتطوير مستواك في كل
-                      مهارة
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-white/90">
-                      الاستعداد النفسي والمعرفي الكامل بدون مفاجآت في الاختبار
-                      الرسمي
-                    </span>
-                  </li>
-                </ul>
-
-                <div className="mt-8 bg-green-500/10 rounded-lg p-4 border border-green-500/20">
-                  <p className="text-white/90 text-sm">
-                    <strong className="text-green-400">النتيجة:</strong> استعداد
-                    احترافي كامل مع فرصة أكبر بكثير لتحقيق درجات عالية واجتياز
-                    الاختبار الرسمي من المرة الأولى.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* FAQ Section */}
-          <div className="max-w-4xl mx-auto mt-20 px-4 relative z-10">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
-                  الأسئلة
-                </span>{" "}
-                الشائعة
-              </h2>
-            </div>
-
-            <div className="glass-card p-6 rounded-2xl border border-white/10">
-              {/* FAQ Item 1 */}
-              <div className="border-b border-white/10 pb-4 mb-4">
-                <h3 className="text-xl font-bold text-amber-400 mb-2">
-                  ما هي مميزات العضوية الذهبية؟
-                </h3>
-                <p className="text-white/80 text-sm">
-                  العضوية الذهبية توفر لك الوصول إلى أكثر من 30 اختباراً حقيقياً
-                  من الامتحانات السابقة، مع تحليل مفصل لأدائك، وشهادات إتمام
-                  مخصصة، ودعم فني متميز، وتحديثات مستمرة بسعر شهري مناسب مع
-                  إمكانية الإلغاء في أي وقت.
-                </p>
-              </div>
-
-              {/* FAQ Item 2 */}
-              <div className="border-b border-white/10 pb-4 mb-4">
-                <h3 className="text-xl font-bold text-amber-400 mb-2">
-                  هل الاشتراك شهري أم سنوي؟
-                </h3>
-                <p className="text-white/80 text-sm">
-                  الاشتراك شهري بقيمة 99 جنيه شهرياً، دفعة واحدة لمدة شهر كامل.
-                  بعد انتهاء المدة، يمكنك تجديد الاشتراك مرة أخرى إذا رغبت في
-                  ذلك. لا يتم التجديد تلقائياً.
-                </p>
-              </div>
-
-              {/* FAQ Item 3 */}
-              <div className="border-b border-white/10 pb-4 mb-4">
-                <h3 className="text-xl font-bold text-amber-400 mb-2">
-                  كيف أدفع ثمن الاشتراك؟
-                </h3>
-                <p className="text-white/80 text-sm">
-                  يمكنك الدفع عبر بطاقات الائتمان (فيزا، ماستركارد، ميزة). جميع
-                  طرق الدفع آمنة ومشفرة بالكامل ويتم التعامل معها من خلال بوابات
-                  دفع موثوقة.
-                </p>
-              </div>
-
-              {/* FAQ Item 4 */}
-              <div>
-                <h3 className="text-xl font-bold text-amber-400 mb-2">
-                  هل الامتحانات حقيقية فعلاً من الاختبارات السابقة؟
-                </h3>
-                <p className="text-white/80 text-sm">
-                  نعم، جميع الامتحانات مأخوذة من نماذج فعلية من الاختبارات
-                  الرسمية السابقة، وتم تدقيقها من قبل متخصصين لضمان مطابقتها
-                  لمستوى الصعوبة والهيكل الدقيق للاختبارات الحقيقية، مما يوفر لك
-                  تجربة تدريبية واقعية تماماً.
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* CTA Section - Simplified */}
           <div className="max-w-5xl mx-auto mt-16 px-4 mb-16 relative z-10">
             <div className="glass-card overflow-hidden rounded-2xl border-2 border-amber-500/30 shadow-lg">
@@ -647,14 +519,23 @@ export default function PremiumPage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() =>
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }
-                  className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                >
-                  اشترك الآن في العضوية الذهبية
-                </button>
+                {!user ? (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    سجل الآن واشترك في العضوية الذهبية
+                  </button>
+                ) : (
+                  <button
+                    onClick={() =>
+                      window.scrollTo({ top: 0, behavior: "smooth" })
+                    }
+                    className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    اشترك الآن في العضوية الذهبية
+                  </button>
+                )}
 
                 <p className="text-white/60 text-sm mt-3 relative z-10">
                   اشتراك شهري - دفعة واحدة - صالح لمدة شهر كامل
@@ -663,6 +544,21 @@ export default function PremiumPage() {
             </div>
           </div>
         </div>
+
+        {/* Authentication Modal */}
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthenticated={handleAuthenticated}
+          mode="register"
+        />
+
+        {/* Payment Status Modal */}
+        <PaymentStatusModal
+          isOpen={showPaymentModal}
+          status={paymentStatus}
+          onClose={() => setShowPaymentModal(false)}
+        />
       </div>
 
       {/* Animated float effect for background elements */}

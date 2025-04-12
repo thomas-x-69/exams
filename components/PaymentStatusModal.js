@@ -1,10 +1,11 @@
 // components/PaymentStatusModal.js
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { handleSuccessfulPayment } from "../utils/premiumService";
+import { useAuth } from "../context/ClientAuthContext";
 
 const PaymentStatusModal = ({ isOpen, status, onClose }) => {
   const router = useRouter();
+  const { activatePremium } = useAuth();
 
   // Handle successful payment
   useEffect(() => {
@@ -14,16 +15,21 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
       status?.verifiedByServer === true
     ) {
       // Only activate premium if payment was verified by the server
-      const result = handleSuccessfulPayment({ id: "monthly" }); // Changed from lifetime to monthly
-      if (result.success) {
-        // Set a timer to redirect to premium content
-        const timer = setTimeout(() => {
-          router.push("/premium-exams");
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
+      const activatePremiumSubscription = async () => {
+        const result = await activatePremium(30); // 30 days
+
+        if (result.success) {
+          // Set a timer to redirect to premium content
+          const timer = setTimeout(() => {
+            router.push("/premium-exams");
+          }, 3000);
+          return () => clearTimeout(timer);
+        }
+      };
+
+      activatePremiumSubscription();
     }
-  }, [isOpen, status, router]);
+  }, [isOpen, status, router, activatePremium]);
 
   if (!isOpen || !status) return null;
 
@@ -70,7 +76,7 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
         return (
           <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/20">
             <svg
-              className="w-14 h-14 text-blue-600 animate-spin"
+              className="w-14 h-14 text-blue-600 animate-spin-slow"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -182,13 +188,13 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
 
         <button
           onClick={handleAction}
-          className={`px-8 py-3 rounded-xl font-bold text-white text-lg ${
+          className={`px-8 py-3 rounded-xl font-bold text-white text-lg transition-all duration-300 hover:shadow-lg ${
             status.status === "success"
               ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               : status.status === "error"
               ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
               : "bg-gradient-to-r from-blue-500 to-indigo-600"
-          } transition-colors shadow-lg`}
+          }`}
         >
           {status.status === "success" && status.verifiedByServer === true
             ? "استعرض المحتوى المميز"
@@ -208,6 +214,45 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
           </p>
         )}
       </div>
+
+      {/* Custom animation */}
+      <style jsx>{`
+        @keyframes spin-slow {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+
+        @keyframes fade-in {
+          0% {
+            opacity: 0;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+        .animate-in {
+          animation: fade-in 0.3s ease-out;
+        }
+
+        @keyframes zoom-in {
+          0% {
+            transform: scale(0.95);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+        .zoom-in {
+          animation: zoom-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

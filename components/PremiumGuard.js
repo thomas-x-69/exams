@@ -3,50 +3,40 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkPremiumStatus } from "../utils/premiumService";
+import { useClientAuth } from "../context/ClientAuthContext";
 
 /**
  * A component to protect premium-only routes
- * Wrap any premium content with this component
+ * Just redirects to premium page when trying to access premium content
  */
 const PremiumGuard = ({ children }) => {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isPremium, setIsPremium] = useState(false);
+  const { isPremium, loading } = useClientAuth();
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
-    // Check premium status
-    const checkAccess = () => {
-      try {
-        const hasPremium = checkPremiumStatus();
-        setIsPremium(hasPremium);
-
-        // If not premium, redirect to premium page
-        if (!hasPremium) {
-          router.replace("/premium");
-        }
-      } catch (error) {
-        console.error("Error checking premium access:", error);
+    // Wait for auth to initialize
+    if (!loading) {
+      if (!isPremium) {
+        // Redirect to premium page if not premium
         router.replace("/premium");
-      } finally {
-        setLoading(false);
+      } else {
+        // User is authenticated and premium
+        setPageLoading(false);
       }
-    };
+    }
+  }, [isPremium, loading, router]);
 
-    // Run check on component mount
-    checkAccess();
-  }, [router]);
-
-  if (loading) {
+  if (loading || pageLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            <div className="absolute top-0 left-0 w-full h-full border-8 border-yellow-500/20 rounded-full"></div>
-            <div className="absolute top-0 left-0 w-full h-full border-8 border-t-yellow-500 rounded-full animate-spin"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-yellow-400 text-xl">
+          <div className="w-24 h-24 mx-auto mb-6 relative">
+            <div className="absolute inset-0 border-4 border-yellow-500/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-t-yellow-500 rounded-full animate-spin"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <svg
-                className="w-12 h-12"
+                className="w-12 h-12 text-yellow-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -60,9 +50,17 @@ const PremiumGuard = ({ children }) => {
               </svg>
             </div>
           </div>
-          <p className="text-white text-xl font-bold">
-            جاري التحقق من العضوية...
-          </p>
+          <div className="flex flex-col items-center">
+            <p className="text-white text-xl font-bold mb-1">
+              جاري التحقق من العضوية...
+            </p>
+            <div className="w-48 h-1.5 bg-slate-700 rounded-full overflow-hidden mt-2">
+              <div
+                className="h-full bg-yellow-500 animate-pulse"
+                style={{ width: "60%" }}
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
     );

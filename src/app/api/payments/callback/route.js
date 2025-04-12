@@ -1,49 +1,12 @@
 // src/app/api/payments/callback/route.js
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 
-// Process Paymob webhook/callback
+// Process payment callback
 export async function POST(req) {
   try {
     // Get the request body
     const body = await req.json();
     console.log("Received payment callback:", JSON.stringify(body));
-
-    // Validate HMAC if present
-    const hmacSecret = process.env.PAYMOB_HMAC_SECRET;
-    if (hmacSecret && body.hmac) {
-      // The data to be secured by HMAC
-      const { hmac, ...dataWithoutHmac } = body;
-
-      // Sort the keys alphabetically
-      const sortedKeys = Object.keys(dataWithoutHmac).sort();
-
-      // Concatenate the values in order
-      let concatenatedString = "";
-      sortedKeys.forEach((key) => {
-        if (
-          dataWithoutHmac[key] !== null &&
-          dataWithoutHmac[key] !== undefined
-        ) {
-          concatenatedString += dataWithoutHmac[key];
-        }
-      });
-
-      // Calculate HMAC using SHA512
-      const calculatedHmac = crypto
-        .createHmac("sha512", hmacSecret)
-        .update(concatenatedString)
-        .digest("hex");
-
-      // Verify HMAC
-      if (hmac !== calculatedHmac) {
-        console.error("HMAC validation failed");
-        return NextResponse.json(
-          { success: false, message: "HMAC validation failed" },
-          { status: 401 }
-        );
-      }
-    }
 
     // Extract important data from the callback
     const {
@@ -116,7 +79,7 @@ export async function POST(req) {
   }
 }
 
-// For Paymob's transaction processed callback
+// For payment redirect (GET request)
 export async function GET(req) {
   try {
     // Get query parameters

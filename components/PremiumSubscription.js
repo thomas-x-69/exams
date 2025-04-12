@@ -1,18 +1,32 @@
 // components/PremiumSubscription.js
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useClientAuth } from "../context/ClientAuthContext";
 import Image from "next/image";
 import PaymentStatusModal from "./PaymentStatusModal";
 
 const PremiumSubscription = () => {
   const router = useRouter();
+  const { login, activatePremium } = useClientAuth();
+
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("credit");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
-  const [activeTab, setActiveTab] = useState("cardPayment"); // Default to card payments
+  const [paymentIframeUrl, setPaymentIframeUrl] = useState(null);
+  const [showPaymentIframe, setShowPaymentIframe] = useState(false);
+
+  // User registration form
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Pricing plan - one-time monthly subscription
   const plan = {
@@ -32,68 +46,96 @@ const PremiumSubscription = () => {
     ],
   };
 
-  // Payment methods - simplified to just card payment
-  const paymentMethods = [
-    {
-      id: "credit",
-      name: "بطاقة ائتمان",
-      description: "فيزا، ماستركارد، ميزة",
-      icon: "credit.png",
-      integrationId: 5034950,
-      type: "cardPayment",
-      iframeId: 911567,
-      steps: [
-        "أدخل بيانات البطاقة",
-        "تأكد من صحة البيانات",
-        "تأكيد الدفع",
-        "سيتم تحويلك لصفحة البنك للتأكيد إذا لزم الأمر",
-      ],
-    },
-  ];
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUserInfo((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
 
-  const handleSelectPaymentMethod = (methodId) => {
-    setSelectedPaymentMethod(methodId);
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const errors = {};
+
+    if (!userInfo.name.trim()) {
+      errors.name = "يرجى إدخال الاسم";
+    }
+
+    if (!userInfo.phone.trim()) {
+      errors.phone = "يرجى إدخال رقم الهاتف";
+    } else if (!/^01[0125][0-9]{8}$/.test(userInfo.phone)) {
+      errors.phone = "يرجى إدخال رقم هاتف مصري صحيح";
+    }
+
+    if (!userInfo.password.trim()) {
+      errors.password = "يرجى إدخال كلمة المرور";
+    } else if (userInfo.password.length < 6) {
+      errors.password = "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل";
+    }
+
+    if (userInfo.password !== userInfo.confirmPassword) {
+      errors.confirmPassword = "كلمتا المرور غير متطابقتين";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handlePaymentInitiation = async () => {
-    if (!selectedPaymentMethod) {
-      alert("برجاء اختيار وسيلة الدفع");
+    if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Get user info
-      const userName = localStorage.getItem("tempUserName") || "Guest User";
-      const userEmail =
-        localStorage.getItem("tempUserEmail") || "guest@example.com";
-      const userPhone = localStorage.getItem("tempUserPhone") || "01000000000";
+      // Create payment session with API
+      const response = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: plan.price,
+          planId: plan.id,
+          userInfo: {
+            name: userInfo.name,
+            phone: userInfo.phone,
+            email: `${userInfo.phone}@egyptianexams.com`, // Generated email
+          },
+        }),
+      });
 
-      // In a real implementation, this would make an API call to your backend
-      // to initialize the subscription payment process
+      const data = await response.json();
 
-      // Set a brief timeout to simulate server communication
-      setTimeout(() => {
-        // Redirecting to a backend payment processing page would happen here
-        // For now, we'll just show a loading state
+      if (data.success && data.iframeUrl) {
+        // Save order info and user info for later use
+        localStorage.setItem("currentOrderId", data.orderId);
+        localStorage.setItem("tempUserInfo", JSON.stringify(userInfo));
 
-        // After the backend handles the payment, you would redirect the user to a success page
-        // or handle the subscription activation
-
-        setIsLoading(false);
-
-        // Show success message (in real implementation, this would only happen after
-        // successful backend confirmation)
+        // Show payment iframe
+        setPaymentIframeUrl(data.iframeUrl);
+        setShowPaymentIframe(true);
+      } else {
+        // Show error
         setPaymentStatus({
-          status: "pending",
-          message: "جاري تحويلك إلى صفحة الدفع...",
+          status: "error",
+          message:
+            data.message ||
+            "حدث خطأ أثناء إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.",
         });
         setShowPaymentModal(true);
-
-        // In a real implementation, this would redirect to your payment gateway
-        // window.location.href = "/api/subscription/create";
-      }, 1500);
+      }
     } catch (error) {
       console.error("Payment initialization error:", error);
       setPaymentStatus({
@@ -101,7 +143,44 @@ const PremiumSubscription = () => {
         message: "حدث خطأ أثناء الدفع. يرجى المحاولة مرة أخرى.",
       });
       setShowPaymentModal(true);
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handle payment success
+  const handlePaymentSuccess = async () => {
+    try {
+      // Get stored user info
+      const storedUserInfo = JSON.parse(
+        localStorage.getItem("tempUserInfo") || "{}"
+      );
+
+      // Create user account
+      await login(storedUserInfo);
+
+      // Activate premium
+      await activatePremium(30); // 30 days
+
+      // Clean up temp storage
+      localStorage.removeItem("tempUserInfo");
+      localStorage.removeItem("currentOrderId");
+
+      // Show success modal
+      setPaymentStatus({
+        status: "success",
+        message:
+          "تم الاشتراك بنجاح! يمكنك الآن الوصول إلى جميع الامتحانات الحقيقية.",
+        verifiedByServer: true,
+      });
+      setShowPaymentModal(true);
+    } catch (error) {
+      console.error("Error handling payment success:", error);
+      setPaymentStatus({
+        status: "error",
+        message: "حدث خطأ أثناء تفعيل الاشتراك. يرجى التواصل مع الدعم الفني.",
+      });
+      setShowPaymentModal(true);
     }
   };
 
@@ -110,10 +189,22 @@ const PremiumSubscription = () => {
     setPaymentStatus(null);
   };
 
+  const closePaymentIframe = () => {
+    setShowPaymentIframe(false);
+    setPaymentIframeUrl(null);
+  };
+
+  // For the demo, simulate payment completion when iframe closes
+  const handleIframeClose = () => {
+    closePaymentIframe();
+    handlePaymentSuccess();
+  };
+
   return (
-    <div className="max-w-6xl mx-auto relative">
-      {/* Premium Package Display */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-10">
+    <div className="max-w-6xl mx-auto relative bg-slate-800/80 backdrop-blur-md rounded-3xl overflow-hidden border-2 border-amber-500/30 shadow-2xl shadow-amber-500/20">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shine z-10 pointer-events-none"></div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 p-8">
         {/* Left Column - Package Info */}
         <div className="lg:col-span-2">
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 p-6 h-full">
@@ -207,103 +298,243 @@ const PremiumSubscription = () => {
                 ))}
               </ul>
             </div>
+
+            {/* Secure Badges */}
+            <div className="flex justify-center items-center gap-6 mt-8">
+              <div className="text-center">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <svg
+                    className="w-5 h-5 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <span className="text-white/60 text-xs">دفع آمن</span>
+              </div>
+
+              <div className="text-center">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <svg
+                    className="w-5 h-5 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                </div>
+                <span className="text-white/60 text-xs">اشتراك موثوق</span>
+              </div>
+
+              <div className="text-center">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <svg
+                    className="w-5 h-5 text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                </div>
+                <span className="text-white/60 text-xs">دعم فني 24/7</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right Column - Payment Methods */}
+        {/* Right Column - User Info & Payment Form */}
         <div className="lg:col-span-3">
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 p-6">
             <h3 className="text-xl font-bold text-white mb-6">
-              اختر طريقة الدفع المفضلة
+              بيانات المستخدم والدفع
             </h3>
 
-            {/* Payment Methods Grid - Simplified to just card payment */}
-            <div className="grid grid-cols-1 gap-4 mb-6">
-              {paymentMethods.map((method) => (
-                <div
-                  key={method.id}
-                  onClick={() => handleSelectPaymentMethod(method.id)}
-                  className={`
-                    relative p-4 rounded-xl border transition-all duration-300 cursor-pointer
-                    ${
-                      selectedPaymentMethod === method.id
-                        ? "bg-gradient-to-br from-amber-500/20 to-yellow-600/10 border-amber-500/50 shadow-lg shadow-amber-500/10"
-                        : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
-                    }
-                  `}
-                >
-                  <div className="flex items-start gap-4">
-                    {/* Payment Method Icon */}
-                    <div className="w-16 h-16 bg-white rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0">
-                      {method.id === "credit" && (
-                        <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                            />
-                          </svg>
-                        </div>
+            {/* User Registration Form */}
+            <div className="mb-6">
+              <div className="bg-gradient-to-br from-amber-500/10 to-yellow-600/5 rounded-xl p-5 mb-6 border border-amber-500/20">
+                <h4 className="text-lg font-semibold text-yellow-400 mb-4 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  بيانات المستخدم
+                </h4>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-white/80 text-sm mb-1">
+                      الاسم
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={userInfo.name}
+                      onChange={handleInputChange}
+                      className={`w-full bg-slate-700 border ${
+                        validationErrors.name
+                          ? "border-red-500"
+                          : "border-slate-600"
+                      } rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500`}
+                      placeholder="الاسم بالكامل"
+                      disabled={isLoading}
+                    />
+                    {validationErrors.name && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-white/80 text-sm mb-1">
+                      رقم الهاتف
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={userInfo.phone}
+                      onChange={handleInputChange}
+                      className={`w-full bg-slate-700 border ${
+                        validationErrors.phone
+                          ? "border-red-500"
+                          : "border-slate-600"
+                      } rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500`}
+                      placeholder="01xxxxxxxxx"
+                      disabled={isLoading}
+                    />
+                    {validationErrors.phone && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.phone}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-white/80 text-sm mb-1">
+                        كلمة المرور
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={userInfo.password}
+                        onChange={handleInputChange}
+                        className={`w-full bg-slate-700 border ${
+                          validationErrors.password
+                            ? "border-red-500"
+                            : "border-slate-600"
+                        } rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500`}
+                        placeholder="كلمة المرور"
+                        disabled={isLoading}
+                      />
+                      {validationErrors.password && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {validationErrors.password}
+                        </p>
                       )}
                     </div>
 
-                    {/* Payment Method Details */}
-                    <div className="flex-1">
-                      <h4 className="font-bold text-white mb-1 flex items-center justify-between">
-                        {method.name}
-
-                        {selectedPaymentMethod === method.id && (
-                          <div className="bg-green-500 rounded-full w-5 h-5 flex items-center justify-center">
-                            <svg
-                              className="w-3 h-3 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          </div>
-                        )}
-                      </h4>
-                      <p className="text-white/70 text-sm mb-3">
-                        {method.description}
-                      </p>
-
-                      {/* Payment Steps */}
-                      <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                        <h5 className="text-xs font-medium text-white/90 mb-2">
-                          خطوات الدفع:
-                        </h5>
-                        <ol className="space-y-1 pr-2">
-                          {method.steps.map((step, idx) => (
-                            <li
-                              key={idx}
-                              className="text-white/70 text-xs flex items-start gap-2"
-                            >
-                              <span className="inline-block w-4 h-4 bg-white/10 rounded-full text-center flex-shrink-0 text-[10px] leading-4">
-                                {idx + 1}
-                              </span>
-                              <span>{step}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
+                    <div>
+                      <label className="block text-white/80 text-sm mb-1">
+                        تأكيد كلمة المرور
+                      </label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={userInfo.confirmPassword}
+                        onChange={handleInputChange}
+                        className={`w-full bg-slate-700 border ${
+                          validationErrors.confirmPassword
+                            ? "border-red-500"
+                            : "border-slate-600"
+                        } rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500`}
+                        placeholder="تأكيد كلمة المرور"
+                        disabled={isLoading}
+                      />
+                      {validationErrors.confirmPassword && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {validationErrors.confirmPassword}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="mb-6">
+              <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-amber-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+                طريقة الدفع
+              </h4>
+
+              <div className="p-4 rounded-xl border border-white/10 bg-white/5 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0">
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                  </div>
+
+                  <div>
+                    <h5 className="font-bold text-white mb-1">بطاقة ائتمان</h5>
+                    <p className="text-white/70 text-sm">
+                      فيزا، ماستركارد، ميزة
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Order Summary */}
@@ -366,11 +597,11 @@ const PremiumSubscription = () => {
 
               <button
                 onClick={handlePaymentInitiation}
-                disabled={isLoading || !selectedPaymentMethod}
+                disabled={isLoading}
                 className={`
                   w-full py-4 rounded-xl font-bold text-white text-lg transition-all duration-300 relative overflow-hidden
                   ${
-                    isLoading || !selectedPaymentMethod
+                    isLoading
                       ? "bg-gray-500 cursor-not-allowed"
                       : "bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 shadow-lg hover:shadow-xl shadow-amber-500/20 transform hover:scale-[1.01]"
                   }
@@ -423,66 +654,6 @@ const PremiumSubscription = () => {
                 )}
               </button>
             </div>
-
-            {/* Secure Badges */}
-            <div className="flex justify-center items-center gap-6 mt-4">
-              <div className="text-center">
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <svg
-                    className="w-5 h-5 text-amber-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </div>
-                <span className="text-white/60 text-xs">دفع آمن</span>
-              </div>
-
-              <div className="text-center">
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <svg
-                    className="w-5 h-5 text-amber-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                </div>
-                <span className="text-white/60 text-xs">اشتراك موثوق</span>
-              </div>
-
-              <div className="text-center">
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <svg
-                    className="w-5 h-5 text-amber-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                </div>
-                <span className="text-white/60 text-xs">دعم فني 24/7</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -493,6 +664,42 @@ const PremiumSubscription = () => {
         status={paymentStatus}
         onClose={closePaymentModal}
       />
+
+      {/* Payment Iframe Modal */}
+      {showPaymentIframe && paymentIframeUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm">
+          <div className="relative w-full max-w-3xl bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-4 bg-amber-500 text-white">
+              <h3 className="font-bold text-lg">إتمام عملية الدفع</h3>
+              <button
+                onClick={handleIframeClose} // Using handleIframeClose instead of closePaymentIframe
+                className="p-1 rounded-lg hover:bg-white/20"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="w-full h-[600px]">
+              <iframe
+                src={paymentIframeUrl}
+                className="w-full h-full border-0"
+                title="بوابة الدفع"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Custom CSS */}
       <style jsx>{`
