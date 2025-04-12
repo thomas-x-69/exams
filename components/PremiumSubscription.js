@@ -3,9 +3,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useClientAuth } from "../context/ClientAuthContext";
+import { createPaymentSession, verifyPayment } from "../lib/firebase";
+import LoginModal from "./LoginModal";
 
 const PremiumSubscription = () => {
   const router = useRouter();
+  const { user, userProfile, isPremium, activatePremium } = useClientAuth();
 
   // Form and subscription states
   const [isLoading, setIsLoading] = useState(false);
@@ -13,34 +17,25 @@ const PremiumSubscription = () => {
   const [paymentIframeUrl, setPaymentIframeUrl] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
-  const [formStep, setFormStep] = useState("info"); // 'info' or 'payment'
-  const [isUserRegistered, setIsUserRegistered] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [formHighlight, setFormHighlight] = useState("");
 
   // Form data
   const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
     agreedToTerms: false,
   });
 
-  // Check if user is already registered
+  // Update form data when user logs in
   useEffect(() => {
-    const userName = localStorage.getItem("userName");
-    const userPhone = localStorage.getItem("userPhone");
-
-    if (userName && userPhone) {
-      setIsUserRegistered(true);
+    if (userProfile) {
       setFormData((prev) => ({
         ...prev,
-        name: userName,
-        phone: userPhone,
+        name: userProfile.name || "",
+        phone: userProfile.phone || "",
       }));
     }
-  }, []);
+  }, [userProfile]);
 
   // Subscription plan details
   const plan = {
@@ -79,38 +74,9 @@ const PremiumSubscription = () => {
     }
   };
 
-  // Validate Egyptian phone number format
-  const validatePhoneNumber = (phone) => {
-    // Check for Egyptian phone number format (starts with 01 followed by 9 digits)
-    const phoneRegex = /^01[0125][0-9]{8}$/;
-    return phoneRegex.test(phone);
-  };
-
   // Validate the form
   const validateForm = () => {
     const errors = {};
-
-    if (!formData.name.trim()) {
-      errors.name = "يرجى إدخال الاسم";
-    }
-
-    if (!formData.phone.trim()) {
-      errors.phone = "يرجى إدخال رقم الهاتف";
-    } else if (!validatePhoneNumber(formData.phone)) {
-      errors.phone = "يرجى إدخال رقم هاتف مصري صحيح";
-    }
-
-    if (!isUserRegistered) {
-      if (!formData.password) {
-        errors.password = "يرجى إدخال كلمة المرور";
-      } else if (formData.password.length < 6) {
-        errors.password = "كلمة المرور يجب أن تكون 6 أحرف على الأقل";
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = "كلمات المرور غير متطابقة";
-      }
-    }
 
     if (!formData.agreedToTerms) {
       errors.agreedToTerms = "يجب الموافقة على الشروط والأحكام";
@@ -122,7 +88,9 @@ const PremiumSubscription = () => {
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
 
     // Clear any previous error
     setValidationErrors({});
@@ -135,32 +103,31 @@ const PremiumSubscription = () => {
       return;
     }
 
-    // Form is valid, proceed with payment
+    // Check if user is logged in, if not show login modal
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Form is valid and user is logged in, proceed with payment
     setIsLoading(true);
 
     try {
-      // If not already registered, save user info
-      if (!isUserRegistered) {
-        // Save to localStorage
-        localStorage.setItem("userName", formData.name);
-        localStorage.setItem("userPhone", formData.phone);
-        localStorage.setItem("userRegistered", "true");
-        setIsUserRegistered(true);
-      }
+      // Create payment session
+      const paymentSession = await createPaymentSession(plan.price, plan.id, {
+        name: userProfile?.name,
+        phone: userProfile?.phone,
+        email: userProfile?.email || `${userProfile?.phone}@egyptianexams.com`,
+        uid: user?.id,
+      });
 
-      // Simulate creating payment session with API
-      setTimeout(() => {
-        // Simulate successful payment creation
-        const orderId = `order_${Date.now()}_${Math.random()
-          .toString(36)
-          .substring(2, 8)}`;
-        const iframeUrl = `/payment-simulator.html?order_id=${orderId}&amount=${plan.price}&plan=${plan.id}`;
-
+      if (paymentSession.success) {
         // Show payment iframe
-        setPaymentIframeUrl(iframeUrl);
+        setPaymentIframeUrl(paymentSession.iframeUrl);
         setShowPaymentIframe(true);
-        setIsLoading(false);
-      }, 1000);
+      } else {
+        throw new Error(paymentSession.message || "فشل في إنشاء جلسة الدفع");
+      }
     } catch (error) {
       console.error("Payment initialization error:", error);
       setPaymentStatus({
@@ -168,44 +135,73 @@ const PremiumSubscription = () => {
         message: "حدث خطأ أثناء إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.",
       });
       setShowPaymentModal(true);
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle successful payment completion
-  const handlePaymentSuccess = async () => {
+  // Handle payment verification
+  const verifyPaymentStatus = async (orderId) => {
     try {
-      // Activate premium
-      localStorage.setItem("premiumUser", "true");
+      const result = await verifyPayment(orderId);
 
-      // Set expiry date (30 days from now)
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 30);
-      localStorage.setItem("premiumExpiry", expiryDate.toISOString());
+      if (result.success && result.status === "paid") {
+        // Activate premium subscription
+        await activatePremium(30); // 30 days
 
-      // Show success modal
-      setPaymentStatus({
-        status: "success",
-        message:
-          "تم الاشتراك بنجاح! يمكنك الآن الوصول إلى جميع الامتحانات الحقيقية.",
-        verifiedByServer: true,
-      });
-      setShowPaymentModal(true);
+        // Show success modal
+        setPaymentStatus({
+          status: "success",
+          message:
+            "تم الاشتراك بنجاح! يمكنك الآن الوصول إلى جميع الامتحانات الحقيقية.",
+          verifiedByServer: true,
+        });
+        setShowPaymentModal(true);
+      } else if (result.status === "pending") {
+        // Show pending modal
+        setPaymentStatus({
+          status: "pending",
+          message:
+            "الدفع قيد المعالجة. سيتم تفعيل العضوية الذهبية بمجرد تأكيد الدفع.",
+          referenceNumber: result.referenceNumber,
+        });
+        setShowPaymentModal(true);
+      } else {
+        // Show error modal
+        setPaymentStatus({
+          status: "error",
+          message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
+        });
+        setShowPaymentModal(true);
+      }
     } catch (error) {
-      console.error("Error handling payment success:", error);
+      console.error("Payment verification error:", error);
       setPaymentStatus({
         status: "error",
-        message: "حدث خطأ أثناء تفعيل الاشتراك. يرجى التواصل مع الدعم الفني.",
+        message:
+          "حدث خطأ أثناء التحقق من حالة الدفع. يرجى التواصل مع الدعم الفني.",
       });
       setShowPaymentModal(true);
     }
   };
 
-  // Close payment iframe and simulate success
-  const handleIframeClose = () => {
+  // Close payment iframe
+  const handleIframeClose = (result) => {
     setShowPaymentIframe(false);
     setPaymentIframeUrl(null);
-    handlePaymentSuccess();
+
+    if (result && result.orderId) {
+      verifyPaymentStatus(result.orderId);
+    }
+  };
+
+  // Handle successful login from login modal
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // Continue with payment process
+    setTimeout(() => {
+      handleSubmit();
+    }, 500);
   };
 
   return (
@@ -370,7 +366,7 @@ const PremiumSubscription = () => {
           </div>
         </div>
 
-        {/* Right Column - Combined Registration & Payment Form */}
+        {/* Right Column - Payment info or Login prompt */}
         <div className="lg:col-span-3">
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 p-5 lg:p-6">
             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -387,134 +383,15 @@ const PremiumSubscription = () => {
                   d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span>
-                {isUserRegistered ? "إتمام الاشتراك" : "إنشاء حساب والاشتراك"}
-              </span>
+              <span>{user ? "إتمام الاشتراك" : "تسجيل الدخول للاشتراك"}</span>
             </h3>
 
-            {/* Integrated registration and payment form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Form section */}
-              <div
-                className={`bg-slate-700/50 rounded-xl p-5 border transition-all duration-300 ${
-                  formHighlight === "error"
-                    ? "border-red-500 animate-shake"
-                    : "border-slate-600"
-                }`}
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-white/80 text-sm mb-1.5">
-                      الاسم الكامل
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className={`w-full bg-slate-800 border ${
-                        validationErrors.name
-                          ? "border-red-500"
-                          : "border-slate-600"
-                      } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 transition-colors`}
-                      placeholder="أدخل اسمك الكامل"
-                      disabled={isLoading || isUserRegistered}
-                    />
-                    {validationErrors.name && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {validationErrors.name}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-white/80 text-sm mb-1.5">
-                      رقم الهاتف
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className={`w-full bg-slate-800 border ${
-                          validationErrors.phone
-                            ? "border-red-500"
-                            : "border-slate-600"
-                        } rounded-lg px-4 py-3 pl-16 text-white focus:outline-none focus:border-amber-500 transition-colors`}
-                        placeholder="01xxxxxxxxx"
-                        disabled={isLoading || isUserRegistered}
-                      />
-                      <div className="absolute left-0 top-0 h-full flex items-center px-4 text-white/60 border-r border-slate-600">
-                        +2
-                      </div>
-                    </div>
-                    {validationErrors.phone && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {validationErrors.phone}
-                      </p>
-                    )}
-                  </div>
-
-                  {!isUserRegistered && (
-                    <>
-                      <div>
-                        <label className="block text-white/80 text-sm mb-1.5">
-                          كلمة المرور
-                        </label>
-                        <input
-                          type="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          className={`w-full bg-slate-800 border ${
-                            validationErrors.password
-                              ? "border-red-500"
-                              : "border-slate-600"
-                          } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 transition-colors`}
-                          placeholder="كلمة المرور (6 أحرف على الأقل)"
-                          disabled={isLoading}
-                        />
-                        {validationErrors.password && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {validationErrors.password}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-white/80 text-sm mb-1.5">
-                          تأكيد كلمة المرور
-                        </label>
-                        <input
-                          type="password"
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleInputChange}
-                          className={`w-full bg-slate-800 border ${
-                            validationErrors.confirmPassword
-                              ? "border-red-500"
-                              : "border-slate-600"
-                          } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 transition-colors`}
-                          placeholder="تأكيد كلمة المرور"
-                          disabled={isLoading}
-                        />
-                        {validationErrors.confirmPassword && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {validationErrors.confirmPassword}
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Payment method section */}
-              <div className="bg-gradient-to-br from-slate-700/50 to-slate-700/40 rounded-xl p-5 border border-slate-600">
-                <h4 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+            {/* Login prompt for non-logged in users */}
+            {!user ? (
+              <div className="text-center p-6 bg-slate-700/50 rounded-xl border border-white/10">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30">
                   <svg
-                    className="w-5 h-5 text-amber-400"
+                    className="w-10 h-10 text-blue-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -523,17 +400,32 @@ const PremiumSubscription = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                     />
                   </svg>
-                  طريقة الدفع
-                </h4>
-
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0">
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-3">
+                  قم بتسجيل الدخول للاشتراك
+                </h3>
+                <p className="text-white/70 mb-6 text-lg">
+                  يجب تسجيل الدخول أو إنشاء حساب جديد للاستمتاع بالعضوية الذهبية
+                </p>
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-blue-500/20"
+                >
+                  تسجيل الدخول / إنشاء حساب
+                </button>
+              </div>
+            ) : (
+              /* Payment form for logged-in users */
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* User info display when logged in */}
+                <div className="bg-slate-700/50 rounded-xl p-5 border border-slate-600">
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center">
                       <svg
-                        className="w-7 h-7 text-white"
+                        className="w-6 h-6 text-white"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -542,97 +434,23 @@ const PremiumSubscription = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
                     </div>
-
                     <div>
-                      <h5 className="font-bold text-white mb-1">
-                        بطاقة ائتمان
-                      </h5>
+                      <h4 className="text-white font-medium">
+                        {userProfile?.name || "المستخدم"}
+                      </h4>
                       <p className="text-white/70 text-sm">
-                        فيزا، ماستركارد، ميزة
+                        {userProfile?.phone || ""}
                       </p>
                     </div>
                   </div>
-                </div>
 
-                {/* Order Summary */}
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-4">
-                  <h5 className="font-medium text-white mb-3">ملخص الطلب</h5>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                      <span className="text-white/70">
-                        العضوية الذهبية (شهرياً)
-                      </span>
-                      <span className="text-white">{plan.price} جنيه</span>
-                    </div>
-
-                    <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                      <span className="text-white/70">الخصم</span>
-                      <span className="text-green-400">
-                        {plan.originalPrice - plan.price} جنيه
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-white font-semibold">
-                        الإجمالي (شهرياً)
-                      </span>
-                      <div className="text-xl font-bold text-amber-400">
-                        {plan.price} جنيه
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Terms and conditions */}
-                <div className="mb-6">
-                  <label className="flex items-start gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      name="agreedToTerms"
-                      checked={formData.agreedToTerms}
-                      onChange={handleInputChange}
-                      className="mt-1 text-amber-500 focus:ring-amber-500"
-                    />
-                    <span
-                      className={`text-sm ${
-                        validationErrors.agreedToTerms
-                          ? "text-red-400"
-                          : "text-white/80 group-hover:text-white"
-                      }`}
-                    >
-                      أوافق على{" "}
-                      <a
-                        href="/terms"
-                        className="text-amber-400 hover:text-amber-300 underline"
-                      >
-                        الشروط والأحكام
-                      </a>{" "}
-                      و{" "}
-                      <a
-                        href="/privacy"
-                        className="text-amber-400 hover:text-amber-300 underline"
-                      >
-                        سياسة الخصوصية
-                      </a>
-                    </span>
-                  </label>
-                  {validationErrors.agreedToTerms && (
-                    <p className="text-red-500 text-xs mt-1 mr-6">
-                      {validationErrors.agreedToTerms}
-                    </p>
-                  )}
-                </div>
-
-                {/* Security note */}
-                <div className="bg-gradient-to-r from-amber-500/20 to-yellow-600/20 p-3 rounded-lg border border-amber-500/30 text-sm text-white/90 mb-5">
-                  <div className="flex items-start gap-2">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center">
                     <svg
-                      className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"
+                      className="w-5 h-5 text-blue-400 mr-2 flex-shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -644,62 +462,135 @@ const PremiumSubscription = () => {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <div>
-                      <span className="block font-medium text-amber-300 mb-1">
-                        دفع آمن ومضمون
-                      </span>
-                      <span>
-                        اشتراك شهري بدفعة واحدة - صالح لمدة شهر كامل - يمكنك
-                        تجديد الاشتراك بعد انتهاء الشهر إذا رغبت في ذلك
-                      </span>
-                    </div>
+                    <span className="text-white/80 text-sm">
+                      أنت مسجل الدخول، يمكنك الاستمرار لإتمام الاشتراك
+                    </span>
                   </div>
                 </div>
 
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`
-                    w-full py-4 rounded-xl font-bold text-white text-lg transition-all duration-300 relative overflow-hidden
-                    ${
-                      isLoading
-                        ? "bg-gray-500 cursor-not-allowed"
-                        : "bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 shadow-lg hover:shadow-xl shadow-amber-500/20 transform hover:scale-[1.01]"
-                    }
-                  `}
-                >
-                  {/* Animated Shine Effect */}
-                  <span className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-shine"></span>
+                {/* Payment method section */}
+                <div className="bg-gradient-to-br from-slate-700/50 to-slate-700/40 rounded-xl p-5 border border-slate-600">
+                  <h4 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-amber-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                    طريقة الدفع
+                  </h4>
 
-                  {isLoading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0">
+                        <svg
+                          className="w-7 h-7 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
                           stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>جاري المعالجة...</span>
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                          />
+                        </svg>
+                      </div>
+
+                      <div>
+                        <h5 className="font-bold text-white mb-1">
+                          بطاقة ائتمان
+                        </h5>
+                        <p className="text-white/70 text-sm">
+                          فيزا، ماستركارد، ميزة
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-3">
+                  </div>
+
+                  {/* Order Summary */}
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-4">
+                    <h5 className="font-medium text-white mb-3">ملخص الطلب</h5>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                        <span className="text-white/70">
+                          العضوية الذهبية (شهرياً)
+                        </span>
+                        <span className="text-white">{plan.price} جنيه</span>
+                      </div>
+
+                      <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                        <span className="text-white/70">الخصم</span>
+                        <span className="text-green-400">
+                          {plan.originalPrice - plan.price} جنيه
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-white font-semibold">
+                          الإجمالي (شهرياً)
+                        </span>
+                        <div className="text-xl font-bold text-amber-400">
+                          {plan.price} جنيه
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Terms and conditions */}
+                  <div className="mb-6">
+                    <label className="flex items-start gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        name="agreedToTerms"
+                        checked={formData.agreedToTerms}
+                        onChange={handleInputChange}
+                        className="mt-1 text-amber-500 focus:ring-amber-500"
+                      />
+                      <span
+                        className={`text-sm ${
+                          validationErrors.agreedToTerms
+                            ? "text-red-400"
+                            : "text-white/80 group-hover:text-white"
+                        }`}
+                      >
+                        أوافق على{" "}
+                        <a
+                          href="/terms"
+                          className="text-amber-400 hover:text-amber-300 underline"
+                        >
+                          الشروط والأحكام
+                        </a>{" "}
+                        و{" "}
+                        <a
+                          href="/privacy"
+                          className="text-amber-400 hover:text-amber-300 underline"
+                        >
+                          سياسة الخصوصية
+                        </a>
+                      </span>
+                    </label>
+                    {validationErrors.agreedToTerms && (
+                      <p className="text-red-500 text-xs mt-1 mr-6">
+                        {validationErrors.agreedToTerms}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Security note */}
+                  <div className="bg-gradient-to-r from-amber-500/20 to-yellow-600/20 p-3 rounded-lg border border-amber-500/30 text-sm text-white/90 mb-5">
+                    <div className="flex items-start gap-2">
                       <svg
-                        className="w-6 h-6"
+                        className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -708,19 +599,83 @@ const PremiumSubscription = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <span>
-                        {isUserRegistered
-                          ? "إتمام الدفع الآن"
-                          : "إنشاء حساب وإتمام الدفع"}
-                      </span>
+                      <div>
+                        <span className="block font-medium text-amber-300 mb-1">
+                          دفع آمن ومضمون
+                        </span>
+                        <span>
+                          اشتراك شهري بدفعة واحدة - صالح لمدة شهر كامل - يمكنك
+                          تجديد الاشتراك بعد انتهاء الشهر إذا رغبت في ذلك
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </button>
-              </div>
-            </form>
+                  </div>
+
+                  {/* Submit button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`
+                    w-full py-4 rounded-xl font-bold text-white text-lg transition-all duration-300 relative overflow-hidden
+                    ${
+                      isLoading
+                        ? "bg-gray-500 cursor-not-allowed"
+                        : "bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 shadow-lg hover:shadow-xl shadow-amber-500/20 transform hover:scale-[1.01]"
+                    }
+                  `}
+                  >
+                    {/* Animated Shine Effect */}
+                    <span className="absolute inset-0 w-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-shine"></span>
+
+                    {isLoading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        <span>جاري المعالجة...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-3">
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <span>إتمام الدفع الآن</span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
@@ -732,7 +687,7 @@ const PremiumSubscription = () => {
             <div className="flex justify-between items-center p-4 bg-amber-500 text-white">
               <h3 className="font-bold text-lg">إتمام عملية الدفع</h3>
               <button
-                onClick={handleIframeClose}
+                onClick={() => handleIframeClose(null)}
                 className="p-1 rounded-lg hover:bg-white/20 transition-colors"
               >
                 <svg
@@ -760,6 +715,13 @@ const PremiumSubscription = () => {
           </div>
         </div>
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
+      />
 
       {/* Custom CSS */}
       <style jsx>{`

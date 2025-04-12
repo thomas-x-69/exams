@@ -20,6 +20,8 @@ export const checkPremiumStatus = () => {
         // Premium has expired
         localStorage.setItem("premiumUser", "false");
         localStorage.removeItem("premiumExpiry");
+        localStorage.setItem("subscription_cancelled", "true");
+        localStorage.setItem("subscription_expired", now.toISOString());
         return false;
       }
     }
@@ -42,6 +44,16 @@ export const activatePremium = (duration = 30) => {
     expiryDate.setDate(expiryDate.getDate() + duration);
     localStorage.setItem("premiumExpiry", expiryDate.toISOString());
 
+    // Store subscription info
+    localStorage.setItem("subscription_start", new Date().toISOString());
+    localStorage.setItem("subscription_type", "monthly");
+    localStorage.setItem("subscription_autorenew", "true");
+    localStorage.setItem("subscription_price", "29");
+
+    // Clear cancelled flag if exists
+    localStorage.removeItem("subscription_cancelled");
+    localStorage.removeItem("subscription_expired");
+
     // Set username from temporary storage if available
     const userName = localStorage.getItem("tempUserName");
     if (userName) {
@@ -63,6 +75,11 @@ export const activatePremium = (duration = 30) => {
         month: "long",
         day: "numeric",
       }),
+      nextBillingDate: expiryDate.toLocaleDateString("ar-EG", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
     };
   } catch (error) {
     console.error("Error activating premium:", error);
@@ -73,13 +90,20 @@ export const activatePremium = (duration = 30) => {
   }
 };
 
-// Revoke premium access
+// Revoke premium access (cancel subscription)
 export const revokePremium = () => {
   try {
-    localStorage.setItem("premiumUser", "false");
-    localStorage.removeItem("premiumExpiry");
+    // We don't immediately remove access, but mark it as cancelled and won't auto-renew
+    localStorage.setItem("subscription_cancelled", "true");
+    localStorage.setItem("subscription_autorenew", "false");
+    localStorage.setItem("subscription_cancel_date", new Date().toISOString());
 
-    return { success: true };
+    // User can still access premium until expiry date
+    return {
+      success: true,
+      message:
+        "تم إلغاء الاشتراك بنجاح. يمكنك الاستمرار في استخدام المميزات حتى نهاية الفترة الحالية.",
+    };
   } catch (error) {
     console.error("Error revoking premium:", error);
     return {
@@ -94,6 +118,11 @@ export const getPremiumExpiryInfo = () => {
   try {
     const isPremium = localStorage.getItem("premiumUser") === "true";
     const expiryDateStr = localStorage.getItem("premiumExpiry");
+    const subscriptionType =
+      localStorage.getItem("subscription_type") || "monthly";
+    const autoRenew = localStorage.getItem("subscription_autorenew") === "true";
+    const isCancelled =
+      localStorage.getItem("subscription_cancelled") === "true";
 
     if (!isPremium || !expiryDateStr) {
       return {
@@ -112,6 +141,9 @@ export const getPremiumExpiryInfo = () => {
 
     return {
       isPremium: true,
+      subscriptionType,
+      autoRenew,
+      isCancelled,
       expiryDate: expiryDateStr,
       expiryFormatted: expiryDate.toLocaleDateString("ar-EG", {
         year: "numeric",
@@ -119,6 +151,13 @@ export const getPremiumExpiryInfo = () => {
         day: "numeric",
       }),
       daysRemaining: Math.max(0, diffDays),
+      nextBillingDate: autoRenew
+        ? expiryDate.toLocaleDateString("ar-EG", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : null,
     };
   } catch (error) {
     console.error("Error getting premium expiry info:", error);
@@ -132,16 +171,16 @@ export const getPremiumExpiryInfo = () => {
 // Handle successful payment
 export const handleSuccessfulPayment = (planInfo) => {
   try {
-    // Default to 30 days (monthly)
-    let duration = 30;
+    // Determine duration based on plan
+    let duration = 30; // Default: 30 days (monthly)
 
     if (planInfo) {
-      if (planInfo.id === "monthly") {
-        duration = 30; // 1 month
-      } else if (planInfo.id === "quarterly") {
-        duration = 90; // 3 months
-      } else if (planInfo.id === "yearly") {
+      if (planInfo.id === "yearly") {
         duration = 365; // 1 year
+      } else if (planInfo.id === "lifetime") {
+        duration = 36500; // 100 years (effectively lifetime)
+      } else if (planInfo.id === "monthly") {
+        duration = 30; // 30 days (monthly)
       }
     }
 
@@ -149,6 +188,46 @@ export const handleSuccessfulPayment = (planInfo) => {
     return activatePremium(duration);
   } catch (error) {
     console.error("Error handling successful payment:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Handle subscription renewal
+export const renewSubscription = () => {
+  try {
+    // Check if subscription should be renewed
+    const isPremium = localStorage.getItem("premiumUser") === "true";
+    const autoRenew = localStorage.getItem("subscription_autorenew") === "true";
+    const isCancelled =
+      localStorage.getItem("subscription_cancelled") === "true";
+
+    if (!isPremium || !autoRenew || isCancelled) {
+      return {
+        success: false,
+        message: "الاشتراك غير قابل للتجديد أو تم إلغاؤه",
+      };
+    }
+
+    // Get subscription type
+    const subscriptionType =
+      localStorage.getItem("subscription_type") || "monthly";
+
+    // Renew subscription based on type
+    if (subscriptionType === "monthly") {
+      return activatePremium(30);
+    } else if (subscriptionType === "yearly") {
+      return activatePremium(365);
+    }
+
+    return {
+      success: false,
+      message: "نوع الاشتراك غير معروف",
+    };
+  } catch (error) {
+    console.error("Error renewing subscription:", error);
     return {
       success: false,
       error: error.message,

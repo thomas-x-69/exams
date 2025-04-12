@@ -1,13 +1,22 @@
+// src/app/account/page.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useClientAuth } from "../../../context/ClientAuthContext";
 import Header from "../../../components/Header";
+import Footer from "../../../components/Footer";
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, isPremium, logout, checkPremiumStatus } = useClientAuth();
+  const {
+    user,
+    userProfile,
+    isPremium,
+    logout,
+    updateProfile,
+    checkPremiumStatus,
+  } = useClientAuth();
 
   const [activeTab, setActiveTab] = useState("profile");
   const [name, setName] = useState("");
@@ -19,23 +28,27 @@ export default function AccountPage() {
   const [premiumInfo, setPremiumInfo] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);
 
-  // Check if user is premium and redirect if not
+  // Check if user is authenticated and redirect if not
   useEffect(() => {
-    if (!isPremium) {
-      router.replace("/premium");
+    if (!user && !pageLoading) {
+      router.replace("/");
       return;
     }
 
     // Load user data
-    if (user) {
-      setName(user.name || "");
+    if (userProfile) {
+      setName(userProfile.name || "");
 
       // Get premium info for display
-      const info = checkPremiumStatus();
-      setPremiumInfo(info);
+      const fetchPremiumInfo = async () => {
+        const info = await checkPremiumStatus();
+        setPremiumInfo(info);
+      };
+
+      fetchPremiumInfo();
       setPageLoading(false);
     }
-  }, [user, isPremium, router, checkPremiumStatus]);
+  }, [user, userProfile, router, checkPremiumStatus, pageLoading]);
 
   // Handle profile update
   const handleProfileUpdate = async (e) => {
@@ -45,20 +58,30 @@ export default function AccountPage() {
       setIsLoading(true);
       setMessage({ type: "", text: "" });
 
-      // Update user name in localStorage
-      const updatedUser = { ...user, name };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      localStorage.setItem("userName", name);
+      // Validate inputs
+      if (!name.trim()) {
+        setMessage({
+          type: "error",
+          text: "يرجى إدخال الاسم",
+        });
+        setIsLoading(false);
+        return;
+      }
 
-      setMessage({
-        type: "success",
-        text: "تم تحديث الملف الشخصي بنجاح",
-      });
+      // Update profile
+      const result = await updateProfile({ name });
 
-      // Refresh page after 1 second
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      if (result.success) {
+        setMessage({
+          type: "success",
+          text: "تم تحديث الملف الشخصي بنجاح",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error || "حدث خطأ أثناء تحديث الملف الشخصي",
+        });
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       setMessage({
@@ -81,6 +104,7 @@ export default function AccountPage() {
       // Form validation
       if (!currentPassword) {
         setMessage({ type: "error", text: "يرجى إدخال كلمة المرور الحالية" });
+        setIsLoading(false);
         return;
       }
 
@@ -89,34 +113,38 @@ export default function AccountPage() {
           type: "error",
           text: "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل",
         });
+        setIsLoading(false);
         return;
       }
 
       if (newPassword !== confirmPassword) {
         setMessage({ type: "error", text: "كلمات المرور غير متطابقة" });
-        return;
-      }
-
-      // Verify current password (simplified for client-side auth)
-      if (user.password !== currentPassword) {
-        setMessage({ type: "error", text: "كلمة المرور الحالية غير صحيحة" });
         setIsLoading(false);
         return;
       }
 
       // Update password
-      const updatedUser = { ...user, password: newPassword };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      // Clear form
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-
-      setMessage({
-        type: "success",
-        text: "تم تغيير كلمة المرور بنجاح",
+      const result = await updateProfile({
+        currentPassword,
+        newPassword,
       });
+
+      if (result.success) {
+        // Clear form
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+
+        setMessage({
+          type: "success",
+          text: "تم تغيير كلمة المرور بنجاح",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error || "حدث خطأ أثناء تغيير كلمة المرور",
+        });
+      }
     } catch (error) {
       console.error("Error changing password:", error);
       setMessage({
@@ -130,8 +158,10 @@ export default function AccountPage() {
 
   // Handle sign out
   const handleLogout = async () => {
-    logout();
-    router.push("/");
+    const success = await logout();
+    if (success) {
+      router.push("/");
+    }
   };
 
   // Loading state
@@ -208,7 +238,7 @@ export default function AccountPage() {
             إعدادات الحساب
           </h1>
           <p className="text-xl text-white/70 mb-2">
-            مرحباً {user?.name || "المستخدم"}
+            مرحباً {userProfile?.name || "المستخدم"}
           </p>
 
           {isPremium && premiumInfo && (
@@ -406,7 +436,7 @@ export default function AccountPage() {
                         </label>
                         <input
                           type="text"
-                          value={user?.phone || ""}
+                          value={userProfile?.phone || ""}
                           disabled
                           className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white/70 cursor-not-allowed"
                         />
@@ -664,84 +694,110 @@ export default function AccountPage() {
                       <p className="text-white/70">اشتراك شهري بقيمة 99 جنيه</p>
                     </div>
 
-                    <div className="bg-gradient-to-r from-amber-500 to-yellow-600 rounded-full text-white px-4 py-2 text-sm font-bold shadow-lg">
-                      اشتراك فعال
+                    <div
+                      className={`rounded-full text-white px-4 py-2 text-sm font-bold shadow-lg ${
+                        isPremium
+                          ? "bg-gradient-to-r from-amber-500 to-yellow-600"
+                          : "bg-gradient-to-r from-red-500 to-red-600"
+                      }`}
+                    >
+                      {isPremium ? "اشتراك فعال" : "غير مشترك"}
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-slate-700/50 rounded-xl p-4 border border-white/10">
-                      <h4 className="text-white/80 text-sm mb-2">
-                        تاريخ بداية الاشتراك
-                      </h4>
-                      <p className="text-white font-medium">
-                        {new Date(
-                          premiumInfo?.expiryDate
-                            ? new Date(premiumInfo.expiryDate).getTime() -
-                              30 * 24 * 60 * 60 * 1000
-                            : new Date()
-                        ).toLocaleDateString("ar-EG", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
+                  {isPremium && premiumInfo && (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="bg-slate-700/50 rounded-xl p-4 border border-white/10">
+                        <h4 className="text-white/80 text-sm mb-2">
+                          تاريخ بداية الاشتراك
+                        </h4>
+                        <p className="text-white font-medium">
+                          {new Date(
+                            premiumInfo?.expiryDate
+                              ? new Date(premiumInfo.expiryDate).getTime() -
+                                30 * 24 * 60 * 60 * 1000
+                              : new Date()
+                          ).toLocaleDateString("ar-EG", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
 
-                    <div className="bg-slate-700/50 rounded-xl p-4 border border-white/10">
-                      <h4 className="text-white/80 text-sm mb-2">
-                        تاريخ انتهاء الاشتراك
-                      </h4>
-                      <p className="text-white font-medium">
-                        {premiumInfo?.expiryFormatted || "غير معروف"}
-                      </p>
+                      <div className="bg-slate-700/50 rounded-xl p-4 border border-white/10">
+                        <h4 className="text-white/80 text-sm mb-2">
+                          تاريخ انتهاء الاشتراك
+                        </h4>
+                        <p className="text-white font-medium">
+                          {premiumInfo?.expiryFormatted || "غير معروف"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="mt-6">
-                    <div className="bg-gradient-to-r from-amber-500/20 to-yellow-600/20 p-4 rounded-xl border border-amber-500/30 relative overflow-hidden">
-                      <div className="flex flex-col md:flex-row md:items-center gap-4">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-amber-400 mb-1">
-                            متبقي على انتهاء الاشتراك
-                          </h4>
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="h-2 bg-slate-700 rounded-full flex-1 overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-amber-400 to-yellow-500"
-                                style={{
-                                  width: `${
-                                    premiumInfo
-                                      ? Math.min(
-                                          100,
-                                          (premiumInfo.daysRemaining / 30) * 100
-                                        )
-                                      : 100
-                                  }%`,
-                                }}
-                              ></div>
+                  {isPremium && premiumInfo && (
+                    <div className="mt-6">
+                      <div className="bg-gradient-to-r from-amber-500/20 to-yellow-600/20 p-4 rounded-xl border border-amber-500/30 relative overflow-hidden">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-bold text-amber-400 mb-1">
+                              متبقي على انتهاء الاشتراك
+                            </h4>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="h-2 bg-slate-700 rounded-full flex-1 overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-amber-400 to-yellow-500"
+                                  style={{
+                                    width: `${
+                                      premiumInfo
+                                        ? Math.min(
+                                            100,
+                                            (premiumInfo.daysRemaining / 30) *
+                                              100
+                                          )
+                                        : 100
+                                    }%`,
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="text-white font-medium whitespace-nowrap">
+                                {premiumInfo?.daysRemaining || 0} يوم
+                              </span>
                             </div>
-                            <span className="text-white font-medium whitespace-nowrap">
-                              {premiumInfo?.daysRemaining || 0} يوم
-                            </span>
+                            <p className="text-white/70 text-sm">
+                              سيتوقف الوصول إلى المحتوى المميز بعد انتهاء فترة
+                              الاشتراك
+                            </p>
                           </div>
-                          <p className="text-white/70 text-sm">
-                            سيتوقف الوصول إلى المحتوى المميز بعد انتهاء فترة
-                            الاشتراك
-                          </p>
-                        </div>
 
-                        <div className="shrink-0">
-                          <a
-                            href="/premium"
-                            className="inline-block px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-lg font-medium transition-all duration-300 shadow-md"
-                          >
-                            تجديد الاشتراك
-                          </a>
+                          <div className="shrink-0">
+                            <a
+                              href="/premium"
+                              className="inline-block px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-lg font-medium transition-all duration-300 shadow-md"
+                            >
+                              تجديد الاشتراك
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {!isPremium && (
+                    <div className="mt-6 text-center">
+                      <p className="text-white/70 mb-6">
+                        لم تقم بالاشتراك في العضوية الذهبية بعد. اشترك الآن
+                        للوصول إلى جميع الامتحانات الحقيقية!
+                      </p>
+                      <a
+                        href="/premium"
+                        className="inline-block px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl font-bold transition-all duration-300 shadow-lg shadow-amber-500/20"
+                      >
+                        اشترك في العضوية الذهبية
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-slate-800 border border-white/10 rounded-xl p-6">
@@ -892,6 +948,8 @@ export default function AccountPage() {
           </button>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

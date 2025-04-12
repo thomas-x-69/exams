@@ -7,25 +7,44 @@ import { useClientAuth } from "../context/ClientAuthContext";
 
 /**
  * A component to protect premium-only routes
- * Just redirects to premium page when trying to access premium content
+ * Redirects to premium page when trying to access premium content without a subscription
  */
 const PremiumGuard = ({ children }) => {
   const router = useRouter();
-  const { isPremium, loading } = useClientAuth();
+  const { isPremium, checkPremiumStatus, loading } = useClientAuth();
   const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
-    // Wait for auth to initialize
+    const verifyPremiumStatus = async () => {
+      try {
+        // Verify premium status from latest data
+        const premiumStatus = await checkPremiumStatus();
+
+        if (!premiumStatus.isPremium) {
+          // Not premium - redirect to premium subscription page
+          router.replace("/premium");
+        } else {
+          // User has premium access - render the content
+          setPageLoading(false);
+        }
+      } catch (error) {
+        console.error("Error verifying premium status:", error);
+        // If error, redirect to premium page as a fallback
+        router.replace("/premium");
+      }
+    };
+
+    // Wait for initial auth loading to complete
     if (!loading) {
       if (!isPremium) {
-        // Redirect to premium page if not premium
+        // Quick check - if definitely not premium, redirect immediately
         router.replace("/premium");
       } else {
-        // User is authenticated and premium
-        setPageLoading(false);
+        // Otherwise do a thorough check (may have expired)
+        verifyPremiumStatus();
       }
     }
-  }, [isPremium, loading, router]);
+  }, [isPremium, loading, router, checkPremiumStatus]);
 
   if (loading || pageLoading) {
     return (
@@ -66,7 +85,7 @@ const PremiumGuard = ({ children }) => {
     );
   }
 
-  // If premium, render the protected content
+  // If premium and not loading, render the protected content
   return isPremium ? children : null;
 };
 

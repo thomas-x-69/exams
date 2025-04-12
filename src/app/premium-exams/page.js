@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import PremiumGuard from "../../../components/PremiumGuard";
-import PremiumSubscriptionModal from "../../../components/PremiumSubscriptionModal";
-import { getPremiumExpiryInfo } from "../../../utils/premiumService";
+import WelcomePremiumModal from "../../../components/WelcomePremiumModal";
+import { useClientAuth } from "../../../context/ClientAuthContext";
 
 // Realistic exam mock data
 const realExamData = [
@@ -307,46 +307,30 @@ const PremiumBadge = () => (
 
 export default function PremiumExamsPage() {
   const router = useRouter();
+  const { userProfile, checkPremiumStatus } = useClientAuth();
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSubjects, setShowSubjects] = useState(false);
-  const [isPremiumUser, setIsPremiumUser] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [premiumInfo, setPremiumInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check premium status on initial load
   useEffect(() => {
-    // Simulate loading
-    const loadTimer = setTimeout(() => {
+    const loadPremiumData = async () => {
       try {
-        const isPremium = localStorage.getItem("premiumUser") === "true";
-        const username = localStorage.getItem("userName") || "المستخدم";
-        setIsPremiumUser(isPremium);
-        setUserName(username);
-        setIsLoading(false);
-
         // Get premium expiry info
-        if (isPremium) {
-          const info = getPremiumExpiryInfo();
-          setPremiumInfo(info);
-        }
-
-        // If not premium, show the premium modal after a delay
-        if (!isPremium) {
-          setTimeout(() => {
-            setShowPremiumModal(true);
-          }, 1000);
-        }
+        const info = await checkPremiumStatus();
+        setPremiumInfo(info);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error checking premium status:", error);
         setIsLoading(false);
       }
-    }, 1500);
+    };
 
-    return () => clearTimeout(loadTimer);
-  }, []);
+    loadPremiumData();
+  }, [checkPremiumStatus]);
 
   // Filter exams based on category and search query
   const filteredExams = useMemo(() => {
@@ -406,11 +390,8 @@ export default function PremiumExamsPage() {
         {/* Header */}
         <Header showSubjects={showSubjects} setShowSubjects={setShowSubjects} />
 
-        {/* Premium Subscription Modal */}
-        <PremiumSubscriptionModal
-          isOpen={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
-        />
+        {/* Welcome Modal for new premium users */}
+        <WelcomePremiumModal />
 
         {/* Main Content */}
         <div className="text-center mb-12">
@@ -428,7 +409,8 @@ export default function PremiumExamsPage() {
 
           <div className="inline-block bg-white/5 rounded-lg px-4 py-2 border border-white/10">
             <span className="text-white/80">
-              مرحباً {userName}! استمتع بالوصول الكامل للامتحانات الحقيقية
+              مرحباً {userProfile?.name || "المستخدم"}! استمتع بالوصول الكامل
+              للامتحانات الحقيقية
             </span>
           </div>
 

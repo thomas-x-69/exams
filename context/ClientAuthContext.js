@@ -2,15 +2,29 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  auth,
+  getUserProfile,
+  loginWithPhoneAndPassword,
+  registerUser,
+  updateUserProfile,
+  setPremiumStatus,
+  checkPremiumStatus,
+  logoutUser,
+} from "../lib/firebase";
 
 // Create auth context
 const ClientAuthContext = createContext({
   user: null,
+  userProfile: null,
   loading: true,
   isPremium: false,
   premiumExpiryDate: null,
   login: async () => {},
+  register: async () => {},
   logout: () => {},
+  updateProfile: async () => {},
   activatePremium: async () => {},
   checkPremiumStatus: () => {},
 });
@@ -18,84 +32,149 @@ const ClientAuthContext = createContext({
 // Auth provider component
 export const ClientAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
   const [premiumExpiryDate, setPremiumExpiryDate] = useState(null);
 
-  // Load user data from localStorage
+  // Listen for auth state changes
   useEffect(() => {
-    try {
-      setLoading(true);
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      try {
+        setLoading(true);
 
-      // Get user from localStorage
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      }
+        if (authUser) {
+          // User is signed in
+          setUser(authUser);
 
-      // Check premium status
-      const localIsPremium = localStorage.getItem("premiumUser") === "true";
-      const localExpiryDate = localStorage.getItem("premiumExpiry");
+          // Get user profile from Firestore
+          const profile = await getUserProfile(authUser.uid);
+          setUserProfile(profile);
 
-      if (localIsPremium && localExpiryDate) {
-        const expiryDate = new Date(localExpiryDate);
-        const now = new Date();
-
-        if (expiryDate > now) {
-          setIsPremium(true);
-          setPremiumExpiryDate(expiryDate);
+          // Check premium status
+          const premiumStatus = await checkPremiumStatus(authUser.uid);
+          setIsPremium(premiumStatus.isPremium);
+          if (premiumStatus.isPremium) {
+            setPremiumExpiryDate(premiumStatus.expiryDate);
+          } else {
+            setPremiumExpiryDate(null);
+          }
         } else {
-          // Premium expired
-          setIsPremium(false);
-          setPremiumExpiryDate(null);
-          localStorage.setItem("premiumUser", "false");
-          localStorage.removeItem("premiumExpiry");
+          // User is signed out
+          setUser(null);
+          setUserProfile(null);
+
+          // Check localStorage for premium status (for compatibility)
+          const localIsPremium = localStorage.getItem("premiumUser") === "true";
+          const localExpiryDate = localStorage.getItem("premiumExpiry");
+
+          if (localIsPremium && localExpiryDate) {
+            const expiryDate = new Date(localExpiryDate);
+            const now = new Date();
+
+            if (expiryDate > now) {
+              setIsPremium(true);
+              setPremiumExpiryDate(expiryDate);
+            } else {
+              setIsPremium(false);
+              setPremiumExpiryDate(null);
+              localStorage.setItem("premiumUser", "false");
+              localStorage.removeItem("premiumExpiry");
+            }
+          } else {
+            setIsPremium(false);
+            setPremiumExpiryDate(null);
+          }
         }
-      } else {
-        setIsPremium(false);
-        setPremiumExpiryDate(null);
+      } catch (error) {
+        console.error("Error in auth state change:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading user data:", error);
-    } finally {
-      setLoading(false);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // Login/Register function - just save to localStorage
-  const login = async (userData) => {
+  // Login function
+  const login = async (phoneNumber, password) => {
     try {
-      // Save user data to localStorage
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("userName", userData.name || "المستخدم");
+      setLoading(true);
+      const { user, userData } = await loginWithPhoneAndPassword(
+        phoneNumber,
+        password
+      );
+      setUser(user);
+      setUserProfile(userData);
 
-      // Update state
-      setUser(userData);
+      // Check premium status
+      const premiumStatus = await checkPremiumStatus(user.uid);
+      setIsPremium(premiumStatus.isPremium);
+      if (premiumStatus.isPremium) {
+        setPremiumExpiryDate(premiumStatus.expiryDate);
+      }
 
       return { success: true, user: userData };
     } catch (error) {
       console.error("Error logging in:", error);
       return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Register function
+  const register = async (userData) => {
+    try {
+      setLoading(true);
+      const { user, userData: profile } = await registerUser(userData);
+      setUser(user);
+      setUserProfile(profile);
+
+      return { success: true, user: profile };
+    } catch (error) {
+      console.error("Error registering:", error);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
     }
   };
 
   // Logout function
-  const logout = () => {
+  const logout = async () => {
     try {
-      // Clear user data from localStorage
-      localStorage.removeItem("user");
-      localStorage.removeItem("userName");
-
-      // Don't remove premium status on logout to allow multiple devices
-
-      // Update state
+      setLoading(true);
+      await logoutUser();
       setUser(null);
+      setUserProfile(null);
 
+      // Keep premium status in localStorage for compatibility
       return true;
     } catch (error) {
       console.error("Error logging out:", error);
       return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update profile function
+  const updateProfile = async (userData) => {
+    try {
+      if (!user) throw new Error("User not authenticated");
+
+      await updateUserProfile(user.uid, userData);
+
+      // Update local state
+      setUserProfile((prev) => ({
+        ...prev,
+        ...userData,
+      }));
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return { success: false, error: error.message };
     }
   };
 
@@ -106,9 +185,14 @@ export const ClientAuthProvider = ({ children }) => {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + duration);
 
-      // Save premium status to localStorage
-      localStorage.setItem("premiumUser", "true");
-      localStorage.setItem("premiumExpiry", expiryDate.toISOString());
+      // If user is logged in, update Firestore
+      if (user) {
+        await setPremiumStatus(user.uid, expiryDate);
+      } else {
+        // Just save to localStorage for non-logged in users
+        localStorage.setItem("premiumUser", "true");
+        localStorage.setItem("premiumExpiry", expiryDate.toISOString());
+      }
 
       // Update state
       setIsPremium(true);
@@ -129,9 +213,22 @@ export const ClientAuthProvider = ({ children }) => {
     }
   };
 
-  // Check premium status
-  const checkPremiumStatus = () => {
+  // Check premium status function
+  const checkPremiumStatusFn = async () => {
     try {
+      // If user is logged in, check Firestore
+      if (user) {
+        const status = await checkPremiumStatus(user.uid);
+        setIsPremium(status.isPremium);
+        if (status.isPremium) {
+          setPremiumExpiryDate(status.expiryDate);
+        } else {
+          setPremiumExpiryDate(null);
+        }
+        return status;
+      }
+
+      // Otherwise check localStorage (for compatibility)
       const localIsPremium = localStorage.getItem("premiumUser") === "true";
       const localExpiryDate = localStorage.getItem("premiumExpiry");
 
@@ -140,7 +237,9 @@ export const ClientAuthProvider = ({ children }) => {
         const now = new Date();
 
         if (expiryDate > now) {
-          // Still valid
+          setIsPremium(true);
+          setPremiumExpiryDate(expiryDate);
+
           return {
             isPremium: true,
             expiryDate: expiryDate,
@@ -153,6 +252,11 @@ export const ClientAuthProvider = ({ children }) => {
               (expiryDate - now) / (1000 * 60 * 60 * 24)
             ),
           };
+        } else {
+          setIsPremium(false);
+          setPremiumExpiryDate(null);
+          localStorage.setItem("premiumUser", "false");
+          localStorage.removeItem("premiumExpiry");
         }
       }
 
@@ -166,13 +270,16 @@ export const ClientAuthProvider = ({ children }) => {
   // Context value
   const value = {
     user,
+    userProfile,
     loading,
     isPremium,
     premiumExpiryDate,
     login,
+    register,
     logout,
+    updateProfile,
     activatePremium,
-    checkPremiumStatus,
+    checkPremiumStatus: checkPremiumStatusFn,
   };
 
   return (
