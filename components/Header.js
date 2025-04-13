@@ -7,6 +7,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useClientAuth } from "../context/ClientAuthContext";
 import LoginModal from "./LoginModal";
+import AccountSettings from "./AccountSettings";
 
 const Header = ({ showSubjects, setShowSubjects }) => {
   const { user, userProfile, isPremium, loading, logout } = useClientAuth();
@@ -15,6 +16,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
   const isLandingPage = pathname === "/";
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
   const accountMenuRef = useRef(null);
 
   const handleAccountClick = () => {
@@ -23,7 +25,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
 
   const handleAccountSettings = () => {
     setShowAccountMenu(false);
-    router.push("/account");
+    setShowAccountSettings(true);
   };
 
   const handleLogout = async () => {
@@ -213,7 +215,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
                           {userProfile?.name || "المستخدم"}
                         </div>
                         <div className="text-white/60 text-sm truncate">
-                          {userProfile?.phone || ""}
+                          {userProfile?.email || ""}
                         </div>
                       </div>
 
@@ -358,6 +360,12 @@ const Header = ({ showSubjects, setShowSubjects }) => {
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
+      />
+
+      {/* Account Settings Modal */}
+      <AccountSettings
+        isOpen={showAccountSettings}
+        onClose={() => setShowAccountSettings(false)}
       />
     </>
   );

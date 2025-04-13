@@ -6,7 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import {
   auth,
   getUserProfile,
-  loginWithPhoneAndPassword,
+  loginWithEmailAndPassword,
   registerUser,
   updateUserProfile,
   setPremiumStatus,
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
       ? onAuthStateChanged(auth, async (authUser) => {
           try {
             if (authUser) {
-              // User is signed in with Firebase
+              // User is signed in
               setUser(authUser);
 
               // Get user profile - first from localStorage, then Firestore if needed
@@ -98,9 +98,18 @@ export const AuthProvider = ({ children }) => {
                 setPremiumExpiryDate(premiumStatus.expiryDate);
               }
             } else {
-              // User is signed out or no Firebase auth
-              // But we keep any data from local storage for a smoother experience
-              // Already handled by the checkLocalData function
+              // User is signed out
+              setUser(null);
+              setUserProfile(null);
+
+              // We might still have premium status from localStorage
+              const premiumStatus = await checkPremiumStatus();
+              setIsPremium(premiumStatus.isPremium);
+              if (premiumStatus.isPremium) {
+                setPremiumExpiryDate(premiumStatus.expiryDate);
+              } else {
+                setPremiumExpiryDate(null);
+              }
             }
           } catch (err) {
             console.error("Error in auth state change:", err);
@@ -109,22 +118,26 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
           }
         })
-      : () => {};
+      : () => {
+          setLoading(false);
+        };
 
-    // Cleanup Firebase listener on unmount
+    // Cleanup function
     return () => {
-      if (unsubscribe) unsubscribe();
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
     };
   }, []);
 
   // Login function
-  const login = async (phoneNumber, password) => {
+  const login = async (email, password) => {
     try {
       clearError();
       setLoading(true);
 
       // Call login function from firebase.js
-      const result = await loginWithPhoneAndPassword(phoneNumber, password);
+      const result = await loginWithEmailAndPassword(email, password);
 
       if (result.success) {
         setUser(result.user);

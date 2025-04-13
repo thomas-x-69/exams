@@ -2,18 +2,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useClientAuth } from "../context/ClientAuthContext"; // Fixed import
-import { signOut } from "firebase/auth";
-import { auth } from "../lib/firebase";
-import { getPremiumExpiryInfo } from "../utils/premiumService";
+import { useClientAuth } from "../context/ClientAuthContext";
 
 const AccountSettings = ({ isOpen, onClose }) => {
   const { user, userProfile, updateProfile, isPremium, premiumExpiryDate } =
-    useClientAuth(); // Fixed hook usage
+    useClientAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [name, setName] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -27,9 +23,21 @@ const AccountSettings = ({ isOpen, onClose }) => {
     }
 
     // Get premium info for display
-    const info = getPremiumExpiryInfo();
-    setPremiumInfo(info);
-  }, [userProfile]);
+    if (isPremium && premiumExpiryDate) {
+      const expiry = new Date(premiumExpiryDate);
+      const now = new Date();
+
+      setPremiumInfo({
+        expiryDate: expiry,
+        expiryFormatted: expiry.toLocaleDateString("ar-EG", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        daysRemaining: Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)),
+      });
+    }
+  }, [userProfile, isPremium, premiumExpiryDate]);
 
   // Handle click outside modal
   useEffect(() => {
@@ -56,14 +64,30 @@ const AccountSettings = ({ isOpen, onClose }) => {
       setIsLoading(true);
       setMessage({ type: "", text: "" });
 
-      await updateProfile({
-        name,
-      });
+      // Validate name
+      if (!name.trim()) {
+        setMessage({
+          type: "error",
+          text: "يرجى إدخال الاسم",
+        });
+        setIsLoading(false);
+        return;
+      }
 
-      setMessage({
-        type: "success",
-        text: "تم تحديث الملف الشخصي بنجاح",
-      });
+      // Update profile
+      const result = await updateProfile({ name });
+
+      if (result.success) {
+        setMessage({
+          type: "success",
+          text: "تم تحديث الملف الشخصي بنجاح",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error || "حدث خطأ أثناء تحديث الملف الشخصي",
+        });
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       setMessage({
@@ -83,45 +107,48 @@ const AccountSettings = ({ isOpen, onClose }) => {
       setIsLoading(true);
       setMessage({ type: "", text: "" });
 
-      // Form validation
-      if (!currentPassword) {
-        setMessage({ type: "error", text: "يرجى إدخال كلمة المرور الحالية" });
+      // Validate passwords
+      if (!password) {
+        setMessage({ type: "error", text: "يرجى إدخال كلمة المرور الجديدة" });
+        setIsLoading(false);
         return;
       }
 
-      if (newPassword.length < 6) {
+      if (password.length < 6) {
         setMessage({
           type: "error",
           text: "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل",
         });
+        setIsLoading(false);
         return;
       }
 
-      if (newPassword !== confirmPassword) {
+      if (password !== confirmPassword) {
         setMessage({ type: "error", text: "كلمات المرور غير متطابقة" });
-        return;
-      }
-
-      // Verify current password
-      if (userProfile.password !== currentPassword) {
-        setMessage({ type: "error", text: "كلمة المرور الحالية غير صحيحة" });
+        setIsLoading(false);
         return;
       }
 
       // Update password
-      await updateProfile({
-        password: newPassword,
+      const result = await updateProfile({
+        newPassword: password,
       });
 
-      // Clear form
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      if (result.success) {
+        // Clear form
+        setPassword("");
+        setConfirmPassword("");
 
-      setMessage({
-        type: "success",
-        text: "تم تغيير كلمة المرور بنجاح",
-      });
+        setMessage({
+          type: "success",
+          text: "تم تغيير كلمة المرور بنجاح",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error || "حدث خطأ أثناء تغيير كلمة المرور",
+        });
+      }
     } catch (error) {
       console.error("Error changing password:", error);
       setMessage({
@@ -130,20 +157,6 @@ const AccountSettings = ({ isOpen, onClose }) => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Handle sign out
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      localStorage.removeItem("premiumUser");
-      localStorage.removeItem("premiumExpiry");
-      localStorage.removeItem("userName");
-      onClose();
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Error signing out:", error);
     }
   };
 
@@ -175,7 +188,9 @@ const AccountSettings = ({ isOpen, onClose }) => {
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">إعدادات الحساب</h2>
+                <h2 className="text-xl font-bold text-white mb-1">
+                  إعدادات الحساب
+                </h2>
                 <p className="text-white/80 text-sm">
                   {userProfile?.name || "المستخدم"}
                 </p>
@@ -248,7 +263,7 @@ const AccountSettings = ({ isOpen, onClose }) => {
                 المعلومات الشخصية
               </h3>
 
-              {message.text && (
+              {message.text && activeTab === "profile" && (
                 <div
                   className={`mb-4 p-3 rounded-lg ${
                     message.type === "success"
@@ -276,16 +291,16 @@ const AccountSettings = ({ isOpen, onClose }) => {
 
                 <div>
                   <label className="block text-white/80 text-sm mb-1">
-                    رقم الهاتف
+                    البريد الإلكتروني
                   </label>
                   <input
                     type="text"
-                    value={userProfile?.phone || ""}
+                    value={userProfile?.email || ""}
                     disabled
                     className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white/70 cursor-not-allowed"
                   />
                   <p className="text-xs text-white/50 mt-1">
-                    لا يمكن تغيير رقم الهاتف
+                    لا يمكن تغيير البريد الإلكتروني
                   </p>
                 </div>
 
@@ -307,7 +322,7 @@ const AccountSettings = ({ isOpen, onClose }) => {
                 تغيير كلمة المرور
               </h3>
 
-              {message.text && (
+              {message.text && activeTab === "password" && (
                 <div
                   className={`mb-4 p-3 rounded-lg ${
                     message.type === "success"
@@ -322,25 +337,12 @@ const AccountSettings = ({ isOpen, onClose }) => {
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div>
                   <label className="block text-white/80 text-sm mb-1">
-                    كلمة المرور الحالية
-                  </label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white/80 text-sm mb-1">
                     كلمة المرور الجديدة
                   </label>
                   <input
                     type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                     disabled={isLoading}
                   />
@@ -392,17 +394,13 @@ const AccountSettings = ({ isOpen, onClose }) => {
                   )}
                 </div>
 
-                {isPremium && premiumExpiryDate && (
+                {isPremium && premiumInfo && (
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-white/80">
                       تاريخ انتهاء الاشتراك:
                     </span>
                     <span className="text-amber-400 font-medium">
-                      {new Date(premiumExpiryDate).toLocaleDateString("ar-EG", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+                      {premiumInfo.expiryFormatted}
                     </span>
                   </div>
                 )}
@@ -450,36 +448,6 @@ const AccountSettings = ({ isOpen, onClose }) => {
               )}
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="bg-slate-700 p-4 border-t border-slate-600 flex justify-between items-center">
-          <button
-            onClick={handleSignOut}
-            className="text-red-400 hover:text-red-300 transition-colors text-sm flex items-center gap-1"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            <span>تسجيل الخروج</span>
-          </button>
-
-          <button
-            onClick={onClose}
-            className="bg-amber-500 hover:bg-amber-600 text-white py-1.5 px-4 rounded-lg text-sm font-medium transition-colors shadow-md"
-          >
-            إغلاق
-          </button>
         </div>
       </div>
     </div>
