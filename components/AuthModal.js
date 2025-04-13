@@ -2,43 +2,39 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "../context/ClientAuthContext";
+import { useAuth } from "../context/AuthContext";
 
-const AuthModal = ({ isOpen, onClose, initialMode = "login", onSuccess }) => {
+const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
+  const { login, register, error, clearError, setError } = useAuth();
   const [mode, setMode] = useState(initialMode); // 'login' or 'register'
-  const [step, setStep] = useState("phone"); // 'phone', 'verification', 'profile'
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [countdown, setCountdown] = useState(0);
+  const [formErrors, setFormErrors] = useState({});
   const modalRef = useRef(null);
 
-  // Form data
-  const [formData, setFormData] = useState({
-    phone: "",
-    password: "",
-    name: "",
-    confirmPassword: "",
-  });
-
-  // Verification code (in a real app, this would be generated and sent via SMS)
-  const [verificationCode, setVerificationCode] = useState("");
-
-  // Get auth context
-  const { signInWithPhone, signUpWithPhone } = useAuth();
-
-  // Handle countdown for resending verification code
+  // Reset state when modal is opened/closed
   useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    if (isOpen) {
+      setMode(initialMode);
+      clearError();
+      setFormErrors({});
+    } else {
+      // Reset form when modal closes
+      setPhoneNumber("");
+      setPassword("");
+      setName("");
+      setConfirmPassword("");
+      setIsLoading(false);
     }
-    return () => clearTimeout(timer);
-  }, [countdown]);
+  }, [isOpen, initialMode, clearError]);
 
-  // Handle click outside modal
+  // Close modal when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
         onClose();
       }
     };
@@ -52,595 +48,405 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login", onSuccess }) => {
     };
   }, [isOpen, onClose]);
 
-  // Reset form when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setMode(initialMode);
-      setStep("phone");
-      setFormData({
-        phone: "",
-        password: "",
-        name: "",
-        confirmPassword: "",
-      });
-      setError("");
-      setVerificationCode("");
+  // Validate form fields
+  const validateForm = () => {
+    const errors = {};
+
+    // Validate phone number (Egyptian format)
+    if (!phoneNumber) {
+      errors.phoneNumber = "يرجى إدخال رقم الهاتف";
+    } else {
+      const phoneRegex = /^01[0125][0-9]{8}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        errors.phoneNumber = "يرجى إدخال رقم هاتف مصري صحيح";
+      }
     }
-  }, [isOpen, initialMode]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    // Validate password
+    if (!password) {
+      errors.password = "يرجى إدخال كلمة المرور";
+    } else if (password.length < 6) {
+      errors.password = "كلمة المرور يجب أن تكون 6 أحرف على الأقل";
+    }
 
-    // Clear error when user types
-    if (error) setError("");
+    // Registration-specific validations
+    if (mode === "register") {
+      // Validate name
+      if (!name) {
+        errors.name = "يرجى إدخال الاسم";
+      }
+
+      // Validate password confirmation
+      if (password !== confirmPassword) {
+        errors.confirmPassword = "كلمة المرور غير متطابقة";
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // Validate phone number (Egyptian format)
-  const validatePhoneNumber = (phone) => {
-    // Egyptian phone numbers: 01x followed by 8 digits
-    const phoneRegex = /^01[0125][0-9]{8}$/;
-    return phoneRegex.test(phone);
-  };
-
-  // Handle phone submission
-  const handlePhoneSubmit = async (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+
+    // Clear any previous errors
+    clearError();
+
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      // Validate phone number
-      if (!formData.phone.trim()) {
-        setError("يرجى إدخال رقم الهاتف");
-        return;
-      }
+      let result;
 
-      if (!validatePhoneNumber(formData.phone)) {
-        setError("يرجى إدخال رقم هاتف مصري صحيح");
-        return;
-      }
-
-      setIsLoading(true);
-
-      // In a real app, you would send a verification code via SMS here
-      // For demo purposes, we'll just move to the verification step
-      setTimeout(() => {
-        setStep("verification");
-        setCountdown(60); // Set countdown for 60 seconds
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      console.error("Error sending verification code:", error);
-      setError("حدث خطأ أثناء إرسال رمز التحقق");
-      setIsLoading(false);
-    }
-  };
-
-  // Handle verification code submission
-  const handleVerificationSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      // Validate verification code
-      if (!verificationCode.trim()) {
-        setError("يرجى إدخال رمز التحقق");
-        return;
-      }
-
-      if (!/^\d{6}$/.test(verificationCode)) {
-        setError("يجب أن يكون رمز التحقق 6 أرقام");
-        return;
-      }
-
-      setIsLoading(true);
-
-      // For demo purposes, we'll consider any 6-digit code valid
-      // In a real app, you would validate the code with your backend
-
-      // Check if user exists (login) or needs to complete profile (register)
       if (mode === "login") {
-        setStep("password");
+        // Login flow
+        result = await login(phoneNumber, password);
       } else {
-        setStep("profile");
+        // Register flow
+        result = await register({
+          name,
+          phone: phoneNumber,
+          password,
+        });
       }
-
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error verifying code:", error);
-      setError("رمز التحقق غير صحيح");
-      setIsLoading(false);
-    }
-  };
-
-  // Handle login with password
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      // Validate password
-      if (!formData.password.trim()) {
-        setError("يرجى إدخال كلمة المرور");
-        return;
-      }
-
-      setIsLoading(true);
-
-      // Sign in with phone and password
-      const result = await signInWithPhone(formData.phone, formData.password);
 
       if (result.success) {
+        // Call success callback if provided
         if (onSuccess) {
           onSuccess(result.user);
         }
+        // Close modal
         onClose();
       } else {
-        setError(result.error || "حدث خطأ أثناء تسجيل الدخول");
+        // Show error from result
+        setError(result.error || "حدث خطأ. يرجى المحاولة مرة أخرى.");
       }
-
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error signing in:", error);
-      setError("حدث خطأ أثناء تسجيل الدخول");
+    } catch (err) {
+      console.error("Authentication error:", err);
+      setError(err.message || "حدث خطأ. يرجى المحاولة مرة أخرى.");
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle profile completion and registration
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      // Validate fields
-      if (!formData.name.trim()) {
-        setError("يرجى إدخال الاسم");
-        return;
-      }
-
-      if (!formData.password.trim()) {
-        setError("يرجى إدخال كلمة المرور");
-        return;
-      }
-
-      if (formData.password.length < 6) {
-        setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
-        return;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        setError("كلمات المرور غير متطابقة");
-        return;
-      }
-
-      setIsLoading(true);
-
-      // Sign up with phone, password, and name
-      const result = await signUpWithPhone(
-        formData.phone,
-        formData.password,
-        formData.name
-      );
-
-      if (result.success) {
-        if (onSuccess) {
-          onSuccess(result.user);
-        }
-        onClose();
-      } else {
-        setError(result.error || "حدث خطأ أثناء إنشاء الحساب");
-      }
-
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error signing up:", error);
-      setError("حدث خطأ أثناء إنشاء الحساب");
-      setIsLoading(false);
-    }
-  };
-
-  // Handle resend verification code
-  const handleResendCode = () => {
-    if (countdown > 0) return;
-
-    // In a real app, you would resend the verification code here
-    setCountdown(60);
-    // Simulate sending code
-    setTimeout(() => {
-      // Code sent
-    }, 1000);
-  };
-
+  // If modal is not open, don't render anything
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md">
       <div
         ref={modalRef}
-        className="w-full max-w-md bg-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300"
+        className="w-full max-w-md bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-white/10 overflow-hidden transform transition-all animate-in fade-in zoom-in duration-300"
+        style={{ maxHeight: "90vh", overflowY: "auto" }}
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">
-              {step === "phone" &&
-                (mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد")}
-              {step === "verification" && "التحقق من رقم الهاتف"}
-              {step === "password" && "تسجيل الدخول"}
-              {step === "profile" && "إكمال بيانات الحساب"}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+        {/* Header with decorative elements */}
+        <div className="sticky top-0 z-10 bg-slate-800 bg-opacity-95 backdrop-blur-sm">
+          <div className="relative overflow-hidden">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/30 to-indigo-600/30"></div>
+
+            {/* Header content */}
+            <div className="relative p-5 flex items-center justify-between border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/30 to-indigo-500/30 flex items-center justify-center border border-white/20">
+                  {mode === "login" ? (
+                    <svg
+                      className="w-6 h-6 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-6 h-6 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
+                  </h2>
+                  <p className="text-white/60 text-sm">
+                    {mode === "login"
+                      ? "قم بتسجيل الدخول للوصول إلى حسابك"
+                      : "سجل وانضم إلى منصة الاختبارات المصرية"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                aria-label="إغلاق"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Form area */}
+        <div className="p-6">
+          {/* Display general error if any */}
+          {error && (
+            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-4 flex items-start gap-2">
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
                 fill="none"
-                stroke="currentColor"
                 viewBox="0 0 24 24"
+                stroke="currentColor"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {/* Error message */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
+              <p className="text-red-400 text-sm flex-1">{error}</p>
             </div>
           )}
 
-          {/* Phone number step */}
-          {step === "phone" && (
-            <form onSubmit={handlePhoneSubmit} className="space-y-4">
-              <div>
-                <label className="block text-white/80 text-sm mb-1.5">
-                  رقم الهاتف
-                </label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="01xxxxxxxxx"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 pl-16 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    disabled={isLoading}
-                  />
-                  <div className="absolute left-0 top-0 h-full flex items-center px-4 text-white/60 border-r border-slate-600">
-                    +2
-                  </div>
-                </div>
-                <p className="text-white/50 text-xs mt-1">
-                  سنرسل لك رسالة نصية تحتوي على رمز التحقق
-                </p>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition-colors flex items-center justify-center"
-                >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>جاري الإرسال...</span>
-                    </>
-                  ) : (
-                    "إرسال رمز التحقق"
-                  )}
-                </button>
-              </div>
-
-              <div className="flex justify-center gap-2 pt-3">
-                <span className="text-white/60">
-                  {mode === "login" ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setMode(mode === "login" ? "register" : "login")
-                  }
-                  className="text-blue-400 hover:text-blue-300"
-                >
-                  {mode === "login" ? "إنشاء حساب" : "تسجيل الدخول"}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Verification code step */}
-          {step === "verification" && (
-            <form onSubmit={handleVerificationSubmit} className="space-y-4">
-              <div>
-                <label className="block text-white/80 text-sm mb-1.5">
-                  رمز التحقق
-                </label>
-                <input
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "");
-                    if (value.length <= 6) setVerificationCode(value);
-                  }}
-                  placeholder="أدخل الرمز المكون من 6 أرقام"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center tracking-wider text-xl"
-                  maxLength={6}
-                  disabled={isLoading}
-                />
-                <p className="text-white/50 text-xs mt-1">
-                  تم إرسال رمز التحقق إلى {formData.phone}+
-                </p>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition-colors flex items-center justify-center"
-                >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>جاري التحقق...</span>
-                    </>
-                  ) : (
-                    "تأكيد الرمز"
-                  )}
-                </button>
-              </div>
-
-              <div className="flex justify-between text-sm pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep("phone")}
-                  className="text-white/60 hover:text-white"
-                >
-                  تغيير رقم الهاتف
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleResendCode}
-                  disabled={countdown > 0}
-                  className={`text-blue-400 hover:text-blue-300 ${
-                    countdown > 0 ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {countdown > 0
-                    ? `إعادة الإرسال (${countdown})`
-                    : "إعادة إرسال الرمز"}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Password step (for login) */}
-          {step === "password" && (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div className="mb-2">
-                <p className="text-white/80 text-sm">
-                  تسجيل الدخول لرقم: {formData.phone}+
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-white/80 text-sm mb-1.5">
-                  كلمة المرور
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="أدخل كلمة المرور"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition-colors flex items-center justify-center"
-                >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>جاري تسجيل الدخول...</span>
-                    </>
-                  ) : (
-                    "تسجيل الدخول"
-                  )}
-                </button>
-              </div>
-
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep("phone")}
-                  className="text-white/60 hover:text-white text-sm"
-                >
-                  العودة
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Profile setup step (for registration) */}
-          {step === "profile" && (
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
-              <div className="mb-2">
-                <p className="text-white/80 text-sm">
-                  إكمال إنشاء حساب لرقم: {formData.phone}+
-                </p>
-              </div>
-
+          {/* Authentication form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name field - only for registration */}
+            {mode === "register" && (
               <div>
                 <label className="block text-white/80 text-sm mb-1.5">
                   الاسم
                 </label>
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="أدخل اسمك الكامل"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={`w-full bg-slate-700 border ${
+                    formErrors.name ? "border-red-500" : "border-slate-600"
+                  } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors`}
+                  placeholder="الاسم الكامل"
                   disabled={isLoading}
                 />
+                {formErrors.name && (
+                  <p className="text-red-400 text-xs mt-1">{formErrors.name}</p>
+                )}
               </div>
+            )}
 
-              <div>
-                <label className="block text-white/80 text-sm mb-1.5">
-                  كلمة المرور
-                </label>
+            {/* Phone number field */}
+            <div>
+              <label className="block text-white/80 text-sm mb-1.5">
+                رقم الهاتف
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className={`w-full bg-slate-700 border ${
+                    formErrors.phoneNumber
+                      ? "border-red-500"
+                      : "border-slate-600"
+                  } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors pl-16 dir-ltr text-left`}
+                  placeholder="01xxxxxxxxx"
+                  disabled={isLoading}
+                />
+                <div className="absolute left-0 top-0 h-full flex items-center px-4 text-white/60 border-r border-slate-600">
+                  +2
+                </div>
+              </div>
+              {formErrors.phoneNumber && (
+                <p className="text-red-400 text-xs mt-1">
+                  {formErrors.phoneNumber}
+                </p>
+              )}
+            </div>
+
+            {/* Password field */}
+            <div>
+              <label className="block text-white/80 text-sm mb-1.5">
+                كلمة المرور
+              </label>
+              <div className="relative">
                 <input
                   type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="أدخل كلمة المرور (6 أحرف على الأقل)"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`w-full bg-slate-700 border ${
+                    formErrors.password ? "border-red-500" : "border-slate-600"
+                  } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors`}
+                  placeholder="كلمة المرور"
                   disabled={isLoading}
                 />
               </div>
+              {formErrors.password && (
+                <p className="text-red-400 text-xs mt-1">
+                  {formErrors.password}
+                </p>
+              )}
+              {mode === "register" && (
+                <p className="text-xs text-white/50 mt-1">
+                  يجب أن تكون كلمة المرور 6 أحرف على الأقل
+                </p>
+              )}
+            </div>
 
+            {/* Confirm Password field - only for registration */}
+            {mode === "register" && (
               <div>
                 <label className="block text-white/80 text-sm mb-1.5">
                   تأكيد كلمة المرور
                 </label>
                 <input
                   type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="أعد إدخال كلمة المرور"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full bg-slate-700 border ${
+                    formErrors.confirmPassword
+                      ? "border-red-500"
+                      : "border-slate-600"
+                  } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors`}
+                  placeholder="تأكيد كلمة المرور"
                   disabled={isLoading}
                 />
+                {formErrors.confirmPassword && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {formErrors.confirmPassword}
+                  </p>
+                )}
               </div>
+            )}
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition-colors flex items-center justify-center"
-                >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>جاري إنشاء الحساب...</span>
-                    </>
-                  ) : (
-                    "إنشاء الحساب"
-                  )}
-                </button>
-              </div>
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="relative w-full overflow-hidden mt-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-xl font-bold shadow-md transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {/* Animated loading bar */}
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-700">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>
+                      {mode === "login"
+                        ? "جاري تسجيل الدخول..."
+                        : "جاري إنشاء الحساب..."}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep("phone")}
-                  className="text-white/60 hover:text-white text-sm"
-                >
-                  العودة
-                </button>
-              </div>
-            </form>
-          )}
+              {/* Button text */}
+              <span className={isLoading ? "opacity-0" : ""}>
+                {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب"}
+              </span>
+            </button>
+
+            {/* Toggle between login and register */}
+            <div className="text-center pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  clearError();
+                  setFormErrors({});
+                  setMode(mode === "login" ? "register" : "login");
+                }}
+                className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
+                disabled={isLoading}
+              >
+                {mode === "login"
+                  ? "ليس لديك حساب؟ إنشاء حساب جديد"
+                  : "لديك حساب بالفعل؟ تسجيل الدخول"}
+              </button>
+            </div>
+          </form>
         </div>
+
+        {/* Custom animations */}
+        <style jsx>{`
+          @keyframes progress-bar {
+            0% {
+              transform: translateX(-100%);
+            }
+            100% {
+              transform: translateX(100%);
+            }
+          }
+
+          .animate-progress-bar {
+            animation: progress-bar 1.5s ease-in-out infinite;
+          }
+
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+
+          @keyframes zoom-in {
+            from {
+              transform: scale(0.95);
+              opacity: 0;
+            }
+            to {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+
+          .animate-in {
+            animation: both;
+          }
+
+          .fade-in {
+            animation-name: fade-in;
+          }
+
+          .zoom-in {
+            animation-name: zoom-in;
+          }
+
+          .duration-300 {
+            animation-duration: 300ms;
+          }
+        `}</style>
       </div>
     </div>
   );

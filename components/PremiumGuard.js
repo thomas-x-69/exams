@@ -11,7 +11,8 @@ import { useClientAuth } from "../context/ClientAuthContext";
  */
 const PremiumGuard = ({ children }) => {
   const router = useRouter();
-  const { isPremium, checkPremiumStatus, loading } = useClientAuth();
+  const { isPremium, checkPremiumStatus, loading, userProfile } =
+    useClientAuth();
   const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +39,7 @@ const PremiumGuard = ({ children }) => {
     if (!loading) {
       if (!isPremium) {
         // Quick check - if definitely not premium, redirect immediately
-        router.replace("/premium");
+        router.replace("/premium?access=denied");
       } else {
         // Otherwise do a thorough check (may have expired)
         verifyPremiumStatus();
@@ -71,7 +72,12 @@ const PremiumGuard = ({ children }) => {
           </div>
           <div className="flex flex-col items-center">
             <p className="text-white text-xl font-bold mb-1">
-              جاري التحقق من العضوية...
+              {userProfile?.name
+                ? `مرحباً ${userProfile.name}`
+                : "جاري التحقق من العضوية..."}
+            </p>
+            <p className="text-white/70 text-sm mb-3">
+              جاري التحقق من صلاحية الوصول للمحتوى المميز
             </p>
             <div className="w-48 h-1.5 bg-slate-700 rounded-full overflow-hidden mt-2">
               <div

@@ -4,10 +4,16 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useClientAuth } from "../context/ClientAuthContext";
+import { handleSuccessfulPayment } from "../utils/premiumService";
 
-const PaymentStatusModal = ({ isOpen, status, onClose }) => {
+const PaymentStatusModal = ({
+  isOpen,
+  status,
+  onClose,
+  planType = "monthly",
+}) => {
   const router = useRouter();
-  const { activatePremium } = useClientAuth();
+  const { user, userProfile, activatePremium } = useClientAuth();
 
   // Handle successful payment
   useEffect(() => {
@@ -16,22 +22,42 @@ const PaymentStatusModal = ({ isOpen, status, onClose }) => {
       status?.status === "success" &&
       status?.verifiedByServer === true
     ) {
-      // Only activate premium if payment was verified by the server
+      // Activate premium subscription based on plan type
       const activatePremiumSubscription = async () => {
-        const result = await activatePremium(30); // 30 days
+        try {
+          // Get duration based on plan type
+          let duration = 30; // Default: monthly
 
-        if (result.success) {
-          // Set a timer to redirect to premium content
-          const timer = setTimeout(() => {
-            router.push("/premium-exams");
-          }, 3000);
-          return () => clearTimeout(timer);
+          if (planType === "yearly") {
+            duration = 365;
+          } else if (planType === "quarterly") {
+            duration = 90;
+          }
+
+          // Get user ID
+          const userId = user?.uid || userProfile?.id;
+
+          // Use premium service utility to handle the payment
+          const result = await handleSuccessfulPayment(userId, {
+            id: planType,
+            duration,
+          });
+
+          if (result.success) {
+            // Set a timer to redirect to premium content
+            const timer = setTimeout(() => {
+              router.push("/premium-exams");
+            }, 3000);
+            return () => clearTimeout(timer);
+          }
+        } catch (error) {
+          console.error("Error activating premium:", error);
         }
       };
 
       activatePremiumSubscription();
     }
-  }, [isOpen, status, router, activatePremium]);
+  }, [isOpen, status, router, activatePremium, user, userProfile, planType]);
 
   if (!isOpen || !status) return null;
 
