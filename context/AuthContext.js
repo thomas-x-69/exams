@@ -12,6 +12,7 @@ import {
   setPremiumStatus,
   checkPremiumStatus,
   logoutUser,
+  checkAuthSession,
 } from "../lib/firebase";
 
 // Create auth context with default values
@@ -44,91 +45,110 @@ export const AuthProvider = ({ children }) => {
   // Clear error helper
   const clearError = () => setError(null);
 
-  // Listen for auth state changes
+  // Initialize session from client storage on mount
   useEffect(() => {
-    // Initial loading
-    setLoading(true);
+    const initializeFromSession = async () => {
+      setLoading(true);
 
-    // Check for locally stored user data first (faster initial load)
-    const checkLocalData = async () => {
       try {
-        // Check localStorage for user data
-        const savedUserData = localStorage.getItem("user_data");
-        if (savedUserData) {
-          const userData = JSON.parse(savedUserData);
-          setUserProfile(userData);
-          // If we have cached user data but no Firebase user yet, create a placeholder
-          if (!user) {
-            setUser({ uid: userData.uid });
+        // First try to get user from session (fast)
+        const sessionUser = checkAuthSession();
+
+        if (sessionUser) {
+          console.log("Restored session from localStorage");
+          setUser(sessionUser);
+
+          // Get the full profile (may use cache)
+          const profile = await getUserProfile(sessionUser.uid);
+          if (profile) {
+            setUserProfile(profile);
           }
+
+          // Check premium status (uses localStorage first)
+          const premiumStatus = await checkPremiumStatus(sessionUser.uid);
+          setIsPremium(premiumStatus.isPremium);
+          if (premiumStatus.isPremium) {
+            setPremiumExpiryDate(premiumStatus.expiryDate);
+          }
+
+          setLoading(false);
+          return; // We've restored state, no need to wait for Firebase
         }
 
-        // Check premium status (this uses localStorage)
+        // Check premium status without user (for non-logged in premium users)
         const premiumStatus = await checkPremiumStatus();
         setIsPremium(premiumStatus.isPremium);
         if (premiumStatus.isPremium) {
           setPremiumExpiryDate(premiumStatus.expiryDate);
         }
+
+        setLoading(false);
       } catch (err) {
-        console.error("Error checking local data:", err);
+        console.error("Error initializing from session:", err);
+        setLoading(false);
       }
     };
 
-    // Run local data check
-    checkLocalData();
-
-    // Set up Firebase Auth listener
-    const unsubscribe = auth
-      ? onAuthStateChanged(auth, async (authUser) => {
-          try {
-            if (authUser) {
-              // User is signed in
-              setUser(authUser);
-
-              // Get user profile - first from localStorage, then Firestore if needed
-              const profile = await getUserProfile(authUser.uid);
-              if (profile) {
-                setUserProfile(profile);
-              }
-
-              // Check premium status
-              const premiumStatus = await checkPremiumStatus(authUser.uid);
-              setIsPremium(premiumStatus.isPremium);
-              if (premiumStatus.isPremium) {
-                setPremiumExpiryDate(premiumStatus.expiryDate);
-              }
-            } else {
-              // User is signed out
-              setUser(null);
-              setUserProfile(null);
-
-              // We might still have premium status from localStorage
-              const premiumStatus = await checkPremiumStatus();
-              setIsPremium(premiumStatus.isPremium);
-              if (premiumStatus.isPremium) {
-                setPremiumExpiryDate(premiumStatus.expiryDate);
-              } else {
-                setPremiumExpiryDate(null);
-              }
-            }
-          } catch (err) {
-            console.error("Error in auth state change:", err);
-            setError(err.message);
-          } finally {
-            setLoading(false);
-          }
-        })
-      : () => {
-          setLoading(false);
-        };
-
-    // Cleanup function
-    return () => {
-      if (typeof unsubscribe === "function") {
-        unsubscribe();
-      }
-    };
+    // Initialize from session immediately
+    initializeFromSession();
   }, []);
+
+  // Listen for auth state changes AFTER the initial session check
+  useEffect(() => {
+    if (!auth) {
+      return () => {}; // No Firebase, nothing to clean up
+    }
+
+    // Only set up Firebase listener if we couldn't restore from session
+    if (!user || user.isSessionUser) {
+      const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+        try {
+          if (authUser) {
+            // User is signed in with Firebase
+            setUser(authUser);
+
+            // Get user profile
+            const profile = await getUserProfile(authUser.uid);
+            if (profile) {
+              setUserProfile(profile);
+            }
+
+            // Check premium status
+            const premiumStatus = await checkPremiumStatus(authUser.uid);
+            setIsPremium(premiumStatus.isPremium);
+            if (premiumStatus.isPremium) {
+              setPremiumExpiryDate(premiumStatus.expiryDate);
+            }
+          } else if (!user || !user.isSessionUser) {
+            // Only clear user if we don't have a session user
+            setUser(null);
+            setUserProfile(null);
+
+            // We might still have premium status from localStorage
+            const premiumStatus = await checkPremiumStatus();
+            setIsPremium(premiumStatus.isPremium);
+            if (premiumStatus.isPremium) {
+              setPremiumExpiryDate(premiumStatus.expiryDate);
+            } else {
+              setPremiumExpiryDate(null);
+            }
+          }
+        } catch (err) {
+          console.error("Error in auth state change:", err);
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      // Cleanup function
+      return () => {
+        unsubscribe();
+      };
+    }
+
+    return () => {};
+  }, [user]);
 
   // Login function
   const login = async (username, password) => {
