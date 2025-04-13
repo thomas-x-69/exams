@@ -7,9 +7,10 @@ import { useAuth } from "../context/AuthContext";
 const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
   const { login, register, error, clearError, setError } = useAuth();
   const [mode, setMode] = useState(initialMode); // 'login' or 'register'
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
@@ -23,9 +24,10 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
       setFormErrors({});
     } else {
       // Reset form when modal closes
-      setEmail("");
+      setUsername("");
       setPassword("");
       setName("");
+      setPhone("");
       setConfirmPassword("");
       setIsLoading(false);
     }
@@ -52,14 +54,11 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
   const validateForm = () => {
     const errors = {};
 
-    // Validate email
-    if (!email) {
-      errors.email = "يرجى إدخال البريد الإلكتروني";
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        errors.email = "يرجى إدخال بريد إلكتروني صحيح";
-      }
+    // Validate username
+    if (!username) {
+      errors.username = "يرجى إدخال اسم المستخدم";
+    } else if (username.length < 3) {
+      errors.username = "اسم المستخدم يجب أن يكون 3 أحرف على الأقل";
     }
 
     // Validate password
@@ -74,6 +73,17 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
       // Validate name
       if (!name) {
         errors.name = "يرجى إدخال الاسم";
+      }
+
+      // Validate phone
+      if (!phone) {
+        errors.phone = "يرجى إدخال رقم الهاتف";
+      } else {
+        // Egyptian phone number validation
+        const phoneRegex = /^01[0125][0-9]{8}$/;
+        if (!phoneRegex.test(phone)) {
+          errors.phone = "يرجى إدخال رقم هاتف مصري صحيح";
+        }
       }
 
       // Validate password confirmation
@@ -105,12 +115,13 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
 
       if (mode === "login") {
         // Login flow
-        result = await login(email, password);
+        result = await login(username, password);
       } else {
         // Register flow
         result = await register({
+          username,
           name,
-          email,
+          phone,
           password,
         });
       }
@@ -244,25 +255,57 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
             </div>
           )}
 
-          {/* Email field */}
+          {/* Username field */}
           <div>
             <label className="block text-white/80 text-sm mb-1.5">
-              البريد الإلكتروني
+              اسم المستخدم
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className={`w-full bg-slate-700 border ${
-                formErrors.email ? "border-red-500" : "border-slate-600"
+                formErrors.username ? "border-red-500" : "border-slate-600"
               } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors`}
-              placeholder="example@domain.com"
+              placeholder="اسم المستخدم"
               disabled={isLoading}
             />
-            {formErrors.email && (
-              <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>
+            {formErrors.username && (
+              <p className="text-red-400 text-xs mt-1">{formErrors.username}</p>
+            )}
+            {mode === "register" && (
+              <p className="text-xs text-white/50 mt-1">
+                يجب أن يكون اسم المستخدم 3 أحرف على الأقل
+              </p>
             )}
           </div>
+
+          {/* Phone field - only for registration */}
+          {mode === "register" && (
+            <div>
+              <label className="block text-white/80 text-sm mb-1.5">
+                رقم الهاتف
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={`w-full bg-slate-700 border ${
+                    formErrors.phone ? "border-red-500" : "border-slate-600"
+                  } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors pl-16 dir-ltr text-left`}
+                  placeholder="01xxxxxxxxx"
+                  disabled={isLoading}
+                />
+                <div className="absolute left-0 top-0 h-full flex items-center px-4 text-white/60 border-r border-slate-600">
+                  +2
+                </div>
+              </div>
+              {formErrors.phone && (
+                <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>
+              )}
+            </div>
+          )}
 
           {/* Password field */}
           <div>

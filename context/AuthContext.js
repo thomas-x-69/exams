@@ -6,7 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import {
   auth,
   getUserProfile,
-  loginWithEmailAndPassword,
+  loginWithUsernameAndPassword,
   registerUser,
   updateUserProfile,
   setPremiumStatus,
@@ -131,13 +131,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     try {
       clearError();
       setLoading(true);
 
       // Call login function from firebase.js
-      const result = await loginWithEmailAndPassword(email, password);
+      const result = await loginWithUsernameAndPassword(username, password);
 
       if (result.success) {
         setUser(result.user);
