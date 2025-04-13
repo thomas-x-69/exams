@@ -1,9 +1,7 @@
 // context/ClientAuthContext.js
 "use client";
 
-// This is a wrapper component to ensure backward compatibility with existing code
-// It redirects all methods to the new AuthContext
-
+// This is a wrapper component for backward compatibility
 import { useContext, createContext } from "react";
 import { AuthProvider, useAuth } from "./AuthContext";
 
@@ -13,23 +11,18 @@ const ClientAuthContext = createContext({
   userProfile: null,
   loading: true,
   isPremium: false,
-  premiumExpiryDate: null,
   login: async () => {},
   register: async () => {},
   logout: () => {},
-  updateProfile: async () => {},
-  activatePremium: async () => {},
-  checkPremiumStatus: () => {},
 });
 
-// This provider component is a pass-through to AuthProvider
+// Provider component passes through to AuthProvider
 export const ClientAuthProvider = ({ children }) => {
   return <AuthProvider>{children}</AuthProvider>;
 };
 
 // The hook now simply uses the new useAuth hook
 export const useClientAuth = () => {
-  // Just use the new hook
   return useAuth();
 };
 

@@ -176,6 +176,7 @@ export default function RootLayout({ children }) {
         <meta name="monetag" content="80244ef307a61f906066873950e415dd"></meta>
         <meta name="msapplication-TileColor" content="#1e40af" />
       </head>
+
       <body
         className={`${cairo.className} antialiased app-container`}
         suppressHydrationWarning
