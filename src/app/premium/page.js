@@ -17,6 +17,7 @@ function PaymentParamsProcessor() {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  console.log(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
   // Process URL parameters when component mounts
   useEffect(() => {
     const status = searchParams.get("status");
