@@ -191,18 +191,6 @@ export default function RootLayout({ children }) {
         <ToastProvider>
           <ClientAuthProvider>
             <Providers>
-              {/* Top Banner Ad (320x50) - FIX #2: Added with iframe directly */}
-              <div className="sticky top-0 z-50 w-full text-center bg-slate-900/80 backdrop-blur-sm py-2 border-b border-white/10 overflow-hidden">
-                <iframe
-                  src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
-                  width="320"
-                  height="50"
-                  frameBorder="0"
-                  scrolling="no"
-                  title="Ad"
-                ></iframe>
-              </div>
-
               <div className="min-h-screen pattern-grid relative overflow-hidden pt-0">
                 {/* Background Elements */}
                 <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -236,7 +224,7 @@ export default function RootLayout({ children }) {
                 {/* Main Content with children */}
                 <main className="relative">
                   {/* Direct Link - FIX #4: Direct implementation, no changes needed */}
-                  <div className="text-center my-4">
+                  {/* <div className="text-center my-4">
                     <a
                       href="https://resolvedinsaneox.com/iuqv5gis0?key=779ef1d65c161a4272e71c070144eb6f"
                       className="inline-block px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 rounded-lg border border-blue-500/20 transition-all duration-300"
@@ -245,13 +233,13 @@ export default function RootLayout({ children }) {
                     >
                       مصادر تعليمية إضافية
                     </a>
-                  </div>
+                  </div> */}
 
                   {/* Actual page content */}
                   {children}
 
                   {/* Banner Ad #2 - FIX: Added with iframe directly */}
-                  <div className="text-center my-6 px-4">
+                  {/* <div className="text-center my-6 px-4">
                     <iframe
                       src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
                       width="320"
@@ -260,7 +248,7 @@ export default function RootLayout({ children }) {
                       scrolling="no"
                       title="Ad"
                     ></iframe>
-                  </div>
+                  </div> */}
 
                   {/* Native Banner Ad #2 - FIX: Using different container ID */}
                   <div className="my-8 py-4 max-w-4xl mx-auto px-4">
@@ -294,6 +282,17 @@ export default function RootLayout({ children }) {
                   src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
                   width="320"
                   height="50"
+                  frameBorder="0"
+                  scrolling="no"
+                  title="Ad"
+                ></iframe>
+              </div>
+              {/* Top Banner Ad (320x50) - FIX #2: Added with iframe directly */}
+              <div className="sticky top-0 z-10 w-full text-center m-auto bg-slate-900/80 backdrop-blur-sm py-2 border-b border-white/10 overflow-hidden ">
+                <iframe
+                  src="//resolvedinsaneox.com/252e3a0d8ed4072689291e0bce42bbe2/invoke.js"
+                  width="1020"
+                  height="90"
                   frameBorder="0"
                   scrolling="no"
                   title="Ad"
