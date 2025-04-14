@@ -18,6 +18,15 @@ const Header = ({ showSubjects, setShowSubjects }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const accountMenuRef = useRef(null);
+  const [isFirebaseAvailable, setIsFirebaseAvailable] = useState(true);
+
+  useEffect(() => {
+    // Check if Firebase has initialization errors
+    const firebaseError = localStorage.getItem("_firebase_init_error");
+    if (firebaseError) {
+      setIsFirebaseAvailable(false);
+    }
+  }, []);
 
   const handleAccountClick = () => {
     setShowAccountMenu(!showAccountMenu);
@@ -35,7 +44,12 @@ const Header = ({ showSubjects, setShowSubjects }) => {
   };
 
   const handleLoginClick = () => {
-    setShowLoginModal(true);
+    if (isFirebaseAvailable) {
+      setShowLoginModal(true);
+    } else {
+      // Show firebase unavailable error - this can be handled by ClientAuthContext
+      localStorage.setItem("_firebase_init_error", "true");
+    }
   };
 
   // Close menu when clicking outside
@@ -323,11 +337,18 @@ const Header = ({ showSubjects, setShowSubjects }) => {
                 <div className="relative group">
                   <button
                     onClick={handleLoginClick}
-                    className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30 border border-blue-500/30 flex items-center justify-center transition-all duration-300 shadow-md"
+                    className={`w-10 h-10 rounded-full ${
+                      !isFirebaseAvailable
+                        ? "bg-gray-600/50 cursor-not-allowed"
+                        : "bg-gradient-to-r from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30"
+                    } border border-blue-500/30 flex items-center justify-center transition-all duration-300 shadow-md`}
                     aria-label="تسجيل الدخول"
+                    disabled={!isFirebaseAvailable}
                   >
                     <svg
-                      className="w-5 h-5 text-white"
+                      className={`w-5 h-5 ${
+                        !isFirebaseAvailable ? "text-gray-400" : "text-white"
+                      }`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -342,7 +363,9 @@ const Header = ({ showSubjects, setShowSubjects }) => {
                   </button>
                   {/* Tooltip */}
                   <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -bottom-10 right-0 z-50 px-3 py-2 text-xs bg-slate-900 text-white rounded-lg whitespace-nowrap shadow-lg border border-slate-700">
-                    تسجيل الدخول
+                    {isFirebaseAvailable
+                      ? "تسجيل الدخول"
+                      : "خدمة تسجيل الدخول غير متاحة حالياً"}
                   </div>
                 </div>
               ) : (

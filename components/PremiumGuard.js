@@ -14,11 +14,43 @@ const PremiumGuard = ({ children }) => {
   const { isPremium, checkPremiumStatus, loading, userProfile } =
     useClientAuth();
   const [pageLoading, setPageLoading] = useState(true);
+  const [verificationAttempted, setVerificationAttempted] = useState(false);
+
+  useEffect(() => {
+    // Set a timeout to prevent infinite loading if Firebase fails
+    const timeoutId = setTimeout(() => {
+      if (pageLoading && !verificationAttempted) {
+        console.log(
+          "Premium verification timed out, redirecting to premium page"
+        );
+        router.replace("/premium?timeout=true");
+      }
+    }, 5000); // 5 seconds timeout
+
+    return () => clearTimeout(timeoutId);
+  }, [pageLoading, verificationAttempted, router]);
 
   useEffect(() => {
     const verifyPremiumStatus = async () => {
       try {
-        // Verify premium status from latest data
+        setVerificationAttempted(true);
+
+        // First check localStorage directly for a quick check
+        const isPremiumLocal = localStorage.getItem("premiumUser") === "true";
+        const expiryDate = localStorage.getItem("premiumExpiry");
+
+        if (isPremiumLocal && expiryDate) {
+          const now = new Date();
+          const expiry = new Date(expiryDate);
+
+          if (now < expiry) {
+            // Valid premium from localStorage - allow access
+            setPageLoading(false);
+            return;
+          }
+        }
+
+        // If not in localStorage or expired, check via the context
         const premiumStatus = await checkPremiumStatus();
 
         if (!premiumStatus.isPremium) {

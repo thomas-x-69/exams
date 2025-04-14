@@ -1,7 +1,7 @@
 // context/ClientAuthContext.js
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { useToast } from "../components/ToastNotification";
 
@@ -18,8 +18,21 @@ const ClientAuthContext = createContext({
 
 // Wrapper component that connects AuthProvider with toast notifications
 const ClientAuthWrapper = ({ children }) => {
-  const { error, success, clearError, clearSuccess } = useAuth();
+  const { error, success, clearError, clearSuccess, loading } = useAuth();
   const toast = useToast();
+  const [hasShownInitialError, setHasShownInitialError] = useState(false);
+
+  // Handle Firebase initialization errors through toasts
+  useEffect(() => {
+    // Show Firebase initialization error only once on initial load
+    if (loading === false && !hasShownInitialError) {
+      const firebaseError = localStorage.getItem("_firebase_init_error");
+      if (firebaseError) {
+        toast.showError("مشكلة في خدمات تسجيل الدخول. يرجى المحاولة لاحقاً");
+        setHasShownInitialError(true);
+      }
+    }
+  }, [loading, toast, hasShownInitialError]);
 
   // Show toast notifications for auth errors and success messages
   useEffect(() => {

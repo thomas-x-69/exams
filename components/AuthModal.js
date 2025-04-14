@@ -16,7 +16,9 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [isShaking, setIsShaking] = useState(false);
+  const [authTimeout, setAuthTimeout] = useState(false);
   const modalRef = useRef(null);
+  const timerRef = useRef(null);
 
   // Reset state when modal is opened/closed
   useEffect(() => {
@@ -25,6 +27,16 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
       clearError();
       setFormErrors({});
       setSuccessMessage("");
+      setAuthTimeout(false);
+
+      // Set a timeout to prevent hanging forever if Firebase fails
+      timerRef.current = setTimeout(() => {
+        if (isLoading) {
+          setIsLoading(false);
+          setAuthTimeout(true);
+          localStorage.setItem("_firebase_init_error", "true");
+        }
+      }, 8000); // 8 seconds timeout
     } else {
       setUsername("");
       setPassword("");
@@ -33,7 +45,19 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
       setConfirmPassword("");
       setIsLoading(false);
       setSuccessMessage("");
+      setAuthTimeout(false);
+
+      // Clear timeout on close
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
   }, [isOpen, initialMode, clearError]);
 
   // Close modal when clicking outside
@@ -105,6 +129,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
     e.preventDefault();
     clearError();
     setSuccessMessage("");
+    setAuthTimeout(false);
 
     // Validate form
     if (!validateForm()) {
@@ -128,6 +153,12 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
           phone,
           password,
         });
+      }
+
+      // Clear timeout since we got a response
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
 
       if (result.success) {
@@ -229,8 +260,39 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
           </div>
         )}
 
+        {/* Auth Timeout Error */}
+        {authTimeout && (
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/30 animate-fade-in">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30 flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-red-400 font-medium">
+                  حدث خطأ في خدمات تسجيل الدخول
+                </p>
+                <p className="text-red-400/70 text-sm">
+                  يرجى المحاولة مرة أخرى لاحقاً أو التواصل مع الدعم الفني
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Display error if any */}
-        {error && (
+        {error && !authTimeout && (
           <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/30 animate-fade-in">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30 flex-shrink-0">
@@ -293,7 +355,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
                     formErrors.name ? "border-red-500" : "border-slate-600"
                   } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors pr-10`}
                   placeholder="الاسم الكامل"
-                  disabled={isLoading || successMessage}
+                  disabled={isLoading || successMessage || authTimeout}
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
                   <svg
@@ -347,7 +409,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
                   formErrors.username ? "border-red-500" : "border-slate-600"
                 } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors pr-10`}
                 placeholder="اسم المستخدم"
-                disabled={isLoading || successMessage}
+                disabled={isLoading || successMessage || authTimeout}
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
                 <svg
@@ -402,7 +464,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
                     formErrors.phone ? "border-red-500" : "border-slate-600"
                   } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors pr-10`}
                   placeholder="01xxxxxxxxx"
-                  disabled={isLoading || successMessage}
+                  disabled={isLoading || successMessage || authTimeout}
                   maxLength={11}
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
@@ -457,7 +519,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
                   formErrors.password ? "border-red-500" : "border-slate-600"
                 } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors pr-10`}
                 placeholder="كلمة المرور"
-                disabled={isLoading || successMessage}
+                disabled={isLoading || successMessage || authTimeout}
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
                 <svg
@@ -518,7 +580,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
                       : "border-slate-600"
                   } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors pr-10`}
                   placeholder="تأكيد كلمة المرور"
-                  disabled={isLoading || successMessage}
+                  disabled={isLoading || successMessage || authTimeout}
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
                   <svg
@@ -560,7 +622,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
           {/* Submit button */}
           <button
             type="submit"
-            disabled={isLoading || successMessage}
+            disabled={isLoading || successMessage || authTimeout}
             className="w-full mt-6 bg-gradient-to-r from-blue-600/70 to-indigo-600/70 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-xl font-bold shadow-md transition-all duration-300 disabled:opacity-70 relative overflow-hidden"
           >
             {/* Button shine effect */}
@@ -592,6 +654,8 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
                 </svg>
                 <span>{successMessage}</span>
               </div>
+            ) : authTimeout ? (
+              <span>حاول مرة أخرى لاحقاً</span>
             ) : (
               <span>{mode === "login" ? "تسجيل الدخول" : "إنشاء حساب"}</span>
             )}
@@ -607,7 +671,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
                 setMode(mode === "login" ? "register" : "login");
               }}
               className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
-              disabled={isLoading || successMessage}
+              disabled={isLoading || successMessage || authTimeout}
             >
               {mode === "login"
                 ? "ليس لديك حساب؟ إنشاء حساب جديد"

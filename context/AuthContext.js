@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }) => {
   const [success, setSuccess] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [premiumExpiryDate, setPremiumExpiryDate] = useState(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Clear error
   const clearError = () => setError(null);
@@ -179,9 +180,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Handle auth initialization
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setAuthInitialized(true);
+    }
+  }, []);
+
   // Listen for auth state changes
   useEffect(() => {
-    if (!auth) return () => {};
+    if (!auth) {
+      // If auth is not available, finish loading and continue with null user
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+      return () => {};
+    }
 
     setLoading(true);
 
@@ -253,7 +267,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [authInitialized]);
 
   // Login function
   const login = async (username, password) => {
