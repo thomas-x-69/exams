@@ -151,7 +151,7 @@ export default function RootLayout({ children }) {
         <meta name="monetag" content="80244ef307a61f906066873950e415dd"></meta>
         <meta name="msapplication-TileColor" content="#1e40af" />
 
-        {/* Anti-AdBlock Popunder Script - FIX #1: Added directly as external script */}
+        {/* Anti-AdBlock Popunder Script */}
         <Script
           type="text/javascript"
           src="//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
@@ -159,7 +159,7 @@ export default function RootLayout({ children }) {
       </head>
 
       <body
-        className={`${cairo.className} antialiased app-container`}
+        className={`${cairo.className} antialiased app-container relative`}
         suppressHydrationWarning
       >
         {/* Google AdSense Script */}
@@ -187,6 +187,36 @@ export default function RootLayout({ children }) {
           }}
         />
 
+        {/* Left Side Banner Ad - Fixed position, only visible on larger screens */}
+        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-30 hidden lg:block">
+          <div className="p-1 bg-slate-800/40 backdrop-blur-sm rounded-r-lg border-t border-r border-b border-white/10">
+            <iframe
+              src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
+              width="160"
+              height="600"
+              frameBorder="0"
+              scrolling="no"
+              title="Left Side Ad"
+              className="rounded"
+            ></iframe>
+          </div>
+        </div>
+
+        {/* Right Side Banner Ad - Fixed position, only visible on larger screens */}
+        <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-30 hidden lg:block">
+          <div className="p-1 bg-slate-800/40 backdrop-blur-sm rounded-l-lg border-t border-l border-b border-white/10">
+            <iframe
+              src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
+              width="160"
+              height="600"
+              frameBorder="0"
+              scrolling="no"
+              title="Right Side Ad"
+              className="rounded"
+            ></iframe>
+          </div>
+        </div>
+
         {/* Wrap with Toast Provider, AuthProvider and Redux Provider */}
         <ToastProvider>
           <ClientAuthProvider>
@@ -209,8 +239,8 @@ export default function RootLayout({ children }) {
                   ></div>
                 </div>
 
-                {/* Native Banner Ad #1 - FIX #3: Added external script directly */}
-                <div className="mx-auto max-w-4xl px-4 mt-4 text-center">
+                {/* Native Banner Ad #1 */}
+                {/* <div className="mx-auto max-w-4xl px-4 mt-4 text-center">
                   <div className="glass-card p-4 rounded-xl border border-white/10 overflow-hidden">
                     <div id="container-8ec6bdce286a228c65ed68b05a0ddd40"></div>
                     <script
@@ -219,38 +249,14 @@ export default function RootLayout({ children }) {
                       src="//resolvedinsaneox.com/8ec6bdce286a228c65ed68b05a0ddd40/invoke.js"
                     ></script>
                   </div>
-                </div>
+                </div> */}
 
-                {/* Main Content with children */}
-                <main className="relative">
-                  {/* Direct Link - FIX #4: Direct implementation, no changes needed */}
-                  {/* <div className="text-center my-4">
-                    <a
-                      href="https://resolvedinsaneox.com/iuqv5gis0?key=779ef1d65c161a4272e71c070144eb6f"
-                      className="inline-block px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 rounded-lg border border-blue-500/20 transition-all duration-300"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      مصادر تعليمية إضافية
-                    </a>
-                  </div> */}
-
+                {/* Main Content with children - Add margin to make space for side ads on large screens */}
+                <main className="relative lg:mx-40">
                   {/* Actual page content */}
                   {children}
 
-                  {/* Banner Ad #2 - FIX: Added with iframe directly */}
-                  {/* <div className="text-center my-6 px-4">
-                    <iframe
-                      src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
-                      width="320"
-                      height="50"
-                      frameBorder="0"
-                      scrolling="no"
-                      title="Ad"
-                    ></iframe>
-                  </div> */}
-
-                  {/* Native Banner Ad #2 - FIX: Using different container ID */}
+                  {/* Native Banner Ad #2 */}
                   <div className="my-8 py-4 max-w-4xl mx-auto px-4">
                     <div className="glass-card p-4 rounded-xl border border-white/10">
                       <div id="container-8ec6bdce286a228c65ed68b05a0ddd40-2"></div>
@@ -262,7 +268,7 @@ export default function RootLayout({ children }) {
                     </div>
                   </div>
 
-                  {/* Direct Link #2 - FIX: No changes needed */}
+                  {/* Direct Link #2 */}
                   <div className="text-center mb-8">
                     <a
                       href="https://resolvedinsaneox.com/iuqv5gis0?key=779ef1d65c161a4272e71c070144eb6f"
@@ -276,7 +282,7 @@ export default function RootLayout({ children }) {
                 </main>
               </div>
 
-              {/* Banner Ad #3 - FIX: Added with iframe directly */}
+              {/* Banner Ad #3 */}
               <div className="text-center my-4 px-4">
                 <iframe
                   src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
@@ -287,8 +293,9 @@ export default function RootLayout({ children }) {
                   title="Ad"
                 ></iframe>
               </div>
-              {/* Top Banner Ad (320x50) - FIX #2: Added with iframe directly */}
-              <div className="sticky top-0 z-10 w-full text-center m-auto bg-slate-900/80 backdrop-blur-sm py-2 border-b border-white/10 overflow-hidden ">
+
+              {/* Top Banner Ad (320x50) */}
+              <div className="sticky top-0 z-10 w-full text-center m-auto bg-slate-900/80 backdrop-blur-sm py-2 border-b border-white/10 overflow-hidden">
                 <iframe
                   src="//resolvedinsaneox.com/252e3a0d8ed4072689291e0bce42bbe2/invoke.js"
                   width="1020"
@@ -304,7 +311,7 @@ export default function RootLayout({ children }) {
 
         <Footer />
 
-        {/* Social Bar Ad - FIX #5: Adding directly as external script */}
+        {/* Social Bar Ad */}
         <Script
           type="text/javascript"
           src="//resolvedinsaneox.com/50/55/cc/5055cc0e317be9a83e103b3bd187356f.js"
