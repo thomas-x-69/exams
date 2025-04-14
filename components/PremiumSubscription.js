@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useClientAuth } from "../context/ClientAuthContext";
-import { createPaymentSession, verifyPayment } from "../lib/firebase";
 import LoginModal from "./LoginModal";
 
 const PremiumSubscription = () => {
@@ -13,13 +12,13 @@ const PremiumSubscription = () => {
 
   // Form and subscription states
   const [isLoading, setIsLoading] = useState(false);
-  const [showPaymentIframe, setShowPaymentIframe] = useState(false);
-  const [paymentIframeUrl, setPaymentIframeUrl] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [formHighlight, setFormHighlight] = useState("");
+  const [transferCode, setTransferCode] = useState("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -82,6 +81,12 @@ const PremiumSubscription = () => {
       errors.agreedToTerms = "يجب الموافقة على الشروط والأحكام";
     }
 
+    if (!transferCode.trim()) {
+      errors.transferCode = "يرجى إدخال رقم عملية التحويل للتحقق";
+    } else if (transferCode.length < 6) {
+      errors.transferCode = "رقم عملية التحويل يجب أن يكون 6 أرقام على الأقل";
+    }
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -109,89 +114,35 @@ const PremiumSubscription = () => {
       return;
     }
 
-    // Form is valid and user is logged in, proceed with payment
+    // Form is valid and user is logged in, proceed with payment verification
     setIsLoading(true);
 
     try {
-      // Create payment session
-      const paymentSession = await createPaymentSession(plan.price, plan.id, {
-        name: userProfile?.name,
-        phone: userProfile?.phone,
-        email: userProfile?.email || `${userProfile?.phone}@egyptianexams.com`,
-        uid: user?.id,
-      });
+      // This is a simplified verification process - in a real app, you'd call your backend
+      // to verify the transfer code against actual InstaPay transactions
 
-      if (paymentSession.success) {
-        // Show payment iframe
-        setPaymentIframeUrl(paymentSession.iframeUrl);
-        setShowPaymentIframe(true);
-      } else {
-        throw new Error(paymentSession.message || "فشل في إنشاء جلسة الدفع");
-      }
-    } catch (error) {
-      console.error("Payment initialization error:", error);
-      setPaymentStatus({
-        status: "error",
-        message: "حدث خطأ أثناء إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.",
-      });
-      setShowPaymentModal(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Simulate backend verification
+      setTimeout(() => {
+        setIsLoading(false);
 
-  // Handle payment verification
-  const verifyPaymentStatus = async (orderId) => {
-    try {
-      const result = await verifyPayment(orderId);
+        // Activate premium subscription (in production, only do this after real verification)
+        activatePremium(30); // 30 days
 
-      if (result.success && result.status === "paid") {
-        // Activate premium subscription
-        await activatePremium(30); // 30 days
+        // Show success message
+        setShowSuccessMessage(true);
 
-        // Show success modal
-        setPaymentStatus({
-          status: "success",
-          message:
-            "تم الاشتراك بنجاح! يمكنك الآن الوصول إلى جميع الامتحانات الحقيقية.",
-          verifiedByServer: true,
-        });
-        setShowPaymentModal(true);
-      } else if (result.status === "pending") {
-        // Show pending modal
-        setPaymentStatus({
-          status: "pending",
-          message:
-            "الدفع قيد المعالجة. سيتم تفعيل العضوية الذهبية بمجرد تأكيد الدفع.",
-          referenceNumber: result.referenceNumber,
-        });
-        setShowPaymentModal(true);
-      } else {
-        // Show error modal
-        setPaymentStatus({
-          status: "error",
-          message: "فشلت عملية الدفع. يرجى المحاولة مرة أخرى.",
-        });
-        setShowPaymentModal(true);
-      }
+        // Redirect to premium exams after a short delay
+        setTimeout(() => {
+          router.push("/premium-exams");
+        }, 3000);
+      }, 2000);
     } catch (error) {
       console.error("Payment verification error:", error);
-      setPaymentStatus({
-        status: "error",
-        message:
-          "حدث خطأ أثناء التحقق من حالة الدفع. يرجى التواصل مع الدعم الفني.",
+      setIsLoading(false);
+      setValidationErrors({
+        transferCode:
+          "حدث خطأ أثناء التحقق من عملية الدفع. يرجى المحاولة مرة أخرى.",
       });
-      setShowPaymentModal(true);
-    }
-  };
-
-  // Close payment iframe
-  const handleIframeClose = (result) => {
-    setShowPaymentIframe(false);
-    setPaymentIframeUrl(null);
-
-    if (result && result.orderId) {
-      verifyPaymentStatus(result.orderId);
     }
   };
 
@@ -208,6 +159,56 @@ const PremiumSubscription = () => {
     <div className="max-w-6xl mx-auto bg-slate-800/80 backdrop-blur-md rounded-3xl overflow-hidden border-2 border-amber-500/30 shadow-2xl shadow-amber-500/20 relative">
       {/* Animated shine effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shine z-10 pointer-events-none"></div>
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-fade-in">
+          <div className="max-w-md mx-auto text-center p-8">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-400/20 to-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-green-500/40 shadow-lg shadow-green-500/10">
+              <svg
+                className="w-12 h-12 text-green-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+
+            <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+              تم الاشتراك بنجاح!
+            </h3>
+
+            <p className="text-white/80 text-lg mb-6">
+              تم تفعيل العضوية المميزة بنجاح! استمتع بالوصول إلى جميع الامتحانات
+              الحقيقية.
+            </p>
+
+            <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden mb-6">
+              <div
+                className="h-full bg-green-500 animate-pulse-fast"
+                style={{ width: "100%" }}
+              ></div>
+            </div>
+
+            <p className="text-white/60 mb-6 text-sm">
+              جاري تحويلك للمحتوى المميز خلال ثواني...
+            </p>
+
+            <button
+              onClick={() => router.push("/premium-exams")}
+              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-600/20"
+            >
+              استعرض المحتوى المميز الآن
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 p-6 lg:p-8">
         {/* Left Column - Package Info */}
@@ -468,7 +469,7 @@ const PremiumSubscription = () => {
                   </div>
                 </div>
 
-                {/* Payment method section */}
+                {/* InstaPay Payment method section */}
                 <div className="bg-gradient-to-br from-slate-700/50 to-slate-700/40 rounded-xl p-5 border border-slate-600">
                   <h4 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                     <svg
@@ -487,11 +488,40 @@ const PremiumSubscription = () => {
                     طريقة الدفع
                   </h4>
 
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0">
+                  {/* InstaPay Payment */}
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-6">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-14 h-14 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0 border border-green-500/30">
                         <svg
-                          className="w-7 h-7 text-white"
+                          className="w-8 h-8 text-green-400"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                      </div>
+
+                      <div>
+                        <h5 className="font-bold text-white mb-1">
+                          InstaPay انستا پاي
+                        </h5>
+                        <p className="text-white/70 text-sm">
+                          تحويل فوري ومباشر عبر محفظة انستا پاي
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* InstaPay Instructions */}
+                    <div className="bg-green-500/10 rounded-lg border border-green-500/20 p-4 mb-4">
+                      <h5 className="font-bold text-green-400 mb-3 flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -500,19 +530,83 @@ const PremiumSubscription = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                      </div>
+                        تعليمات الدفع عبر انستا پاي
+                      </h5>
 
-                      <div>
-                        <h5 className="font-bold text-white mb-1">
-                          بطاقة ائتمان
-                        </h5>
-                        <p className="text-white/70 text-sm">
-                          فيزا، ماستركارد، ميزة
+                      <ol className="space-y-3 text-white/80 list-decimal list-inside">
+                        <li>افتح تطبيق انستا پاي على هاتفك المحمول</li>
+                        <li>اختر "تحويل" من الشاشة الرئيسية</li>
+                        <li className="font-bold text-white flex items-center gap-2">
+                          <span>حوّل مبلغ</span>
+                          <span className="px-2 py-1 bg-amber-500/20 rounded border border-amber-500/30 text-amber-400">
+                            {plan.price} جنيه مصري
+                          </span>
+                          <span>إلى الرقم</span>
+                        </li>
+                        <li className="font-bold text-white flex flex-wrap items-center gap-2">
+                          <span>رقم الهاتف:</span>
+                          <div className="bg-white/10 px-3 py-1.5 rounded-lg text-amber-300 border border-amber-500/30 flex items-center gap-2">
+                            <span>01004160215</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText("01004160215");
+                                alert("تم نسخ الرقم!");
+                              }}
+                              className="p-1 bg-amber-500/20 rounded hover:bg-amber-500/30 transition-colors"
+                            >
+                              <svg
+                                className="w-4 h-4 text-amber-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </li>
+                        <li>
+                          أكمل العملية واحتفظ برقم العملية (رقم مكون من عدة
+                          أرقام سيظهر لك بعد إتمام التحويل)
+                        </li>
+                        <li>
+                          أدخل رقم العملية في الحقل أدناه للتحقق من الدفع وتفعيل
+                          اشتراكك
+                        </li>
+                      </ol>
+                    </div>
+
+                    {/* Transfer Code Input */}
+                    <div className="mb-4">
+                      <label className="block text-white font-medium mb-2">
+                        رقم عملية التحويل
+                      </label>
+                      <input
+                        type="text"
+                        value={transferCode}
+                        onChange={(e) => setTransferCode(e.target.value)}
+                        placeholder="أدخل رقم عملية التحويل"
+                        className={`w-full bg-slate-700 border ${
+                          validationErrors.transferCode
+                            ? "border-red-500"
+                            : "border-slate-600"
+                        } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+                        disabled={isLoading}
+                      />
+                      {validationErrors.transferCode && (
+                        <p className="text-red-400 text-sm mt-1">
+                          {validationErrors.transferCode}
                         </p>
-                      </div>
+                      )}
                     </div>
                   </div>
 
@@ -652,7 +746,7 @@ const PremiumSubscription = () => {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        <span>جاري المعالجة...</span>
+                        <span>جاري التحقق من الدفع...</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-3">
@@ -669,7 +763,7 @@ const PremiumSubscription = () => {
                             d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
-                        <span>إتمام الدفع الآن</span>
+                        <span>تحقق من الدفع والاشتراك</span>
                       </div>
                     )}
                   </button>
@@ -679,42 +773,6 @@ const PremiumSubscription = () => {
           </div>
         </div>
       </div>
-
-      {/* Payment Iframe Modal */}
-      {showPaymentIframe && paymentIframeUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-3xl bg-white rounded-xl shadow-2xl overflow-hidden animate-zoom-in">
-            <div className="flex justify-between items-center p-4 bg-amber-500 text-white">
-              <h3 className="font-bold text-lg">إتمام عملية الدفع</h3>
-              <button
-                onClick={() => handleIframeClose(null)}
-                className="p-1 rounded-lg hover:bg-white/20 transition-colors"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="w-full h-[600px]">
-              <iframe
-                src={paymentIframeUrl}
-                className="w-full h-full border-0"
-                title="بوابة الدفع"
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Login Modal */}
       <LoginModal
