@@ -184,8 +184,9 @@ export default function RootLayout({ children }) {
       >
         <Script
           type="text/javascript"
-          src="//pl26316499.profitableratecpm.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
+          src="//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
         ></Script>
+
         {/* Google AdSense Script with strategy="afterInteractive" */}
         <Script
           async
