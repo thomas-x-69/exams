@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "../../store/provider";
 import { ClientAuthProvider } from "../../context/ClientAuthContext";
+import { ToastProvider } from "../../components/ToastNotification";
 import "./globals.css";
 import Footer from "../../components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -206,32 +207,34 @@ export default function RootLayout({ children }) {
           }}
         />
 
-        {/* Wrap with both ClientAuthProvider and Redux Provider */}
-        <ClientAuthProvider>
-          <Providers>
-            <div className="min-h-screen pattern-grid relative overflow-hidden top-0 pt-0">
-              {/* Background Elements */}
-              <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 pattern-dots opacity-30"></div>
-                <div className="absolute top-0 -right-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-3xl floating"></div>
-                <div
-                  className="absolute bottom-0 -left-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-3xl floating"
-                  style={{ animationDelay: "-4s" }}
-                ></div>
-                <div
-                  className="absolute top-1/2 left-1/2 w-[1200px] h-[1200px] bg-purple-600/5 rounded-full blur-3xl floating"
-                  style={{
-                    animationDelay: "-2s",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                ></div>
-              </div>
+        {/* Wrap with Toast Provider, AuthProvider and Redux Provider */}
+        <ToastProvider>
+          <ClientAuthProvider>
+            <Providers>
+              <div className="min-h-screen pattern-grid relative overflow-hidden top-0 pt-0">
+                {/* Background Elements */}
+                <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                  <div className="absolute inset-0 pattern-dots opacity-30"></div>
+                  <div className="absolute top-0 -right-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-3xl floating"></div>
+                  <div
+                    className="absolute bottom-0 -left-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-3xl floating"
+                    style={{ animationDelay: "-4s" }}
+                  ></div>
+                  <div
+                    className="absolute top-1/2 left-1/2 w-[1200px] h-[1200px] bg-purple-600/5 rounded-full blur-3xl floating"
+                    style={{
+                      animationDelay: "-2s",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  ></div>
+                </div>
 
-              {/* Main Content with children */}
-              <main>{children}</main>
-            </div>
-          </Providers>
-        </ClientAuthProvider>
+                {/* Main Content with children */}
+                <main>{children}</main>
+              </div>
+            </Providers>
+          </ClientAuthProvider>
+        </ToastProvider>
         <Footer />
         <SpeedInsights />
         <Analytics />
