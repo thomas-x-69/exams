@@ -134,7 +134,12 @@ export default function RootLayout({ children }) {
           type="text/javascript"
           src="//pl26316499.profitableratecpm.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
         ></Script>
-
+        <Script
+          src="https://kulroakonsu.net/88/tag.min.js"
+          data-zone="142303"
+          async
+          data-cfasync="false"
+        ></Script>
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
