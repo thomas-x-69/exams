@@ -30,38 +30,14 @@ export const metadata = {
     "اختبارات مصر",
     "امتحانات مصر",
     "موقع امتحانات مصر",
-    "موقع الامتحانات المصري",
     "امتحانات التنظيم والاداره",
     "اختبارات مصرية",
     "امتحان البريد المصري",
     "امتحانات التربية",
     "نماذج امتحانات",
     "تدريب على الاختبارات",
-    "امتحانات الكترونية",
-    "اختبار التنظيم والادارة",
-    "امتحانات الوظائف الحكومية",
-    "نموذج امتحان",
-    "اختبارات التوظيف",
-    "اسئلة امتحان البريد المصري",
-    "امتحانات الحكومة",
     "امتحانات وزارة التربية",
-    "اختبارات تجريبية",
-    "التقديم للوظائف الحكومية",
-    "اختبار كفايات",
-    "كفايات سلوكية",
-    "كفايات لغوية",
-    "كفايات معرفية",
-    "كفايات تربوية",
-    "كفايات تخصص",
-    "امتحان اونلاين",
-    "امتحان تجريبي",
-    "وظائف مصر",
-    "مسابقات وظائف",
-    "نماذج امتحانات سابقة",
-    "تحميل امتحانات",
-    "حل اسئلة البريد المصري",
     "اختبارات التوظيف 2025",
-    "امتحانات تنظيم وادارة",
   ],
   authors: [
     { name: "منصة الاختبارات المصرية", url: "https://egyptianexams.com" },
@@ -130,16 +106,6 @@ export default function RootLayout({ children }) {
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         {/* Resource Hints - Preconnect to external domains */}
-        <Script
-          type="text/javascript"
-          src="//pl26316499.profitableratecpm.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
-        ></Script>
-        <Script
-          src="https://kulroakonsu.net/88/tag.min.js"
-          data-zone="142303"
-          async
-          data-cfasync="false"
-        ></Script>
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
@@ -153,6 +119,11 @@ export default function RootLayout({ children }) {
         <link
           rel="preconnect"
           href="https://pagead2.googlesyndication.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://resolvedinsaneox.com"
           crossOrigin="anonymous"
         />
 
@@ -177,22 +148,21 @@ export default function RootLayout({ children }) {
           sizes="16x16"
           href="/favicon-16x16.png"
         />
-        <link rel="manifest" href="/site.webmanifest" />
-        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
         <meta name="monetag" content="80244ef307a61f906066873950e415dd"></meta>
         <meta name="msapplication-TileColor" content="#1e40af" />
+
+        {/* Anti-AdBlock Popunder Script - FIX #1: Added directly as external script */}
+        <Script
+          type="text/javascript"
+          src="//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
+        ></Script>
       </head>
 
       <body
         className={`${cairo.className} antialiased app-container`}
         suppressHydrationWarning
       >
-        <Script
-          type="text/javascript"
-          src="//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
-        ></Script>
-
-        {/* Google AdSense Script with strategy="afterInteractive" */}
+        {/* Google AdSense Script */}
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4661333319885394"
@@ -221,7 +191,19 @@ export default function RootLayout({ children }) {
         <ToastProvider>
           <ClientAuthProvider>
             <Providers>
-              <div className="min-h-screen pattern-grid relative overflow-hidden top-0 pt-0">
+              {/* Top Banner Ad (320x50) - FIX #2: Added with iframe directly */}
+              <div className="sticky top-0 z-50 w-full text-center bg-slate-900/80 backdrop-blur-sm py-2 border-b border-white/10 overflow-hidden">
+                <iframe
+                  src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
+                  width="320"
+                  height="50"
+                  frameBorder="0"
+                  scrolling="no"
+                  title="Ad"
+                ></iframe>
+              </div>
+
+              <div className="min-h-screen pattern-grid relative overflow-hidden pt-0">
                 {/* Background Elements */}
                 <div className="fixed inset-0 pointer-events-none overflow-hidden">
                   <div className="absolute inset-0 pattern-dots opacity-30"></div>
@@ -239,13 +221,96 @@ export default function RootLayout({ children }) {
                   ></div>
                 </div>
 
+                {/* Native Banner Ad #1 - FIX #3: Added external script directly */}
+                <div className="mx-auto max-w-4xl px-4 mt-4 text-center">
+                  <div className="glass-card p-4 rounded-xl border border-white/10 overflow-hidden">
+                    <div id="container-8ec6bdce286a228c65ed68b05a0ddd40"></div>
+                    <script
+                      async="async"
+                      data-cfasync="false"
+                      src="//resolvedinsaneox.com/8ec6bdce286a228c65ed68b05a0ddd40/invoke.js"
+                    ></script>
+                  </div>
+                </div>
+
                 {/* Main Content with children */}
-                <main>{children}</main>
+                <main className="relative">
+                  {/* Direct Link - FIX #4: Direct implementation, no changes needed */}
+                  <div className="text-center my-4">
+                    <a
+                      href="https://resolvedinsaneox.com/iuqv5gis0?key=779ef1d65c161a4272e71c070144eb6f"
+                      className="inline-block px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 rounded-lg border border-blue-500/20 transition-all duration-300"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      مصادر تعليمية إضافية
+                    </a>
+                  </div>
+
+                  {/* Actual page content */}
+                  {children}
+
+                  {/* Banner Ad #2 - FIX: Added with iframe directly */}
+                  <div className="text-center my-6 px-4">
+                    <iframe
+                      src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
+                      width="320"
+                      height="50"
+                      frameBorder="0"
+                      scrolling="no"
+                      title="Ad"
+                    ></iframe>
+                  </div>
+
+                  {/* Native Banner Ad #2 - FIX: Using different container ID */}
+                  <div className="my-8 py-4 max-w-4xl mx-auto px-4">
+                    <div className="glass-card p-4 rounded-xl border border-white/10">
+                      <div id="container-8ec6bdce286a228c65ed68b05a0ddd40-2"></div>
+                      <script
+                        async="async"
+                        data-cfasync="false"
+                        src="//resolvedinsaneox.com/8ec6bdce286a228c65ed68b05a0ddd40/invoke.js"
+                      ></script>
+                    </div>
+                  </div>
+
+                  {/* Direct Link #2 - FIX: No changes needed */}
+                  <div className="text-center mb-8">
+                    <a
+                      href="https://resolvedinsaneox.com/iuqv5gis0?key=779ef1d65c161a4272e71c070144eb6f"
+                      className="inline-block px-4 py-2 bg-green-600/10 hover:bg-green-600/20 text-green-400 hover:text-green-300 rounded-lg border border-green-500/20 transition-all duration-300"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      نماذج امتحانات إضافية
+                    </a>
+                  </div>
+                </main>
+              </div>
+
+              {/* Banner Ad #3 - FIX: Added with iframe directly */}
+              <div className="text-center my-4 px-4">
+                <iframe
+                  src="//resolvedinsaneox.com/watchnew?key=6b1c05b745f1da5b03f0e410efd596d7"
+                  width="320"
+                  height="50"
+                  frameBorder="0"
+                  scrolling="no"
+                  title="Ad"
+                ></iframe>
               </div>
             </Providers>
           </ClientAuthProvider>
         </ToastProvider>
+
         <Footer />
+
+        {/* Social Bar Ad - FIX #5: Adding directly as external script */}
+        <Script
+          type="text/javascript"
+          src="//resolvedinsaneox.com/50/55/cc/5055cc0e317be9a83e103b3bd187356f.js"
+        ></Script>
+
         <SpeedInsights />
         <Analytics />
       </body>
