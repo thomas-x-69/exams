@@ -223,7 +223,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
 
                   {/* Account Menu */}
                   {showAccountMenu && (
-                    <div className="absolute top-full right-0 mt-2 w-56 rounded-xl bg-slate-800 shadow-lg border border-white/10 z-50 overflow-hidden">
+                    <div className="absolute left-0 mt-4 w-56 rounded-xl bg-slate-800 shadow-lg border border-white/10 z-50 overflow-hidden">
                       <div className="p-3 border-b border-white/10 bg-slate-700/50">
                         <div className="text-white font-medium">
                           {userProfile?.name || "المستخدم"}

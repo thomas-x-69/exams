@@ -8,6 +8,7 @@ import PremiumSubscription from "../../../components/PremiumSubscription";
 import PaymentStatusModal from "../../../components/PaymentStatusModal";
 import { useClientAuth } from "../../../context/ClientAuthContext";
 import Link from "next/link";
+import LoginModal from "../../../components/LoginModal";
 
 // Component to handle the search params logic
 function PaymentParamsProcessor() {
@@ -119,6 +120,7 @@ export default function PremiumPage() {
   const router = useRouter();
   const { user, userProfile, isPremium, loading } = useClientAuth();
   const [pageLoading, setPageLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Check premium status on initial load
   useEffect(() => {
@@ -130,6 +132,12 @@ export default function PremiumPage() {
       setPageLoading(false);
     }
   }, [isPremium, loading, router]);
+
+  // Handle login success
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // The user can continue with the subscription after login
+  };
 
   // Loading state
   if (pageLoading || loading) {
@@ -191,7 +199,7 @@ export default function PremiumPage() {
         </div>
 
         {/* Header */}
-        <div className="pt-28 pb-12 md:pt-32 md:pb-16 px-4 relative z-10">
+        <div className="pt-28 pb-12 md:pt-32 md:pb-16 px-4 sm:px-6 lg:px-8 relative z-10">
           <Header />
 
           {/* Suspense boundary for the component that uses useSearchParams */}
@@ -200,49 +208,51 @@ export default function PremiumPage() {
           </Suspense>
 
           {/* Hero Section - Enhanced with animated elements */}
-          <div className="max-w-4xl mx-auto text-center mb-6">
+          <div className="max-w-4xl mx-auto text-center mb-6 px-4">
             {/* Limited Time Offer Tag */}
             <div className="inline-block bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg mb-6">
               عرض خاص لفترة محدودة - خصم 35%
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 leading-tight block md:inline">
                 اختبارات حقيقية
               </span>{" "}
               من امتحانات السنوات السابقة
             </h1>
 
-            <p className="text-lg md:text-xl text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
               استعد للامتحانات الرسمية مع أكثر من 30 نموذج امتحان حقيقي مأخوذ من
               الاختبارات الرسمية السابقة. احصل على تجربة مماثلة تماماً للاختبار
               الفعلي لضمان أعلى درجات النجاح.
             </p>
 
             {/* Benefits Pills */}
-            <div className="flex flex-wrap gap-4 justify-center mb-8">
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-white/80 text-sm">
+            <div className="flex flex-wrap gap-2 md:gap-4 justify-center mb-8">
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-white/80 text-xs sm:text-sm">
                   نماذج امتحانات حصرية
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-                <span className="text-white/80 text-sm">
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                <span className="text-white/80 text-xs sm:text-sm">
                   تحليل مفصل للنتائج
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
-                <span className="text-white/80 text-sm">دعم فني 24/7</span>
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-purple-400 rounded-full animate-pulse"></div>
+                <span className="text-white/80 text-xs sm:text-sm">
+                  دعم فني 24/7
+                </span>
               </div>
 
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse"></div>
-                <span className="text-white/80 text-sm">
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-amber-400 rounded-full animate-pulse"></div>
+                <span className="text-white/80 text-xs sm:text-sm">
                   اشتراك شهري بدفعة واحدة
                 </span>
               </div>
@@ -250,13 +260,11 @@ export default function PremiumPage() {
           </div>
 
           {/* Premium Subscription Component - Always visible for all users */}
-          <div className="max-w-6xl mx-auto relative mt-16">
+          <div className="max-w-6xl mx-auto relative mt-10 sm:mt-16 px-4 sm:px-6 lg:px-0">
             {/* Spotlight Effect - Premium Highlight Banner */}
             <div className="absolute inset-x-0 -top-8 flex justify-center">
-              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-3 rounded-full text-white font-bold shadow-lg transform -rotate-2 z-10 text-center">
-                <span className="text-xl">
-                  أقوى باقة تدريبية للاختبارات المصرية
-                </span>
+              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-white font-bold shadow-lg transform -rotate-2 z-10 text-center text-sm sm:text-xl">
+                <span>أقوى باقة تدريبية للاختبارات المصرية</span>
               </div>
             </div>
 
@@ -267,25 +275,28 @@ export default function PremiumPage() {
 
               {/* Card Content */}
               <div className="glass-card rounded-3xl overflow-hidden backdrop-blur-xl bg-slate-900/80">
-                <div className="p-6 sm:p-10">
+                <div className="p-4 sm:p-6 md:p-10">
                   {/* Always render the PremiumSubscription component */}
-                  <PremiumSubscription userData={userProfile} />
+                  <PremiumSubscription
+                    userData={userProfile}
+                    onLoginClick={() => setShowLoginModal(true)}
+                  />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Why Choose Premium Section */}
-          <div className="max-w-5xl mx-auto mt-20 px-4 relative z-10">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+          <div className="max-w-5xl mx-auto mt-16 sm:mt-20 px-4 relative z-10">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-8">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
                   لماذا
                 </span>{" "}
                 العضوية الذهبية؟
               </h2>
 
-              <p className="text-lg text-white/70 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg text-white/70 max-w-3xl mx-auto">
                 مع العضوية الذهبية، تحصل على تجربة تدريبية متكاملة تحاكي
                 الاختبارات الرسمية بدقة عالية، مما يضمن لك الاستعداد المثالي
                 ويزيد من فرص نجاحك.
@@ -293,13 +304,12 @@ export default function PremiumPage() {
             </div>
 
             {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Feature cards (kept for brevity) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Feature 1 - Exam Icon */}
-              <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+              <div className="glass-card p-4 sm:p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
                   <svg
-                    className="w-8 h-8 text-amber-400"
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -312,20 +322,20 @@ export default function PremiumPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">
                   امتحانات حقيقية
                 </h3>
-                <p className="text-white/70">
+                <p className="text-white/70 text-sm sm:text-base">
                   نماذج حصرية من الامتحانات الرسمية السابقة مع نفس مستوى الصعوبة
                   والهيكل الدقيق للاختبارات الفعلية.
                 </p>
               </div>
 
               {/* Feature 2 - Analytics Icon */}
-              <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+              <div className="glass-card p-4 sm:p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
                   <svg
-                    className="w-8 h-8 text-amber-400"
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -338,20 +348,20 @@ export default function PremiumPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">
                   تحليل متقدم للنتائج
                 </h3>
-                <p className="text-white/70">
+                <p className="text-white/70 text-sm sm:text-base">
                   تحليل مفصل لأدائك مع توضيح نقاط القوة والضعف وتوصيات مخصصة
                   للتحسين في كل مجال من مجالات الاختبار.
                 </p>
               </div>
 
               {/* Feature 3 - Updates Icon */}
-              <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
+              <div className="glass-card p-4 sm:p-6 rounded-2xl border border-white/10 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-105">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-600/20 flex items-center justify-center mb-4">
                   <svg
-                    className="w-8 h-8 text-amber-400"
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -364,10 +374,10 @@ export default function PremiumPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">
                   تحديثات مستمرة
                 </h3>
-                <p className="text-white/70">
+                <p className="text-white/70 text-sm sm:text-base">
                   إضافة نماذج جديدة باستمرار مع كل دفعة من الاختبارات الرسمية،
                   مما يضمن حصولك على أحدث الأسئلة دائماً.
                 </p>
@@ -376,13 +386,13 @@ export default function PremiumPage() {
           </div>
 
           {/* CTA Section - Simplified */}
-          <div className="max-w-5xl mx-auto mt-16 px-4 mb-16 relative z-10">
+          <div className="max-w-5xl mx-auto mt-12 sm:mt-16 px-4 mb-12 sm:mb-16 relative z-10">
             <div className="glass-card overflow-hidden rounded-2xl border-2 border-amber-500/30 shadow-lg">
-              <div className="p-8 md:p-10 text-center relative">
+              <div className="p-6 sm:p-8 md:p-10 text-center relative">
                 {/* Background accent */}
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-yellow-500/10"></div>
 
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 relative z-10">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 relative z-10">
                   استمتع بأكثر من 30 امتحان{" "}
                   <span className="text-yellow-400">حقيقي</span> الآن!
                 </h2>
@@ -409,12 +419,12 @@ export default function PremiumPage() {
                   onClick={() =>
                     window.scrollTo({ top: 0, behavior: "smooth" })
                   }
-                  className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
                 >
                   الاشتراك في العضوية الذهبية الآن
                 </button>
 
-                <p className="text-white/60 text-sm mt-3 relative z-10">
+                <p className="text-white/60 text-xs sm:text-sm mt-3 relative z-10">
                   اشتراك شهري - دفعة واحدة - صالح لمدة شهر كامل
                 </p>
               </div>
@@ -422,6 +432,14 @@ export default function PremiumPage() {
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
+        initialMode="login"
+      />
 
       {/* Animated float effect for background elements */}
       <style jsx>{`

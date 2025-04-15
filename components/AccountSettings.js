@@ -47,12 +47,24 @@ const AccountSettings = ({ isOpen, onClose }) => {
       }
     };
 
+    const handleEscKey = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscKey);
+      // Prevent body scrolling when modal is open
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscKey);
+      // Restore body scrolling when modal is closed
+      document.body.style.overflow = "";
     };
   }, [isOpen, onClose]);
 
@@ -163,43 +175,26 @@ const AccountSettings = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
       <div
         ref={modalRef}
-        className="w-full max-w-2xl bg-slate-800 rounded-lg shadow-xl overflow-hidden transition-all duration-300 border border-amber-500/30"
+        className="w-full max-w-md sm:max-w-lg glass-effect rounded-xl overflow-hidden border border-blue-500/20 shadow-lg"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-4">
+        <div className="bg-gradient-to-r from-blue-800/30 to-blue-600/20 p-3 sm:p-4 border-b border-blue-500/20">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white mb-1">
-                  إعدادات الحساب
-                </h2>
-                <p className="text-white/80 text-sm">
-                  {userProfile?.name || "المستخدم"}
-                </p>
-              </div>
-            </div>
-
+            <h2
+              id="settings-title"
+              className="text-lg sm:text-xl font-bold text-white"
+            >
+              إعدادات الحساب
+            </h2>
             <button
               onClick={onClose}
-              className="p-2 text-white/60 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
+              className="p-1.5 text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
               aria-label="إغلاق"
             >
               <svg
@@ -207,7 +202,6 @@ const AccountSettings = ({ isOpen, onClose }) => {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -221,48 +215,59 @@ const AccountSettings = ({ isOpen, onClose }) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-700">
+        <div className="flex border-b border-slate-700 overflow-x-auto">
           <button
-            onClick={() => setActiveTab("profile")}
-            className={`py-3 px-4 font-medium text-sm border-b-2 ${
+            onClick={() => {
+              setActiveTab("profile");
+              setMessage({ type: "", text: "" });
+            }}
+            className={`flex-1 min-w-0 px-4 py-2 font-medium text-xs sm:text-sm transition-colors ${
               activeTab === "profile"
-                ? "border-amber-500 text-amber-500"
-                : "border-transparent text-white/70 hover:text-white"
+                ? "text-blue-400 border-b-2 border-blue-500 bg-blue-500/10"
+                : "text-white/70 hover:text-white hover:bg-white/5"
             }`}
+            aria-selected={activeTab === "profile" ? "true" : "false"}
+            role="tab"
           >
-            الملف الشخصي
+            <span className="whitespace-nowrap">الملف الشخصي</span>
           </button>
           <button
-            onClick={() => setActiveTab("password")}
-            className={`py-3 px-4 font-medium text-sm border-b-2 ${
+            onClick={() => {
+              setActiveTab("password");
+              setMessage({ type: "", text: "" });
+            }}
+            className={`flex-1 min-w-0 px-4 py-2 font-medium text-xs sm:text-sm transition-colors ${
               activeTab === "password"
-                ? "border-amber-500 text-amber-500"
-                : "border-transparent text-white/70 hover:text-white"
+                ? "text-blue-400 border-b-2 border-blue-500 bg-blue-500/10"
+                : "text-white/70 hover:text-white hover:bg-white/5"
             }`}
+            aria-selected={activeTab === "password" ? "true" : "false"}
+            role="tab"
           >
-            تغيير كلمة المرور
+            <span className="whitespace-nowrap">كلمة المرور</span>
           </button>
           <button
-            onClick={() => setActiveTab("subscription")}
-            className={`py-3 px-4 font-medium text-sm border-b-2 ${
+            onClick={() => {
+              setActiveTab("subscription");
+              setMessage({ type: "", text: "" });
+            }}
+            className={`flex-1 min-w-0 px-4 py-2 font-medium text-xs sm:text-sm transition-colors ${
               activeTab === "subscription"
-                ? "border-amber-500 text-amber-500"
-                : "border-transparent text-white/70 hover:text-white"
+                ? "text-amber-400 border-b-2 border-amber-500 bg-amber-500/10"
+                : "text-white/70 hover:text-white hover:bg-white/5"
             }`}
+            aria-selected={activeTab === "subscription" ? "true" : "false"}
+            role="tab"
           >
-            الاشتراك
+            <span className="whitespace-nowrap">الاشتراك</span>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4">
           {/* Profile Tab */}
           {activeTab === "profile" && (
             <div>
-              <h3 className="text-lg font-medium text-white mb-4">
-                المعلومات الشخصية
-              </h3>
-
               {message.text && activeTab === "profile" && (
                 <div
                   className={`mb-4 p-3 rounded-lg ${
@@ -270,6 +275,7 @@ const AccountSettings = ({ isOpen, onClose }) => {
                       ? "bg-green-500/20 border border-green-500/30 text-green-400"
                       : "bg-red-500/20 border border-red-500/30 text-red-400"
                   }`}
+                  role="alert"
                 >
                   <p className="text-sm">{message.text}</p>
                 </div>
@@ -277,27 +283,37 @@ const AccountSettings = ({ isOpen, onClose }) => {
 
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div>
-                  <label className="block text-white/80 text-sm mb-1">
+                  <label
+                    htmlFor="name"
+                    className="block text-white/80 text-sm mb-1 font-medium"
+                  >
                     الاسم
                   </label>
                   <input
+                    id="name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     disabled={isLoading}
+                    required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-white/80 text-sm mb-1">
+                  <label
+                    htmlFor="email"
+                    className="block text-white/80 text-sm mb-1 font-medium"
+                  >
                     البريد الإلكتروني
                   </label>
                   <input
+                    id="email"
                     type="text"
                     value={userProfile?.email || ""}
                     disabled
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white/70 cursor-not-allowed"
+                    className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-3 py-2 text-white/70 cursor-not-allowed"
+                    aria-readonly="true"
                   />
                   <p className="text-xs text-white/50 mt-1">
                     لا يمكن تغيير البريد الإلكتروني
@@ -307,9 +323,35 @@ const AccountSettings = ({ isOpen, onClose }) => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors shadow-md disabled:bg-amber-500/50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors disabled:bg-blue-600/50 disabled:cursor-not-allowed mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800"
                 >
-                  {isLoading ? "جاري الحفظ..." : "حفظ التغييرات"}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>جاري الحفظ...</span>
+                    </div>
+                  ) : (
+                    "حفظ التغييرات"
+                  )}
                 </button>
               </form>
             </div>
@@ -318,10 +360,6 @@ const AccountSettings = ({ isOpen, onClose }) => {
           {/* Password Tab */}
           {activeTab === "password" && (
             <div>
-              <h3 className="text-lg font-medium text-white mb-4">
-                تغيير كلمة المرور
-              </h3>
-
               {message.text && activeTab === "password" && (
                 <div
                   className={`mb-4 p-3 rounded-lg ${
@@ -329,6 +367,7 @@ const AccountSettings = ({ isOpen, onClose }) => {
                       ? "bg-green-500/20 border border-green-500/30 text-green-400"
                       : "bg-red-500/20 border border-red-500/30 text-red-400"
                   }`}
+                  role="alert"
                 >
                   <p className="text-sm">{message.text}</p>
                 </div>
@@ -336,38 +375,75 @@ const AccountSettings = ({ isOpen, onClose }) => {
 
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div>
-                  <label className="block text-white/80 text-sm mb-1">
+                  <label
+                    htmlFor="password"
+                    className="block text-white/80 text-sm mb-1 font-medium"
+                  >
                     كلمة المرور الجديدة
                   </label>
                   <input
+                    id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     disabled={isLoading}
+                    required
+                    minLength={6}
                   />
                   <p className="text-xs text-white/50 mt-1">على الأقل 6 أحرف</p>
                 </div>
 
                 <div>
-                  <label className="block text-white/80 text-sm mb-1">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-white/80 text-sm mb-1 font-medium"
+                  >
                     تأكيد كلمة المرور الجديدة
                   </label>
                   <input
+                    id="confirmPassword"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     disabled={isLoading}
+                    required
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors shadow-md disabled:bg-amber-500/50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors disabled:bg-blue-600/50 disabled:cursor-not-allowed mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800"
                 >
-                  {isLoading ? "جاري الحفظ..." : "تغيير كلمة المرور"}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>جاري الحفظ...</span>
+                    </div>
+                  ) : (
+                    "تغيير كلمة المرور"
+                  )}
                 </button>
               </form>
             </div>
@@ -375,54 +451,51 @@ const AccountSettings = ({ isOpen, onClose }) => {
 
           {/* Subscription Tab */}
           {activeTab === "subscription" && (
-            <div>
-              <h3 className="text-lg font-medium text-white mb-4">
-                معلومات الاشتراك
-              </h3>
-
-              <div className="bg-slate-700 rounded-lg p-4 border border-slate-600 mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/80">حالة الاشتراك:</span>
+            <div className="space-y-4">
+              <div className="bg-slate-800 rounded-lg p-3 border border-slate-700">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <span className="text-white/80 text-sm">حالة الاشتراك:</span>
                   {isPremium ? (
-                    <span className="text-green-400 bg-green-500/20 px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full text-xs font-medium">
                       مشترك
                     </span>
                   ) : (
-                    <span className="text-red-400 bg-red-500/20 px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full text-xs font-medium">
                       غير مشترك
                     </span>
                   )}
                 </div>
 
                 {isPremium && premiumInfo && (
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-white/80">
-                      تاريخ انتهاء الاشتراك:
-                    </span>
-                    <span className="text-amber-400 font-medium">
-                      {premiumInfo.expiryFormatted}
-                    </span>
-                  </div>
-                )}
-
-                {isPremium && premiumInfo?.daysRemaining !== undefined && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/80">الأيام المتبقية:</span>
-                    <span className="text-amber-400 font-medium">
-                      {premiumInfo.daysRemaining} يوم
-                    </span>
-                  </div>
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                      <span className="text-white/80 text-sm">
+                        تاريخ انتهاء الاشتراك:
+                      </span>
+                      <span className="text-amber-400 font-medium text-sm">
+                        {premiumInfo.expiryFormatted}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-white/80 text-sm">
+                        الأيام المتبقية:
+                      </span>
+                      <span className="text-amber-400 font-medium text-sm">
+                        {premiumInfo.daysRemaining} يوم
+                      </span>
+                    </div>
+                  </>
                 )}
 
                 {!isPremium && (
-                  <div className="mt-4">
+                  <div className="mt-3">
                     <p className="text-white/70 text-sm mb-3">
                       لم تقم بالاشتراك في العضوية الذهبية بعد. اشترك الآن للوصول
                       إلى جميع الامتحانات الحقيقية.
                     </p>
                     <a
                       href="/premium"
-                      className="block w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white py-2 text-center rounded-lg font-medium transition-colors shadow-md"
+                      className="block w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white py-2 text-center rounded-lg font-medium transition-colors shadow-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-slate-800"
                     >
                       اشترك الآن
                     </a>
@@ -431,11 +504,11 @@ const AccountSettings = ({ isOpen, onClose }) => {
               </div>
 
               {isPremium && (
-                <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/20">
-                  <h4 className="text-yellow-400 font-medium mb-2">
+                <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+                  <h4 className="text-amber-400 font-medium mb-2 text-sm">
                     مميزات العضوية الذهبية
                   </h4>
-                  <ul className="text-white/80 text-sm space-y-2 pr-5 list-disc">
+                  <ul className="text-white/80 text-xs space-y-1.5 pr-4 list-disc">
                     <li>
                       الوصول إلى أكثر من 30 اختباراً حقيقياً من امتحانات سابقة
                     </li>

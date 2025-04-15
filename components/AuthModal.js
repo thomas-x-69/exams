@@ -60,11 +60,13 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
     };
   }, [isOpen, initialMode, clearError]);
 
-  // Close modal when clicking outside
+  // Modified click outside behavior - does not close modal
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        onClose();
+    const handleClickOutside = (event) => {
+      // We keep the event listener but don't close the modal when clicking outside
+      // This way only the explicit close button will close the modal
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        // No action - removed onClose() call
       }
     };
 
@@ -75,7 +77,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]); // Removed onClose from dependencies
 
   // Validate form
   const validateForm = () => {
@@ -219,16 +221,38 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = "login" }) => {
         isShaking ? "animate-shake" : ""
       }`}
     >
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600/20 p-5 border-b border-white/10">
-        <h2 className="text-xl font-bold text-white">
-          {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
-        </h2>
-        <p className="text-white/70 text-sm">
-          {mode === "login"
-            ? "قم بتسجيل الدخول للوصول إلى حسابك"
-            : "سجل وانضم إلى منصة الاختبارات المصرية"}
-        </p>
+      {/* Close button - integrated in header with more visible styling */}
+      <button
+        onClick={onClose}
+        className="p-3 rounded-md left-0 absolute m-0 bg-slate-700 text-white flex items-center justify-center shadow transition-all duration-300  hover:shadow-xl"
+        aria-label="إغلاق"
+      >
+        <svg
+          className="w-7 h-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+      {/* Header with integrated close button */}
+      <div className="bg-gradient-to-r from-blue-600/20 to-indigo-800/30 p-5 border-b border-white/10 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
+          </h2>
+          <p className="text-white/70 text-sm">
+            {mode === "login"
+              ? "قم بتسجيل الدخول للوصول إلى حسابك"
+              : "سجل وانضم إلى منصة الاختبارات المصرية"}
+          </p>
+        </div>
       </div>
 
       {/* Form */}

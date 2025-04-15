@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useClientAuth } from "../context/ClientAuthContext";
 import LoginModal from "./LoginModal";
 
-const PremiumSubscription = () => {
+const PremiumSubscription = ({ onLoginClick }) => {
   const router = useRouter();
   const { user, userProfile, isPremium, activatePremium } = useClientAuth();
 
@@ -110,7 +110,11 @@ const PremiumSubscription = () => {
 
     // Check if user is logged in, if not show login modal
     if (!user) {
-      setShowLoginModal(true);
+      if (onLoginClick) {
+        onLoginClick(); // Use the provided onLoginClick from parent if available
+      } else {
+        setShowLoginModal(true); // Otherwise use internal modal
+      }
       return;
     }
 
@@ -163,10 +167,10 @@ const PremiumSubscription = () => {
       {/* Success Message */}
       {showSuccessMessage && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-fade-in">
-          <div className="max-w-md mx-auto text-center p-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-green-400/20 to-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-green-500/40 shadow-lg shadow-green-500/10">
+          <div className="max-w-md mx-auto text-center p-4 sm:p-8">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-green-400/20 to-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 border-4 border-green-500/40 shadow-lg shadow-green-500/10">
               <svg
-                className="w-12 h-12 text-green-500"
+                className="w-10 h-10 sm:w-12 sm:h-12 text-green-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -180,11 +184,11 @@ const PremiumSubscription = () => {
               </svg>
             </div>
 
-            <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3">
               تم الاشتراك بنجاح!
             </h3>
 
-            <p className="text-white/80 text-lg mb-6">
+            <p className="text-white/80 text-base sm:text-lg mb-6">
               تم تفعيل العضوية المميزة بنجاح! استمتع بالوصول إلى جميع الامتحانات
               الحقيقية.
             </p>
@@ -202,7 +206,7 @@ const PremiumSubscription = () => {
 
             <button
               onClick={() => router.push("/premium-exams")}
-              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-600/20"
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-600/20 text-sm sm:text-base"
             >
               استعرض المحتوى المميز الآن
             </button>
@@ -210,16 +214,16 @@ const PremiumSubscription = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 p-6 lg:p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
         {/* Left Column - Package Info */}
         <div className="lg:col-span-2">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 p-5 lg:p-6 h-full">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 p-4 sm:p-5 lg:p-6 h-full">
             {/* Package Title */}
             <div className="relative">
-              <span className="text-xs font-semibold bg-gradient-to-r from-amber-400 to-yellow-500 text-black px-3 py-1 rounded-full absolute -top-10 right-0">
+              <span className="text-xs font-semibold bg-gradient-to-r from-amber-400 to-yellow-500 text-black px-2 sm:px-3 py-1 rounded-full absolute -top-8 sm:-top-10 right-0">
                 عرض لفترة محدودة
               </span>
-              <h3 className="text-2xl font-bold text-white mb-2">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                 العضوية الذهبية
               </h3>
               <p className="text-white/70 text-sm mb-4">
@@ -228,13 +232,17 @@ const PremiumSubscription = () => {
             </div>
 
             {/* Price Section */}
-            <div className="mt-6 flex items-end gap-2 mb-6">
-              <div className="text-4xl font-bold text-white">{plan.price}</div>
+            <div className="mt-5 sm:mt-6 flex items-end gap-2 mb-4 sm:mb-6">
+              <div className="text-3xl sm:text-4xl font-bold text-white">
+                {plan.price}
+              </div>
               <div className="flex flex-col">
-                <span className="text-amber-400 line-through text-lg">
+                <span className="text-amber-400 line-through text-base sm:text-lg">
                   {plan.originalPrice}
                 </span>
-                <span className="text-white/80 text-sm">جنيه مصري / شهر</span>
+                <span className="text-white/80 text-xs sm:text-sm">
+                  جنيه مصري / شهر
+                </span>
               </div>
               <div className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded-lg border border-green-500/30 mr-2">
                 خصم{" "}
@@ -246,9 +254,9 @@ const PremiumSubscription = () => {
             </div>
 
             {/* Monthly Badge */}
-            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 p-2 rounded-lg border border-amber-500/30 mb-6">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 p-2 rounded-lg border border-amber-500/30 mb-4 sm:mb-6">
               <svg
-                className="w-5 h-5 text-amber-400"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -260,16 +268,16 @@ const PremiumSubscription = () => {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-amber-300 font-bold">
+              <span className="text-amber-300 font-bold text-sm sm:text-base">
                 اشتراك شهري - دفع مرة واحدة
               </span>
             </div>
 
             {/* Features List */}
             <div className="mb-6">
-              <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
                 <svg
-                  className="w-5 h-5 text-amber-400"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -283,12 +291,12 @@ const PremiumSubscription = () => {
                 </svg>
                 المميزات الحصرية
               </h4>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <li key={idx} className="flex items-start gap-2 sm:gap-3">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                       <svg
-                        className="w-4 h-4 text-amber-400"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -299,18 +307,20 @@ const PremiumSubscription = () => {
                         />
                       </svg>
                     </div>
-                    <span className="text-white/90 text-sm">{feature}</span>
+                    <span className="text-white/90 text-xs sm:text-sm">
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
             </div>
 
             {/* Secure Badges */}
-            <div className="flex justify-center items-center gap-6 mt-8">
+            <div className="flex justify-center items-center gap-4 sm:gap-6 mt-6 sm:mt-8">
               <div className="text-center">
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
                   <svg
-                    className="w-5 h-5 text-amber-400"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -327,9 +337,9 @@ const PremiumSubscription = () => {
               </div>
 
               <div className="text-center">
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
                   <svg
-                    className="w-5 h-5 text-amber-400"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -346,9 +356,9 @@ const PremiumSubscription = () => {
               </div>
 
               <div className="text-center">
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
                   <svg
-                    className="w-5 h-5 text-amber-400"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -369,10 +379,10 @@ const PremiumSubscription = () => {
 
         {/* Right Column - Payment info or Login prompt */}
         <div className="lg:col-span-3">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 p-5 lg:p-6">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 p-4 sm:p-5 lg:p-6">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
               <svg
-                className="w-5 h-5 text-amber-400"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -389,10 +399,10 @@ const PremiumSubscription = () => {
 
             {/* Login prompt for non-logged in users */}
             {!user ? (
-              <div className="text-center p-6 bg-slate-700/50 rounded-xl border border-white/10">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30">
+              <div className="text-center p-4 sm:p-6 bg-slate-700/50 rounded-xl border border-white/10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30">
                   <svg
-                    className="w-10 h-10 text-blue-500"
+                    className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -405,28 +415,28 @@ const PremiumSubscription = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">
                   قم بتسجيل الدخول للاشتراك
                 </h3>
-                <p className="text-white/70 mb-6 text-lg">
+                <p className="text-white/70 mb-4 sm:mb-6 text-sm sm:text-lg">
                   يجب تسجيل الدخول أو إنشاء حساب جديد للاستمتاع بالعضوية الذهبية
                 </p>
                 <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-blue-500/20"
+                  onClick={onLoginClick || (() => setShowLoginModal(true))}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-blue-500/20 text-sm sm:text-base"
                 >
                   تسجيل الدخول / إنشاء حساب
                 </button>
               </div>
             ) : (
               /* Payment form for logged-in users */
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* User info display when logged in */}
-                <div className="bg-slate-700/50 rounded-xl p-5 border border-slate-600">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center">
+                <div className="bg-slate-700/50 rounded-xl p-4 sm:p-5 border border-slate-600">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-600 flex items-center justify-center">
                       <svg
-                        className="w-6 h-6 text-white"
+                        className="w-5 h-5 sm:w-6 sm:h-6 text-white"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -440,18 +450,18 @@ const PremiumSubscription = () => {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-white font-medium">
+                      <h4 className="text-white font-medium text-sm sm:text-base">
                         {userProfile?.name || "المستخدم"}
                       </h4>
-                      <p className="text-white/70 text-sm">
+                      <p className="text-white/70 text-xs sm:text-sm">
                         {userProfile?.phone || ""}
                       </p>
                     </div>
                   </div>
 
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 sm:p-3 flex items-center">
                     <svg
-                      className="w-5 h-5 text-blue-400 mr-2 flex-shrink-0"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mr-2 flex-shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -463,17 +473,17 @@ const PremiumSubscription = () => {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span className="text-white/80 text-sm">
+                    <span className="text-white/80 text-xs sm:text-sm">
                       أنت مسجل الدخول، يمكنك الاستمرار لإتمام الاشتراك
                     </span>
                   </div>
                 </div>
 
                 {/* InstaPay Payment method section */}
-                <div className="bg-gradient-to-br from-slate-700/50 to-slate-700/40 rounded-xl p-5 border border-slate-600">
-                  <h4 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-slate-700/50 to-slate-700/40 rounded-xl p-4 sm:p-5 border border-slate-600">
+                  <h4 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4 flex items-center gap-2">
                     <svg
-                      className="w-5 h-5 text-amber-400"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -489,11 +499,11 @@ const PremiumSubscription = () => {
                   </h4>
 
                   {/* InstaPay Payment */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-14 h-14 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0 border border-green-500/30">
+                  <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10 mb-4 sm:mb-6">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg p-2 flex items-center justify-center shadow-md flex-shrink-0 border border-green-500/30">
                         <svg
-                          className="w-8 h-8 text-green-400"
+                          className="w-6 h-6 sm:w-8 sm:h-8 text-green-400"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -508,20 +518,20 @@ const PremiumSubscription = () => {
                       </div>
 
                       <div>
-                        <h5 className="font-bold text-white mb-1">
+                        <h5 className="font-bold text-white mb-1 text-sm sm:text-base">
                           InstaPay انستا پاي
                         </h5>
-                        <p className="text-white/70 text-sm">
+                        <p className="text-white/70 text-xs sm:text-sm">
                           تحويل فوري ومباشر عبر محفظة انستا پاي
                         </p>
                       </div>
                     </div>
 
                     {/* InstaPay Instructions */}
-                    <div className="bg-green-500/10 rounded-lg border border-green-500/20 p-4 mb-4">
-                      <h5 className="font-bold text-green-400 mb-3 flex items-center gap-2">
+                    <div className="bg-green-500/10 rounded-lg border border-green-500/20 p-3 sm:p-4 mb-4">
+                      <h5 className="font-bold text-green-400 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                         <svg
-                          className="w-5 h-5"
+                          className="w-4 h-4 sm:w-5 sm:h-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -536,19 +546,19 @@ const PremiumSubscription = () => {
                         تعليمات الدفع عبر انستا پاي
                       </h5>
 
-                      <ol className="space-y-3 text-white/80 list-decimal list-inside">
+                      <ol className="space-y-2 sm:space-y-3 text-white/80 list-decimal list-inside text-xs sm:text-sm">
                         <li>افتح تطبيق انستا پاي على هاتفك المحمول</li>
                         <li>اختر "تحويل" من الشاشة الرئيسية</li>
-                        <li className="font-bold text-white flex items-center gap-2">
+                        <li className="font-bold text-white flex flex-wrap items-center gap-2">
                           <span>حوّل مبلغ</span>
                           <span className="px-2 py-1 bg-amber-500/20 rounded border border-amber-500/30 text-amber-400">
-                            {plan.price} جنيه مصري
+                            100 جنيه مصري
                           </span>
                           <span>إلى الرقم</span>
                         </li>
                         <li className="font-bold text-white flex flex-wrap items-center gap-2">
                           <span>رقم الهاتف:</span>
-                          <div className="bg-white/10 px-3 py-1.5 rounded-lg text-amber-300 border border-amber-500/30 flex items-center gap-2">
+                          <div className="bg-white/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-amber-300 border border-amber-500/30 flex items-center gap-2">
                             <span>01004160215</span>
                             <button
                               type="button"
@@ -559,7 +569,7 @@ const PremiumSubscription = () => {
                               className="p-1 bg-amber-500/20 rounded hover:bg-amber-500/30 transition-colors"
                             >
                               <svg
-                                className="w-4 h-4 text-amber-400"
+                                className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -587,7 +597,7 @@ const PremiumSubscription = () => {
 
                     {/* Transfer Code Input */}
                     <div className="mb-4">
-                      <label className="block text-white font-medium mb-2">
+                      <label className="block text-white font-medium mb-2 text-sm sm:text-base">
                         رقم عملية التحويل
                       </label>
                       <input
@@ -599,11 +609,11 @@ const PremiumSubscription = () => {
                           validationErrors.transferCode
                             ? "border-red-500"
                             : "border-slate-600"
-                        } rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+                        } rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-white focus:outline-none focus:border-amber-500 text-sm sm:text-base`}
                         disabled={isLoading}
                       />
                       {validationErrors.transferCode && (
-                        <p className="text-red-400 text-sm mt-1">
+                        <p className="text-red-400 text-xs sm:text-sm mt-1">
                           {validationErrors.transferCode}
                         </p>
                       )}
@@ -611,29 +621,35 @@ const PremiumSubscription = () => {
                   </div>
 
                   {/* Order Summary */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-4">
-                    <h5 className="font-medium text-white mb-3">ملخص الطلب</h5>
+                  <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10 mb-4">
+                    <h5 className="font-medium text-white mb-3 text-sm sm:text-base">
+                      ملخص الطلب
+                    </h5>
 
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                        <span className="text-white/70">
+                        <span className="text-white/70 text-xs sm:text-sm">
                           العضوية الذهبية (شهرياً)
                         </span>
-                        <span className="text-white">{plan.price} جنيه</span>
+                        <span className="text-white text-xs sm:text-sm">
+                          {plan.price} جنيه
+                        </span>
                       </div>
 
                       <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                        <span className="text-white/70">الخصم</span>
-                        <span className="text-green-400">
+                        <span className="text-white/70 text-xs sm:text-sm">
+                          الخصم
+                        </span>
+                        <span className="text-green-400 text-xs sm:text-sm">
                           {plan.originalPrice - plan.price} جنيه
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center">
-                        <span className="text-white font-semibold">
+                        <span className="text-white font-semibold text-xs sm:text-sm">
                           الإجمالي (شهرياً)
                         </span>
-                        <div className="text-xl font-bold text-amber-400">
+                        <div className="text-lg sm:text-xl font-bold text-amber-400">
                           {plan.price} جنيه
                         </div>
                       </div>
@@ -641,7 +657,7 @@ const PremiumSubscription = () => {
                   </div>
 
                   {/* Terms and conditions */}
-                  <div className="mb-6">
+                  <div className="mb-4 sm:mb-6">
                     <label className="flex items-start gap-2 cursor-pointer group">
                       <input
                         type="checkbox"
@@ -651,7 +667,7 @@ const PremiumSubscription = () => {
                         className="mt-1 text-amber-500 focus:ring-amber-500"
                       />
                       <span
-                        className={`text-sm ${
+                        className={`text-xs sm:text-sm ${
                           validationErrors.agreedToTerms
                             ? "text-red-400"
                             : "text-white/80 group-hover:text-white"
@@ -681,10 +697,10 @@ const PremiumSubscription = () => {
                   </div>
 
                   {/* Security note */}
-                  <div className="bg-gradient-to-r from-amber-500/20 to-yellow-600/20 p-3 rounded-lg border border-amber-500/30 text-sm text-white/90 mb-5">
+                  <div className="bg-gradient-to-r from-amber-500/20 to-yellow-600/20 p-2.5 sm:p-3 rounded-lg border border-amber-500/30 text-xs sm:text-sm text-white/90 mb-4 sm:mb-5">
                     <div className="flex items-start gap-2">
                       <svg
-                        className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 flex-shrink-0 mt-0.5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -713,7 +729,7 @@ const PremiumSubscription = () => {
                     type="submit"
                     disabled={isLoading}
                     className={`
-                    w-full py-4 rounded-xl font-bold text-white text-lg transition-all duration-300 relative overflow-hidden
+                    w-full py-3 sm:py-4 rounded-xl font-bold text-white text-base sm:text-lg transition-all duration-300 relative overflow-hidden
                     ${
                       isLoading
                         ? "bg-gray-500 cursor-not-allowed"
@@ -727,7 +743,7 @@ const PremiumSubscription = () => {
                     {isLoading ? (
                       <div className="flex items-center justify-center gap-2">
                         <svg
-                          className="animate-spin h-5 w-5 text-white"
+                          className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -746,12 +762,14 @@ const PremiumSubscription = () => {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        <span>جاري التحقق من الدفع...</span>
+                        <span className="text-sm sm:text-base">
+                          جاري التحقق من الدفع...
+                        </span>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center gap-3">
+                      <div className="flex items-center justify-center gap-2 sm:gap-3">
                         <svg
-                          className="w-6 h-6"
+                          className="w-5 h-5 sm:w-6 sm:h-6"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -843,6 +861,20 @@ const PremiumSubscription = () => {
 
         .animate-zoom-in {
           animation: zoom-in 0.3s cubic-bezier(0.17, 0.67, 0.29, 0.99);
+        }
+
+        @keyframes pulse-fast {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.6;
+          }
+        }
+
+        .animate-pulse-fast {
+          animation: pulse-fast 1.5s ease-in-out infinite;
         }
       `}</style>
     </div>

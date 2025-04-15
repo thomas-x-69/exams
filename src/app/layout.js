@@ -188,7 +188,7 @@ export default function RootLayout({ children }) {
         />
 
         {/* Left Side Banner Ad - Fixed position, only visible on larger screens */}
-        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 z-30 hidden lg:block">
+        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 hidden lg:block z-[-100]">
           <div className="p-1 bg-slate-800/40 backdrop-blur-sm rounded-r-lg border-t border-r border-b border-white/10">
             <iframe
               src="//resolvedinsaneox.com/59f57cb5378aa0442a7174596eb991bf"
@@ -203,7 +203,7 @@ export default function RootLayout({ children }) {
         </div>
 
         {/* Right Side Banner Ad - Fixed position, only visible on larger screens */}
-        <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-30 hidden lg:block">
+        <div className="fixed right-0 top-1/2 transform -translate-y-1/2  hidden lg:block">
           <div className="p-1 bg-slate-800/40 backdrop-blur-sm rounded-l-lg border-t border-l border-b border-white/10">
             <iframe
               src="//resolvedinsaneox.com/59f57cb5378aa0442a7174596eb991bf"
@@ -257,7 +257,7 @@ export default function RootLayout({ children }) {
                   {children}
 
                   {/* Native Banner Ad #2 */}
-                  <div className="mx-auto max-w-4xl px-4 mt-4 text-center">
+                  <div className="m-auto max-w-4xl px-4 mt-4 text-center align-middle">
                     <div className="glass-card p-4 rounded-xl border border-white/10 overflow-hidden">
                       <div id="container-8ec6bdce286a228c65ed68b05a0ddd40"></div>
                       <script
@@ -294,7 +294,7 @@ export default function RootLayout({ children }) {
                 ></iframe>
               </div>
 
-              {/* Top Banner Ad (728X90) */}
+              {/*  Banner Ad (728X90) */}
               <div className="sticky top-0 z-10 w-full text-center m-auto bg-slate-900/80 backdrop-blur-sm py-2 border-b border-white/10 overflow-hidden">
                 <iframe
                   src="//resolvedinsaneox.com/252e3a0d8ed4072689291e0bce42bbe2"

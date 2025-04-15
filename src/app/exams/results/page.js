@@ -215,65 +215,7 @@ const CategoryDetail = memo(
               </div>
 
               {/* Question Performance Details */}
-              <div className="mt-2 mb-4">
-                <button
-                  onClick={() =>
-                    toggleSection(`score-details-${category.id}-${score.id}`)
-                  }
-                  className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
-                >
-                  <svg
-                    className={`w-3 h-3 transition-transform ${
-                      expanded[`score-details-${category.id}-${score.id}`]
-                        ? "rotate-180"
-                        : ""
-                    }`}
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  تفاصيل الأسئلة
-                </button>
-
-                {expanded[`score-details-${category.id}-${score.id}`] && (
-                  <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200 text-xs">
-                    <div className="flex justify-between text-gray-600 mb-2 pb-1 border-b border-gray-100">
-                      <span>
-                        عدد الأسئلة الكلي:{" "}
-                        {score.questions ||
-                          getQuestionCount(category.id, score.id.split("_")[1])}
-                      </span>
-                      <span>
-                        الإجابات الصحيحة:{" "}
-                        {Math.round(
-                          (score.score / 100) *
-                            (score.questions ||
-                              getQuestionCount(
-                                category.id,
-                                score.id.split("_")[1]
-                              ))
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-sm bg-green-500"></div>
-                        <span>الإجابات الصحيحة: {score.score}%</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-sm bg-red-500"></div>
-                        <span>الإجابات الخاطئة: {100 - score.score}%</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <div className="mt-2 mb-4"></div>
             </div>
           ))}
         </div>

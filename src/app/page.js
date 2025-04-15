@@ -226,7 +226,7 @@ const InlineHeader = () => {
 
                   {/* Account Menu */}
                   {showAccountMenu && (
-                    <div className="absolute top-full right-0 mt-2 w-56 rounded-xl bg-slate-800 shadow-lg border border-white/10 z-50 overflow-hidden">
+                    <div className="absolute left-0 mt-4 w-56 rounded-xl bg-slate-800 shadow-lg border border-white/10 z-50 overflow-hidden">
                       <div className="p-3 border-b border-white/10 bg-slate-700/50">
                         <div className="text-white font-medium">
                           {userProfile?.name || "المستخدم"}
@@ -1175,6 +1175,7 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
                       الكفايات بعدد الإجابات الصحيحة.
                     </span>
                   </li>
+
                   <li className="flex items-start gap-2">
                     <svg
                       className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
@@ -1190,27 +1191,8 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
                       />
                     </svg>
                     <span>
-                      <strong>حساب الدرجة الإجمالية:</strong> تُجمع نتائج جميع
-                      المراحل مع إعطاء وزن لكل مرحلة حسب عدد الأسئلة.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>
-                      <strong>الدرجة النهائية:</strong> تُحسب بمعادلة: (مجموع
-                      (درجة المرحلة × عدد أسئلة المرحلة)) ÷ العدد الكلي للأسئلة.
+                      <strong>الدرجة النهائية = </strong> مجموع المراحل ÷ عدد
+                      المراحل
                     </span>
                   </li>
                 </ul>
