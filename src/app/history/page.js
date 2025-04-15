@@ -680,8 +680,13 @@ export default function HistoryPage() {
                 <h4 className="text-white font-bold mb-3">تحليل إحصائي</h4>
 
                 <div className="space-y-4 flex-1">
-                  {Object.entries(selectedResult.phaseScores || {}).map(
-                    ([phaseId, score]) => {
+                  {Object.entries(selectedResult.phaseScores || {})
+                    // Filter out unwanted "language" and "knowledge" keys
+                    .filter(
+                      ([phaseId]) =>
+                        phaseId !== "language" && phaseId !== "knowledge"
+                    )
+                    .map(([phaseId, score]) => {
                       const phaseName = getPhaseDisplayName(phaseId);
                       return (
                         <div key={phaseId}>
@@ -707,8 +712,7 @@ export default function HistoryPage() {
                           </div>
                         </div>
                       );
-                    }
-                  )}
+                    })}
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-white/10">

@@ -46,7 +46,9 @@ const SkillsRadarChart = ({ phaseScores }) => {
     if (!phaseScores) return;
 
     // Prepare data for radar chart
-    const phaseEntries = Object.entries(phaseScores);
+    const phaseEntries = Object.entries(phaseScores)
+      // Filter out unwanted "language" and "knowledge" keys
+      .filter(([phaseId]) => phaseId !== "language" && phaseId !== "knowledge");
 
     // Sort alphabetically by phase name for consistent appearance
     phaseEntries.sort((a, b) =>
