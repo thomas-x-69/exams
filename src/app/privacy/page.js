@@ -3,7 +3,6 @@
 
 import React from "react";
 import Header from "../../../components/Header";
-import Footer from "../../../components/Footer";
 
 export default function PrivacyPolicy() {
   return (
@@ -42,8 +41,6 @@ export default function PrivacyPolicy() {
               <ul className="list-disc mr-6 mt-2 space-y-1">
                 <li>المعلومات الشخصية: الاسم ورقم الهاتف (اختياري).</li>
                 <li>معلومات الجلسة: مثل نتائج الاختبارات والإجابات.</li>
-                <li>معلومات تقنية: عنوان IP، نوع المتصفح، ومعلومات الجهاز.</li>
-                <li>ملفات تعريف الارتباط وتقنيات التتبع المماثلة.</li>
               </ul>
             </div>
 
@@ -57,7 +54,9 @@ export default function PrivacyPolicy() {
                 <li>حفظ نتائج الاختبارات وتقديم تحليل الأداء.</li>
                 <li>التواصل معك بشأن الاختبارات والتحديثات الجديدة.</li>
                 <li>تخصيص تجربة المستخدم وتحليل استخدام الموقع.</li>
-                <li>عرض الإعلانات المخصصة عبر خدمة Google AdSense.</li>
+                <li>
+                  عرض الإعلانات المخصصة عبر خدمات Google AdSense وAdsterra.
+                </li>
               </ul>
             </div>
 
@@ -93,24 +92,41 @@ export default function PrivacyPolicy() {
             </div>
 
             <div>
-              <h2 className="text-xl font-bold text-white mb-3">
-                Google AdSense
-              </h2>
+              <h2 className="text-xl font-bold text-white mb-3">الإعلانات</h2>
               <p>
-                نستخدم خدمة Google AdSense لعرض الإعلانات على موقعنا. تستخدم
-                Google تقنيات مثل ملفات تعريف الارتباط لجمع معلومات حول استخدامك
-                للموقع لغرض عرض إعلانات مخصصة. يمكنك الاطلاع على سياسة الخصوصية
-                الخاصة بـ Google من خلال زيارة{" "}
-                <a
-                  href="https://policies.google.com/technologies/ads"
-                  className="text-blue-400 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  سياسة إعلانات Google
-                </a>
-                .
+                نستخدم عدة خدمات إعلانية على موقعنا، بما في ذلك Google AdSense
+                وAdsterra وMonetag. تستخدم هذه الشركات تقنيات مثل ملفات تعريف
+                الارتباط وعلامات الويب للحصول على معلومات حول استخدامك للموقع
+                لغرض عرض إعلانات مخصصة. باستخدامك لموقعنا، فإنك توافق على جمع
+                واستخدام بياناتك من قبل هذه الخدمات الإعلانية وفقاً لسياسات
+                الخصوصية الخاصة بهم.
               </p>
+              <ul className="list-disc mr-6 mt-2 space-y-2">
+                <li>
+                  يمكنك الاطلاع على سياسة الخصوصية الخاصة بـ Google من خلال
+                  زيارة{" "}
+                  <a
+                    href="https://policies.google.com/technologies/ads"
+                    className="text-blue-400 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    سياسة إعلانات Google
+                  </a>
+                </li>
+                <li>
+                  يمكنك الاطلاع على سياسة الخصوصية الخاصة بـ Adsterra من خلال
+                  زيارة{" "}
+                  <a
+                    href="https://adsterra.com/privacy-policy/"
+                    className="text-blue-400 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    سياسة خصوصية Adsterra
+                  </a>
+                </li>
+              </ul>
             </div>
 
             <div>
@@ -126,7 +142,9 @@ export default function PrivacyPolicy() {
                   مع مقدمي الخدمات الذين يساعدوننا في تشغيل موقعنا وتقديم
                   خدماتنا.
                 </li>
-                <li>مع شركاء الإعلانات مثل Google AdSense.</li>
+                <li>
+                  مع شركاء الإعلانات مثل Google AdSense وAdsterra وMonetag.
+                </li>
                 <li>
                   عندما يكون ذلك مطلوبًا بموجب القانون أو للاستجابة للإجراءات
                   القانونية.
@@ -177,9 +195,37 @@ export default function PrivacyPolicy() {
                 إذا كانت لديك أي أسئلة حول سياسة الخصوصية هذه، يمكنك التواصل
                 معنا عبر:
               </p>
-              <ul className="list-disc mr-6 mt-2">
-                <li>البريد الإلكتروني: support@egyptianexams.com</li>
-              </ul>
+              <div className="mt-4 bg-blue-500/10 p-4 rounded-lg border border-blue-500/30">
+                <a
+                  href="https://t.me/Egyptian_Exams"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-blue-400"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M8.5,8.5L6.5,10.5L12,16L17.5,10.5L15.5,8.5L12,12L8.5,8.5Z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-medium text-white">
+                      مجموعة التيليجرام - منصة الاختبارات المصرية
+                    </div>
+                    <div className="text-white/60 text-sm">
+                      الطريقة المفضلة للتواصل وطلب المساعدة
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <p className="mt-3 text-white/60 text-sm">
+                نقدم الدعم والمساعدة بشكل أساسي عبر مجموعة التيليجرام الخاصة
+                بنا. انضم إلى المجموعة للتواصل مع فريق الدعم وللاستفادة من خبرات
+                المجتمع.
+              </p>
             </div>
           </div>
         </div>
