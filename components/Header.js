@@ -142,7 +142,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
               {!isPremium && !loading && (
                 <div className="relative group">
                   <Link
-                    href="/premium"
+                    href="/subscription"
                     className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl border border-amber-500/30 transition-all duration-300 flex items-center gap-2 shadow-md shadow-amber-500/10"
                     aria-label="اختبارات حقيقية"
                   >
@@ -172,7 +172,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
               {isPremium && !loading && (
                 <div className="relative group">
                   <Link
-                    href="/premium-exams"
+                    href="/subscription"
                     className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl border border-amber-500/30 transition-all duration-300 flex items-center gap-2 shadow-md shadow-amber-500/10"
                     aria-label="الامتحانات الحقيقية"
                   >
@@ -262,7 +262,7 @@ const Header = ({ showSubjects, setShowSubjects }) => {
 
                         {isPremium && (
                           <Link
-                            href="/premium-exams"
+                            href="/subscription"
                             className="w-full text-right px-3 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors flex items-center gap-2 block"
                           >
                             <svg

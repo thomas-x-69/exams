@@ -71,8 +71,8 @@ const mailPhases = [
     icon: "🧠",
     gradient: "from-blue-500/20 to-indigo-500/20",
     borderColor: "border-blue-200",
-    questions: 150,
-    time: 25, // minutes
+    questions: 180,
+    time: 45, // minutes
   },
   {
     id: "language",
@@ -93,13 +93,13 @@ const mailPhases = [
     icon: "💡",
     gradient: "from-violet-500/20 to-purple-500/20",
     borderColor: "border-violet-200",
-    questions: 40,
+    questions: 60,
     subPhases: [
-      { id: "iq", title: "اختبار الذكاء", questions: 15, time: 5 },
-      { id: "general", title: "معلومات عامة", questions: 15, time: 5 },
-      { id: "it", title: "تكنولوجيا المعلومات", questions: 10, time: 5 },
+      { id: "iq", title: "اختبار الذكاء", questions: 20, time: 10 },
+      { id: "general", title: "معلومات عامة", questions: 20, time: 10 },
+      { id: "it", title: "تكنولوجيا المعلومات", questions: 20, time: 10 },
     ],
-    time: 15, // Total time for all subphases
+    time: 30, // Total time for all subphases
   },
   {
     id: "specialization",
@@ -107,8 +107,8 @@ const mailPhases = [
     icon: "📚",
     gradient: "from-amber-500/20 to-yellow-500/20",
     borderColor: "border-amber-200",
-    questions: 30,
-    time: 15, // 15 minutes
+    questions: 40,
+    time: 25, // 15 minutes
   },
 ];
 
@@ -119,8 +119,8 @@ const educationPhases = [
     icon: "🧠",
     gradient: "from-blue-500/20 to-indigo-500/20",
     borderColor: "border-blue-200",
-    questions: 150,
-    time: 25, // minutes
+    questions: 180,
+    time: 45, // minutes
   },
   {
     id: "language",
@@ -141,13 +141,13 @@ const educationPhases = [
     icon: "💡",
     gradient: "from-violet-500/20 to-purple-500/20",
     borderColor: "border-violet-200",
-    questions: 40,
+    questions: 60,
     subPhases: [
-      { id: "iq", title: "اختبار الذكاء", questions: 15, time: 5 },
-      { id: "general", title: "معلومات عامة", questions: 15, time: 5 },
-      { id: "it", title: "تكنولوجيا المعلومات", questions: 10, time: 5 },
+      { id: "iq", title: "اختبار الذكاء", questions: 20, time: 10 },
+      { id: "general", title: "معلومات عامة", questions: 20, time: 10 },
+      { id: "it", title: "تكنولوجيا المعلومات", questions: 20, time: 10 },
     ],
-    time: 15, // Total time for all subphases
+    time: 30, // Total time for all subphases
   },
   {
     id: "education",
@@ -155,8 +155,8 @@ const educationPhases = [
     icon: "🎓",
     gradient: "from-rose-500/20 to-pink-500/20",
     borderColor: "border-rose-200",
-    questions: 30,
-    time: 15, // 15 minutes
+    questions: 40,
+    time: 20, // 15 minutes
   },
   {
     id: "specialization",
@@ -164,8 +164,8 @@ const educationPhases = [
     icon: "📚",
     gradient: "from-cyan-500/20 to-sky-500/20",
     borderColor: "border-cyan-200",
-    questions: 30,
-    time: 15, // 15 minutes
+    questions: 40,
+    time: 20, // 15 minutes
   },
 ];
 

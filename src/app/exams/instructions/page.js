@@ -14,48 +14,48 @@ const subjectInfo = {
     icon: "📬",
     gradient: "from-blue-500/20 to-indigo-500/20",
     color: "text-blue-600",
-    examTime: 60, // Total time in minutes
-    questionsCount: 40,
+    examTime: 120, // Total time in minutes
+    questionsCount: 320,
   },
   math: {
     name: "الرياضيات",
     icon: "➗",
     gradient: "from-green-500/20 to-emerald-500/20",
     color: "text-emerald-600",
-    examTime: 60, // Total time in minutes
-    questionsCount: 40,
+    examTime: 135, // Total time in minutes
+    questionsCount: 360,
   },
   english: {
     name: "اللغة الإنجليزية",
     icon: "🌎",
     gradient: "from-purple-500/20 to-violet-500/20",
     color: "text-purple-600",
-    examTime: 60, // Total time in minutes
-    questionsCount: 40,
+    examTime: 135, // Total time in minutes
+    questionsCount: 360,
   },
   science: {
     name: "العلوم",
     icon: "🔬",
     gradient: "from-rose-500/20 to-pink-500/20",
     color: "text-rose-600",
-    examTime: 60, // Total time in minutes
-    questionsCount: 40,
+    examTime: 135, // Total time in minutes
+    questionsCount: 360,
   },
   social: {
     name: "الدراسات الاجتماعية",
     icon: "📚",
     gradient: "from-amber-500/20 to-yellow-500/20",
     color: "text-amber-600",
-    examTime: 60, // Total time in minutes
-    questionsCount: 40,
+    examTime: 135, // Total time in minutes
+    questionsCount: 360,
   },
   arabic: {
     name: "اللغة العربية",
     icon: "📖",
     gradient: "from-cyan-500/20 to-sky-500/20",
     color: "text-cyan-600",
-    examTime: 60, // Total time in minutes
-    questionsCount: 40,
+    examTime: 135, // Total time in minutes
+    questionsCount: 360,
   },
 };
 

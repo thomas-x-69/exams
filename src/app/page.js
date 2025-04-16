@@ -145,7 +145,7 @@ const InlineHeader = () => {
               {!isPremium && !loading && (
                 <div className="relative group">
                   <Link
-                    href="/premium"
+                    href="/subscription"
                     className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl border border-amber-500/30 transition-all duration-300 flex items-center gap-2 shadow-md shadow-amber-500/10"
                     aria-label="اختبارات حقيقية"
                   >
@@ -175,7 +175,7 @@ const InlineHeader = () => {
               {isPremium && !loading && (
                 <div className="relative group">
                   <Link
-                    href="/premium-exams"
+                    href="/subscription"
                     className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white rounded-xl border border-amber-500/30 transition-all duration-300 flex items-center gap-2 shadow-md shadow-amber-500/10"
                     aria-label="الامتحانات الحقيقية"
                   >
@@ -265,7 +265,7 @@ const InlineHeader = () => {
 
                         {isPremium && (
                           <Link
-                            href="/premium-exams"
+                            href="/subscription"
                             className="w-full text-right px-3 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors flex items-center gap-2 block"
                           >
                             <svg
@@ -750,41 +750,10 @@ const InstructionsModal = memo(({ isOpen, onClose }) => {
                           </p>
                           <div className="flex items-center gap-4 mt-1">
                             <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              130 سؤال
+                              180 سؤال
                             </span>
                             <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              25 دقيقة
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-blue-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white/90 text-sm font-medium">
-                            كفايات وظيفية
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              50 سؤال
-                            </span>
-                            <span className="bg-white/10 px-2 py-0.5 rounded text-white/80 text-xs">
-                              15 دقيقة
+                              45 دقيقة
                             </span>
                           </div>
                         </div>
@@ -1377,8 +1346,8 @@ const subjects = [
     icon: "📬",
     desc: "اختبارات البريد المصري",
     gradient: "from-blue-600/40 to-indigo-600/40",
-    questions: 150,
-    time: 45,
+    questions: 320,
+    time: 120,
   },
   {
     id: "math",
@@ -1386,8 +1355,8 @@ const subjects = [
     icon: "➗",
     desc: "اختبارات الرياضيات",
     gradient: "from-green-600/40 to-emerald-600/40",
-    questions: 120,
-    time: 40,
+    questions: 360,
+    time: 135,
   },
   {
     id: "english",
@@ -1395,8 +1364,8 @@ const subjects = [
     icon: "🌎",
     desc: "اختبارات اللغة الإنجليزية",
     gradient: "from-purple-600/40 to-violet-600/40",
-    questions: 130,
-    time: 50,
+    questions: 360,
+    time: 135,
   },
   {
     id: "science",
@@ -1404,8 +1373,8 @@ const subjects = [
     icon: "🔬",
     desc: "اختبارات العلوم العامة",
     gradient: "from-rose-600/40 to-pink-600/40",
-    questions: 140,
-    time: 45,
+    questions: 360,
+    time: 135,
   },
   {
     id: "social",
@@ -1413,8 +1382,8 @@ const subjects = [
     icon: "📚",
     desc: "اختبارات الدراسات الاجتماعية",
     gradient: "from-amber-600/40 to-yellow-600/40",
-    questions: 125,
-    time: 40,
+    questions: 360,
+    time: 135,
   },
   {
     id: "arabic",
@@ -1422,8 +1391,8 @@ const subjects = [
     icon: "📖",
     desc: "اختبارات اللغة العربية",
     gradient: "from-cyan-600/40 to-sky-600/40",
-    questions: 135,
-    time: 45,
+    questions: 360,
+    time: 135,
   },
 ];
 
@@ -1639,7 +1608,7 @@ export default function Home() {
 
             {/* Real Exams Card - Enhanced with VIP styling & navigating directly to exams */}
             <Link
-              href="/premium-exams"
+              href="subscription"
               className="relative overflow-hidden rounded-xl group transition-all duration-300 transform hover:scale-[1.01] border-2 border-amber-500/30 shadow-lg shadow-amber-500/10"
             >
               {/* Background gradient */}
