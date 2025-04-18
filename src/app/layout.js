@@ -168,23 +168,72 @@ export default function RootLayout({ children }) {
   `}
         </Script> */}
         <Script
-          id="delayed-popunder"
+          id="screen-aware-popunder"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-      // Wait until the component is mounted on the client side
-      setTimeout(() => {
-        // After 15 seconds have passed, create the script element
-        const script = document.createElement('script');
-        script.src = '//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js';
-        script.async = true;
+      // Function to safely run client-side code
+      function setupPopunderAd() {
+        // Don't run during SSR or if document is not available
+        if (typeof window === 'undefined' || !document) return;
         
-        // Add the script to the document head to execute it
-        document.head.appendChild(script);
+        // Don't show popunders during exams
+        const isExamPage = window.location.pathname.includes('/exams/questions');
+        if (isExamPage) return;
         
-        // Optional: log to console when the ad script loads (for testing)
-        console.log('Popunder ad script loaded after 15-second delay');
-      }, 15000);  // 15000 milliseconds = 15 seconds
+        // Check if this is a small screen device
+        const isSmallScreen = window.innerWidth < 768;
+        
+        // OPTION 1: ONCE DAILY FOR SMALL SCREENS
+        // You can choose this option by setting useDailyLimit to true
+        const useDailyLimit = true;
+        
+        if (isSmallScreen) {
+          // For small screens, implement frequency capping
+          if (useDailyLimit) {
+            // ONCE DAILY APPROACH
+            const lastShown = localStorage.getItem('popunder_last_shown');
+            const now = Date.now();
+            
+            // If it's been shown in the last 24 hours, don't show again
+            if (lastShown && (now - parseInt(lastShown) < 24 * 60 * 60 * 1000)) {
+              console.log('Popunder already shown today on small screen');
+              return;
+            }
+          } else {
+            // ONCE PER PAGE APPROACH
+            // Use a variable in window to track if shown on this page
+            if (window.popunderShownOnThisPage) {
+              console.log('Popunder already shown on this page');
+              return;
+            }
+            window.popunderShownOnThisPage = true;
+          }
+        }
+        
+        // Wait 15 seconds before loading the ad for all devices
+        setTimeout(() => {
+          console.log('Loading popunder after delay');
+          
+          // Create and add the script
+          const script = document.createElement('script');
+          script.src = '//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js';
+          script.async = true;
+          document.head.appendChild(script);
+          
+          // If using daily limit on small screens, update the timestamp
+          if (isSmallScreen && useDailyLimit) {
+            localStorage.setItem('popunder_last_shown', Date.now().toString());
+          }
+        }, 15000);
+      }
+      
+      // Run the setup function when the page is ready
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setupPopunderAd();
+      } else {
+        document.addEventListener('DOMContentLoaded', setupPopunderAd);
+      }
     `,
           }}
         />

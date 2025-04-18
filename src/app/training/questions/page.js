@@ -301,7 +301,7 @@ const QuestionContent = memo(() => {
   if (loading) {
     return (
       <>
-        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28 overflow-auto mb-20">
+        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28 overflow-auto">
           <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin mb-6"></div>
           <div className="text-white text-lg font-bold">
             جاري تحميل الأسئلة...
@@ -637,7 +637,7 @@ const QuestionContent = memo(() => {
     <>
       <div className="flex flex-col min-h-screen max-h-screen pt-20">
         {/* Container with appropriate max width */}
-        <div className="w-full max-w-4xl mx-auto px-4 flex flex-col flex-1">
+        <div className="w-full max-w-4xl mx-auto px-4 flex flex-col flex-1  overflow-scroll">
           {/* Training info header */}
           <div className="glass-card border border-white/30 sticky top-20 z-20 shadow-lg mt-4">
             <div className="px-4 py-3 sm:p-4 bg-gradient-to-r from-blue-900/80 to-indigo-900/80">
@@ -966,7 +966,7 @@ export default function TrainingQuestionsPage() {
 
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">
