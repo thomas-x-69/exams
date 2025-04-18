@@ -301,7 +301,7 @@ const QuestionContent = memo(() => {
   if (loading) {
     return (
       <>
-        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28 overflow-scroll">
+        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28 overflow-auto mb-20">
           <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin mb-6"></div>
           <div className="text-white text-lg font-bold">
             جاري تحميل الأسئلة...
@@ -735,7 +735,7 @@ const QuestionContent = memo(() => {
             />
           </div>
 
-          {/* Scrollable content area */}
+          {/* Scrollable content area - THIS IS THE KEY RESPONSIVE FIX */}
           <div className="flex-1 p-2 sm:p-4 overflow-auto" ref={contentRef}>
             {/* Question progress and navigation */}
             <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6 ">
@@ -756,8 +756,8 @@ const QuestionContent = memo(() => {
                     </div>
                   </div>
 
-                  {/* Progress navigation buttons */}
-                  <div className="overflow-auto pb-2 sm:pb-0 flex justify-center sm:justify-start">
+                  {/* Progress navigation buttons - IMPROVED SCROLLING */}
+                  <div className="overflow-x-auto pb-2 sm:pb-0 flex justify-center sm:justify-start">
                     <ProgressIndicator
                       currentQuestion={currentQuestionIndex}
                       totalQuestions={questions.length}
@@ -769,10 +769,10 @@ const QuestionContent = memo(() => {
               </div>
             </div>
 
-            {/* Question card */}
+            {/* Question card - IMPROVED WITH PROPER OVERFLOW */}
             <div
               ref={questionCardRef}
-              className={`relative overflow-auto transition-all duration-300 ease-out ${
+              className={`relative transition-all duration-300 ease-out ${
                 isTransitioning
                   ? direction === "next"
                     ? "opacity-0 transform -translate-y-4"
@@ -780,7 +780,7 @@ const QuestionContent = memo(() => {
                   : "opacity-100 transform translate-y-0"
               }`}
             >
-              <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6 overflow-auto ">
+              <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6">
                 <div className="p-3 sm:p-5 border-b border-white/20 bg-gradient-to-r from-blue-900/50 to-indigo-900/50">
                   <div className="flex items-start sm:items-center gap-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/30">
@@ -855,7 +855,7 @@ const QuestionContent = memo(() => {
             </div>
           </div>
 
-          {/* Fixed footer with navigation buttons */}
+          {/* Fixed footer with navigation buttons - RESPONSIVE IMPROVEMENTS */}
           <div className="glass-card border-t border-white/30 p-3 sm:p-4 shadow-lg flex justify-between mb-4">
             <button
               onClick={handlePreviousQuestion}
@@ -879,15 +879,19 @@ const QuestionContent = memo(() => {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              السؤال السابق
+              <span className="hidden xs:inline">السؤال السابق</span>
+              <span className="inline xs:hidden">السابق</span>
             </button>
 
             {showCompleteButton ? (
               <button
                 onClick={handleComplete}
-                className="px-4 py-2 sm:px-6 sm:py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 text-xs sm:text-sm border border-green-500/50"
+                className="px-3 py-2 sm:px-6 sm:py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 text-xs sm:text-sm border border-green-500/50"
               >
-                إنهاء التدريب وعرض النتائج
+                <span className="hidden xs:inline">
+                  إنهاء التدريب وعرض النتائج
+                </span>
+                <span className="inline xs:hidden">عرض النتائج</span>
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
@@ -910,7 +914,7 @@ const QuestionContent = memo(() => {
                   isTransitioning ||
                   currentQuestionIndex === questions.length - 1
                 }
-                className={`px-4 py-2 sm:px-6 sm:py-2 rounded-xl transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
+                className={`px-3 py-2 sm:px-6 sm:py-2 rounded-xl transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
                   !isAnswered ||
                   isTransitioning ||
                   currentQuestionIndex === questions.length - 1
@@ -918,7 +922,8 @@ const QuestionContent = memo(() => {
                     : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg border border-blue-500/50"
                 }`}
               >
-                السؤال التالي
+                <span className="hidden xs:inline">السؤال التالي</span>
+                <span className="inline xs:hidden">التالي</span>
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"

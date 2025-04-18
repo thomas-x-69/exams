@@ -156,7 +156,7 @@ export default function RootLayout({ children }) {
           type="text/javascript"
           src="//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
         ></Script> */}
-        <Script>
+        {/* <Script>
           {`
     // Only load popunder after user has been on the site for 30 seconds
     setTimeout(() => {
@@ -166,7 +166,28 @@ export default function RootLayout({ children }) {
       document.head.appendChild(script);
     }, 10000);  // 0 seconds
   `}
-        </Script>
+        </Script> */}
+        <Script
+          id="delayed-popunder"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+      // Wait until the component is mounted on the client side
+      setTimeout(() => {
+        // After 15 seconds have passed, create the script element
+        const script = document.createElement('script');
+        script.src = '//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js';
+        script.async = true;
+        
+        // Add the script to the document head to execute it
+        document.head.appendChild(script);
+        
+        // Optional: log to console when the ad script loads (for testing)
+        console.log('Popunder ad script loaded after 15-second delay');
+      }, 15000);  // 15000 milliseconds = 15 seconds
+    `,
+          }}
+        />
       </head>
 
       <body
