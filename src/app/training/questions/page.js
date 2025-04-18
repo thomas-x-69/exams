@@ -301,7 +301,7 @@ const QuestionContent = memo(() => {
   if (loading) {
     return (
       <>
-        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28">
+        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28 overflow-scroll">
           <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin mb-6"></div>
           <div className="text-white text-lg font-bold">
             جاري تحميل الأسئلة...
