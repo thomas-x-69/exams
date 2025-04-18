@@ -1,10 +1,10 @@
 // src/app/training/results/page.js
 "use client";
 
-import { useState, useEffect, memo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect, memo, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-// import Header from "../../../components/Header";
+import Header from "../../../../components/Header";
 
 // Memoized score card component
 const ScoreCard = memo(({ score, label, icon, gradient }) => (
@@ -68,11 +68,12 @@ const SuggestionCard = memo(({ title, description, icon, gradient }) => (
   </div>
 ));
 
-// Main training results component
-export default function TrainingResultsPage() {
-  const router = useRouter();
+// This component will use useSearchParams and must be wrapped in Suspense
+const ResultsContent = memo(() => {
+  // Import useSearchParams inside the component that's wrapped in Suspense
+  const { useSearchParams } = require("next/navigation");
   const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
   const [selectedView, setSelectedView] = useState("summary");
 
   // Get parameters from URL
@@ -84,35 +85,18 @@ export default function TrainingResultsPage() {
   const correct = parseInt(searchParams.get("correct") || "0");
   const incorrect = total - correct;
 
-  // Set mounted state after hydration
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Don't render during SSR to prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   // If parameters are missing, redirect to training page
   if (!subject || !phase || !name) {
     return (
-      <>
-        {/* <Header /> */}
-        <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-24 lg:mx-40">
-          <div className="text-white mb-4">بيانات نتائج التدريب غير مكتملة</div>
-          <Link
-            href="/training"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg border border-blue-500/50"
-          >
-            العودة لصفحة التدريب
-          </Link>
-        </div>
-      </>
+      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-24 lg:mx-40">
+        <div className="text-white mb-4">بيانات نتائج التدريب غير مكتملة</div>
+        <Link
+          href="/training"
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg border border-blue-500/50"
+        >
+          العودة لصفحة التدريب
+        </Link>
+      </div>
     );
   }
 
@@ -282,303 +266,332 @@ export default function TrainingResultsPage() {
   };
 
   return (
-    <>
-      {/* <Header /> */}
-      <div className="max-w-4xl mx-auto px-4 pt-24 pb-12 lg:mx-40">
-        {/* Header with overall result */}
-        <div className="glass-card overflow-hidden mb-8 border border-white/30">
-          <div className="p-6 bg-gradient-to-r from-blue-900/60 to-indigo-900/60">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center border border-white/30">
-                <span className="text-2xl text-white">🏋️‍♂️</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">نتائج التدريب</h1>
-                <p className="text-white/90">
-                  {getSubjectName()} - {getPhaseName()}
-                </p>
-              </div>
+    <div className="max-w-4xl mx-auto px-4 pt-24 pb-12 lg:mx-40">
+      {/* Header with overall result */}
+      <div className="glass-card overflow-hidden mb-8 border border-white/30">
+        <div className="p-6 bg-gradient-to-r from-blue-900/60 to-indigo-900/60">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center border border-white/30">
+              <span className="text-2xl text-white">🏋️‍♂️</span>
             </div>
-
-            <div className="flex flex-wrap md:flex-nowrap gap-4 mt-6">
-              {/* Score badge */}
-              <div className="w-full md:w-1/3">
-                <div className="bg-white/10 rounded-xl p-4 border border-white/30 text-center">
-                  <div className="mb-2 text-white/90 text-sm">
-                    النتيجة النهائية
-                  </div>
-                  <div
-                    className={`inline-block ${getBadgeColor()} text-white text-4xl font-bold px-4 py-2 rounded-lg border border-white/30`}
-                  >
-                    {score}%
-                  </div>
-                  <div className="mt-2 text-white/90 text-sm">
-                    {correct} صحيحة من {total} سؤال
-                  </div>
-                </div>
-              </div>
-
-              {/* User info and feedback */}
-              <div className="w-full md:w-2/3">
-                <div className="bg-white/10 rounded-xl p-4 border border-white/30 h-full">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white text-xl border border-white/30">
-                      {feedback.icon}
-                    </div>
-                    <div>
-                      <div className="font-bold text-white mb-1">{name}</div>
-                      <h3 className="text-lg font-bold text-white mb-2">
-                        {feedback.title}
-                      </h3>
-                      <p className="text-white/90">{feedback.description}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">نتائج التدريب</h1>
+              <p className="text-white/90">
+                {getSubjectName()} - {getPhaseName()}
+              </p>
             </div>
           </div>
 
-          {/* View tabs */}
-          <div className="flex border-t border-white/20">
-            <button
-              onClick={() => setSelectedView("summary")}
-              className={`flex-1 py-3 text-center transition-colors ${
-                selectedView === "summary"
-                  ? "bg-white/10 text-white font-medium"
-                  : "text-white/70 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              ملخص النتائج
-            </button>
-            <button
-              onClick={() => setSelectedView("recommendations")}
-              className={`flex-1 py-3 text-center transition-colors ${
-                selectedView === "recommendations"
-                  ? "bg-white/10 text-white font-medium"
-                  : "text-white/70 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              التوصيات والنصائح
-            </button>
+          <div className="flex flex-wrap md:flex-nowrap gap-4 mt-6">
+            {/* Score badge */}
+            <div className="w-full md:w-1/3">
+              <div className="bg-white/10 rounded-xl p-4 border border-white/30 text-center">
+                <div className="mb-2 text-white/90 text-sm">
+                  النتيجة النهائية
+                </div>
+                <div
+                  className={`inline-block ${getBadgeColor()} text-white text-4xl font-bold px-4 py-2 rounded-lg border border-white/30`}
+                >
+                  {score}%
+                </div>
+                <div className="mt-2 text-white/90 text-sm">
+                  {correct} صحيحة من {total} سؤال
+                </div>
+              </div>
+            </div>
+
+            {/* User info and feedback */}
+            <div className="w-full md:w-2/3">
+              <div className="bg-white/10 rounded-xl p-4 border border-white/30 h-full">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white text-xl border border-white/30">
+                    {feedback.icon}
+                  </div>
+                  <div>
+                    <div className="font-bold text-white mb-1">{name}</div>
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      {feedback.title}
+                    </h3>
+                    <p className="text-white/90">{feedback.description}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Main content based on selected view */}
-        {selectedView === "summary" ? (
-          <div className="glass-card p-6 border border-white/30">
-            <h2 className="text-xl font-bold text-white mb-6">
-              تفاصيل نتائج التدريب
-            </h2>
-
-            {/* Score metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <ScoreCard
-                score={score}
-                label="الدرجة الكلية"
-                icon="🎯"
-                gradient="bg-gradient-to-br from-blue-600/40 to-indigo-600/40"
-              />
-              <ScoreCard
-                score={Math.round((correct / total) * 100)}
-                label="الإجابات الصحيحة"
-                icon="✅"
-                gradient="bg-gradient-to-br from-green-600/40 to-emerald-600/40"
-              />
-              <ScoreCard
-                score={Math.round((incorrect / total) * 100)}
-                label="الإجابات الخاطئة"
-                icon="❌"
-                gradient="bg-gradient-to-br from-red-600/40 to-rose-600/40"
-              />
-            </div>
-
-            {/* Performance bars */}
-            <div className="bg-white/10 rounded-xl p-4 border border-white/30 mb-8">
-              <h3 className="text-lg font-bold text-white mb-4">
-                تحليل الأداء
-              </h3>
-              <PerformanceBar
-                percentage={Math.round((correct / total) * 100)}
-                label="نسبة الإجابات الصحيحة"
-                color="bg-green-500"
-              />
-            </div>
-
-            {/* Quick tips */}
-            <div className="bg-white/10 rounded-xl p-4 border border-white/30">
-              <h3 className="text-lg font-bold text-white mb-4">
-                نصائح سريعة للتحسين
-              </h3>
-              <ul className="space-y-2 text-white/90">
-                <li className="flex items-start gap-2">
-                  <svg
-                    className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span>تدرب على أسئلة مشابهة بشكل منتظم لتحسين مستواك</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg
-                    className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span>راجع المفاهيم الأساسية المتعلقة بهذه المرحلة</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg
-                    className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span>
-                    جرب الاختبار الكامل لقياس مستواك العام في كافة المراحل
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        ) : (
-          <div className="glass-card p-6 border border-white/30">
-            <h2 className="text-xl font-bold text-white mb-6">
-              التوصيات والنصائح
-            </h2>
-
-            {/* Recommendations */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              {recommendations.map((recommendation, index) => (
-                <SuggestionCard
-                  key={index}
-                  title={recommendation.title}
-                  description={recommendation.description}
-                  icon={recommendation.icon}
-                  gradient={recommendation.gradient}
-                />
-              ))}
-            </div>
-
-            {/* Additional resources */}
-            <div className="bg-white/10 rounded-xl p-4 border border-white/30">
-              <h3 className="text-lg font-bold text-white mb-4">
-                موارد إضافية للتحسين
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white/20 rounded-lg p-4 flex items-center gap-3 border border-white/30">
-                  <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center border border-blue-400/50">
-                    <svg
-                      className="w-5 h-5 text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <Link
-                      href="/pdfs"
-                      className="font-bold text-white hover:text-blue-300 transition-colors"
-                    >
-                      تحميل نماذج أسئلة
-                    </Link>
-                    <p className="text-white/90 text-sm">
-                      نماذج اختبارات سابقة للتدريب
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-white/20 rounded-lg p-4 flex items-center gap-3 border border-white/30">
-                  <div className="w-10 h-10 rounded-full bg-green-500/30 flex items-center justify-center border border-green-400/50">
-                    <svg
-                      className="w-5 h-5 text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <Link
-                      href="/"
-                      className="font-bold text-white hover:text-green-300 transition-colors"
-                    >
-                      اختبار كامل
-                    </Link>
-                    <p className="text-white/90 text-sm">
-                      خوض اختبار كامل بجميع المراحل
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap gap-4 justify-center mt-8">
-          <Link
-            href={`/training/questions?subject=${subject}&phase=${phase}&name=${encodeURIComponent(
-              name
-            )}`}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg hover:shadow-xl border border-blue-500/50"
+        {/* View tabs */}
+        <div className="flex border-t border-white/20">
+          <button
+            onClick={() => setSelectedView("summary")}
+            className={`flex-1 py-3 text-center transition-colors ${
+              selectedView === "summary"
+                ? "bg-white/10 text-white font-medium"
+                : "text-white/70 hover:text-white hover:bg-white/5"
+            }`}
           >
-            إعادة التدريب
-          </Link>
-          <Link
-            href="/training"
-            className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-lg transition-colors"
+            ملخص النتائج
+          </button>
+          <button
+            onClick={() => setSelectedView("recommendations")}
+            className={`flex-1 py-3 text-center transition-colors ${
+              selectedView === "recommendations"
+                ? "bg-white/10 text-white font-medium"
+                : "text-white/70 hover:text-white hover:bg-white/5"
+            }`}
           >
-            العودة لصفحة التدريب
-          </Link>
-          <Link
-            href="/"
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border border-white/20 rounded-lg transition-colors"
-          >
-            الصفحة الرئيسية
-          </Link>
+            التوصيات والنصائح
+          </button>
         </div>
       </div>
+
+      {/* Main content based on selected view */}
+      {selectedView === "summary" ? (
+        <div className="glass-card p-6 border border-white/30">
+          <h2 className="text-xl font-bold text-white mb-6">
+            تفاصيل نتائج التدريب
+          </h2>
+
+          {/* Score metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <ScoreCard
+              score={score}
+              label="الدرجة الكلية"
+              icon="🎯"
+              gradient="bg-gradient-to-br from-blue-600/40 to-indigo-600/40"
+            />
+            <ScoreCard
+              score={Math.round((correct / total) * 100)}
+              label="الإجابات الصحيحة"
+              icon="✅"
+              gradient="bg-gradient-to-br from-green-600/40 to-emerald-600/40"
+            />
+            <ScoreCard
+              score={Math.round((incorrect / total) * 100)}
+              label="الإجابات الخاطئة"
+              icon="❌"
+              gradient="bg-gradient-to-br from-red-600/40 to-rose-600/40"
+            />
+          </div>
+
+          {/* Performance bars */}
+          <div className="bg-white/10 rounded-xl p-4 border border-white/30 mb-8">
+            <h3 className="text-lg font-bold text-white mb-4">تحليل الأداء</h3>
+            <PerformanceBar
+              percentage={Math.round((correct / total) * 100)}
+              label="نسبة الإجابات الصحيحة"
+              color="bg-green-500"
+            />
+          </div>
+
+          {/* Quick tips */}
+          <div className="bg-white/10 rounded-xl p-4 border border-white/30">
+            <h3 className="text-lg font-bold text-white mb-4">
+              نصائح سريعة للتحسين
+            </h3>
+            <ul className="space-y-2 text-white/90">
+              <li className="flex items-start gap-2">
+                <svg
+                  className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>تدرب على أسئلة مشابهة بشكل منتظم لتحسين مستواك</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <svg
+                  className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>راجع المفاهيم الأساسية المتعلقة بهذه المرحلة</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <svg
+                  className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>
+                  جرب الاختبار الكامل لقياس مستواك العام في كافة المراحل
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <div className="glass-card p-6 border border-white/30">
+          <h2 className="text-xl font-bold text-white mb-6">
+            التوصيات والنصائح
+          </h2>
+
+          {/* Recommendations */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {recommendations.map((recommendation, index) => (
+              <SuggestionCard
+                key={index}
+                title={recommendation.title}
+                description={recommendation.description}
+                icon={recommendation.icon}
+                gradient={recommendation.gradient}
+              />
+            ))}
+          </div>
+
+          {/* Additional resources */}
+          <div className="bg-white/10 rounded-xl p-4 border border-white/30">
+            <h3 className="text-lg font-bold text-white mb-4">
+              موارد إضافية للتحسين
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white/20 rounded-lg p-4 flex items-center gap-3 border border-white/30">
+                <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center border border-blue-400/50">
+                  <svg
+                    className="w-5 h-5 text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <Link
+                    href="/pdfs"
+                    className="font-bold text-white hover:text-blue-300 transition-colors"
+                  >
+                    تحميل نماذج أسئلة
+                  </Link>
+                  <p className="text-white/90 text-sm">
+                    نماذج اختبارات سابقة للتدريب
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white/20 rounded-lg p-4 flex items-center gap-3 border border-white/30">
+                <div className="w-10 h-10 rounded-full bg-green-500/30 flex items-center justify-center border border-green-400/50">
+                  <svg
+                    className="w-5 h-5 text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <Link
+                    href="/"
+                    className="font-bold text-white hover:text-green-300 transition-colors"
+                  >
+                    اختبار كامل
+                  </Link>
+                  <p className="text-white/90 text-sm">
+                    خوض اختبار كامل بجميع المراحل
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex flex-wrap gap-4 justify-center mt-8">
+        <Link
+          href={`/training/questions?subject=${subject}&phase=${phase}&name=${encodeURIComponent(
+            name
+          )}`}
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg hover:shadow-xl border border-blue-500/50"
+        >
+          إعادة التدريب
+        </Link>
+        <Link
+          href="/training"
+          className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-lg transition-colors"
+        >
+          العودة لصفحة التدريب
+        </Link>
+        <Link
+          href="/"
+          className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border border-white/20 rounded-lg transition-colors"
+        >
+          الصفحة الرئيسية
+        </Link>
+      </div>
+    </div>
+  );
+});
+
+// Main training results component
+export default function TrainingResultsPage() {
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Header />
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+          </div>
+        }
+      >
+        <ResultsContent />
+      </Suspense>
     </>
   );
 }

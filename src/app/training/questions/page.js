@@ -736,7 +736,7 @@ const QuestionContent = memo(() => {
           </div>
 
           {/* Scrollable content area */}
-          <div className="flex-1 p-2 sm:p-4" ref={contentRef}>
+          <div className="flex-1 p-2 sm:p-4 overflow-auto" ref={contentRef}>
             {/* Question progress and navigation */}
             <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6 ">
               <div className="p-3 sm:p-4">
@@ -757,7 +757,7 @@ const QuestionContent = memo(() => {
                   </div>
 
                   {/* Progress navigation buttons */}
-                  <div className="overflow-x-auto pb-2 sm:pb-0 flex justify-center sm:justify-start">
+                  <div className="overflow-auto pb-2 sm:pb-0 flex justify-center sm:justify-start">
                     <ProgressIndicator
                       currentQuestion={currentQuestionIndex}
                       totalQuestions={questions.length}
@@ -772,7 +772,7 @@ const QuestionContent = memo(() => {
             {/* Question card */}
             <div
               ref={questionCardRef}
-              className={`relative transition-all duration-300 ease-out ${
+              className={`relative overflow-auto transition-all duration-300 ease-out ${
                 isTransitioning
                   ? direction === "next"
                     ? "opacity-0 transform -translate-y-4"
@@ -780,7 +780,7 @@ const QuestionContent = memo(() => {
                   : "opacity-100 transform translate-y-0"
               }`}
             >
-              <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6 ">
+              <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6 overflow-auto ">
                 <div className="p-3 sm:p-5 border-b border-white/20 bg-gradient-to-r from-blue-900/50 to-indigo-900/50">
                   <div className="flex items-start sm:items-center gap-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/30">
