@@ -102,42 +102,6 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  useEffect(() => {
-    // Block popups and new window creation attempts
-    const originalOpen = window.open;
-    window.open = function (url, name, params) {
-      console.log("Popup attempt blocked:", url);
-      return null;
-    };
-
-    // Prevent scripts from creating new elements
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.addedNodes) {
-          mutation.addedNodes.forEach((node) => {
-            if (
-              node.tagName === "SCRIPT" &&
-              node.src &&
-              node.src.includes("resolvedinsaneox.com")
-            ) {
-              node.parentNode.removeChild(node);
-              console.log("Blocked script:", node.src);
-            }
-          });
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-
-    return () => {
-      window.open = originalOpen;
-      observer.disconnect();
-    };
-  }, []);
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
