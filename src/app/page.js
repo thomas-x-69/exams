@@ -1501,6 +1501,41 @@ export default function Home() {
                 </div>
               </div>
             </button>
+
+            {/* NEW Training Mode Button */}
+            {/* <Link
+              href="/training"
+              className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group"
+              aria-label="وضع التدريب"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                <div className="rounded-xl p-4 bg-gradient-to-br from-cyan-600/20 to-blue-600/20 border border-white/10 mx-auto sm:mx-0">
+                  <svg
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <div className="text-center sm:text-right">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-white/90">
+                    وضع التدريب
+                  </h2>
+                  <p className="text-white/70 group-hover:text-white/80">
+                    تدرب على أسئلة محددة مع إظهار الإجابات الصحيحة فورياً
+                  </p>
+                </div>
+              </div>
+            </Link> */}
+
             <Link
               href="/pdfs"
               className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group"
@@ -1712,6 +1747,18 @@ export default function Home() {
                     للتحضير لاختبارات التربية، ننصح بالتدرب على الكفايات
                     التربوية والتخصصية، ومراجعة المناهج التعليمية، والتدرب على
                     حل نماذج امتحانات سابقة موجودة في قسم التحميلات بالموقع.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    ما الفرق بين وضع التدريب والاختبار الكامل؟
+                  </h3>
+                  <p className="text-white/70">
+                    وضع التدريب يتيح لك التركيز على مرحلة محددة أو موضوع معين مع
+                    الحصول على تغذية راجعة فورية بعد كل سؤال، بينما الاختبار
+                    الكامل يحاكي الاختبار الحقيقي بجميع مراحله المتتالية مع عرض
+                    النتيجة في النهاية فقط.
                   </p>
                 </div>
 

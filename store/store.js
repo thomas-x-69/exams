@@ -1,6 +1,7 @@
 // store/store.js
 import { configureStore } from "@reduxjs/toolkit";
 import examReducer from "./examSlice";
+import trainingReducer from "./trainingSlice";
 
 // Function to load state from localStorage (client-side only)
 const loadState = () => {
@@ -40,6 +41,7 @@ const preloadedState = loadState();
 export const store = configureStore({
   reducer: {
     exam: examReducer,
+    training: trainingReducer, // Add the training reducer
   },
   preloadedState,
   middleware: (getDefaultMiddleware) =>
@@ -50,6 +52,9 @@ export const store = configureStore({
 
 // Subscribe to store changes to save state
 store.subscribe(() => {
+  // Only save the exam state, not the training state
+  // This prevents training session data from being persisted
+  // between page refreshes, which is the desired behavior
   saveState({
     exam: store.getState().exam,
   });
