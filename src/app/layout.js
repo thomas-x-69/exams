@@ -156,7 +156,7 @@ export default function RootLayout({ children }) {
           type="text/javascript"
           src="//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
         ></Script> */}
-        {/* <Script>
+        <Script>
           {`
     // Only load popunder after user has been on the site for 30 seconds
     setTimeout(() => {
@@ -164,9 +164,9 @@ export default function RootLayout({ children }) {
       script.src = '//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js';
       script.async = true;
       document.head.appendChild(script);
-    }, 10000);  // 10 seconds
+    }, 10000);  // 0 seconds
   `}
-        </Script> */}
+        </Script>
       </head>
 
       <body

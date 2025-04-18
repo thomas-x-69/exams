@@ -1,247 +1,29 @@
 // src/app/training/questions/page.js
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef, memo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  memo,
+  Suspense,
+} from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getRandomQuestions } from "../../data/questionsUtils";
 import Header from "../../../../components/Header";
 
-// Memoized question option component with improved visual design and better contrast
-const QuestionOption = memo(
-  ({
-    option,
-    index,
-    isSelected,
-    isCorrect,
-    isAnswered,
-    isCorrectAnswer,
-    onSelect,
-  }) => (
-    <button
-      onClick={() => !isAnswered && onSelect(index)}
-      className={`w-full p-4 rounded-xl border text-right transition-all duration-300 mb-3 transform ${
-        isAnswered
-          ? isSelected
-            ? isCorrect
-              ? "border-green-500 bg-gradient-to-r from-green-500/20 to-green-600/30 text-white shadow-md shadow-green-500/20"
-              : "border-red-500 bg-gradient-to-r from-red-500/20 to-red-600/30 text-white shadow-md shadow-red-500/20"
-            : isCorrectAnswer
-            ? "border-green-500 bg-gradient-to-r from-green-500/15 to-green-600/20 text-white/90"
-            : "border-gray-300/50 bg-white/10 text-white/70"
-          : isSelected
-          ? "border-blue-400 bg-gradient-to-r from-blue-500/20 to-indigo-600/30 text-white shadow-md shadow-blue-500/20 scale-[1.01]"
-          : "border-white/30 hover:border-white/50 glass-effect text-white hover:shadow-md hover:scale-[1.01]"
-      }`}
-      disabled={isAnswered}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-            isAnswered
-              ? isSelected
-                ? isCorrect
-                  ? "bg-green-200 border-2 border-green-500"
-                  : "bg-red-200 border-2 border-red-500"
-                : isCorrectAnswer
-                ? "bg-green-200/70 border-2 border-green-500"
-                : "bg-white/20 border border-white/50"
-              : isSelected
-              ? "bg-blue-200 border-2 border-blue-500"
-              : "bg-white/20 border border-white/50"
-          }`}
-        >
-          {isSelected && (
-            <div
-              className={`w-3.5 h-3.5 rounded-full animate-in fade-in duration-300 ${
-                isAnswered
-                  ? isCorrect
-                    ? "bg-green-600"
-                    : "bg-red-600"
-                  : "bg-blue-600"
-              }`}
-            />
-          )}
-          {isAnswered && isCorrectAnswer && !isSelected && (
-            <div className="w-3.5 h-3.5 bg-green-600 rounded-full animate-in fade-in duration-300" />
-          )}
-        </div>
-        <span
-          className={`text-sm md:text-base ${
-            isAnswered
-              ? isSelected && !isCorrect
-                ? "text-white"
-                : "text-white"
-              : "text-white"
-          }`}
-        >
-          {option}
-        </span>
-      </div>
-    </button>
-  )
-);
-
-// Enhanced feedback component with better contrast
-const AnswerFeedback = memo(({ isCorrect, correctAnswer, explanation }) => (
-  <div
-    className={`p-5 rounded-xl mb-6 transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 ${
-      isCorrect
-        ? "bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-green-500/50"
-        : "bg-gradient-to-r from-red-500/20 to-rose-600/20 border border-red-500/50"
-    }`}
-  >
-    <div className="flex flex-col sm:flex-row items-start gap-4">
-      {isCorrect ? (
-        <div className="mt-1 w-12 h-12 bg-green-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-green-500/30">
-          <svg
-            className="w-7 h-7 text-green-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </div>
-      ) : (
-        <div className="mt-1 w-12 h-12 bg-red-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-500/30">
-          <svg
-            className="w-7 h-7 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </div>
-      )}
-      <div className="flex-1">
-        <h4
-          className={`font-bold text-lg ${
-            isCorrect ? "text-green-400" : "text-red-400"
-          } mb-2`}
-        >
-          {isCorrect ? "إجابة صحيحة! أحسنت!" : "إجابة خاطئة"}
-        </h4>
-        {!isCorrect && (
-          <p className="text-white/90 text-sm mb-3 bg-white/10 p-3 rounded-lg border border-white/20">
-            الإجابة الصحيحة هي:{" "}
-            <span className="font-bold text-green-300">{correctAnswer}</span>
-          </p>
-        )}
-        {explanation && (
-          <div className="glass-effect p-3 rounded-xl mt-2 border border-white/30">
-            <div className="flex gap-2 items-center mb-2">
-              <svg
-                className="w-5 h-5 text-blue-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="font-bold text-blue-300 text-sm">
-                شرح الإجابة
-              </span>
-            </div>
-            <p className="text-white/90 text-sm mr-7">{explanation}</p>
-          </div>
-        )}
-
-        {/* Quick tip for wrong answers */}
-        {!isCorrect && !explanation && (
-          <div className="glass-effect p-3 rounded-xl mt-2 border border-white/30">
-            <div className="flex gap-2 items-center mb-2">
-              <svg
-                className="w-5 h-5 text-amber-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-              <span className="font-bold text-amber-300 text-sm">نصيحة</span>
-            </div>
-            <p className="text-white/90 text-sm mr-7">
-              راجع هذا النوع من الأسئلة جيداً، وتدرب على المزيد من الأمثلة
-              المشابهة
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-));
-
-// Improved progress indicator with question status visualization
-const ProgressIndicator = memo(
-  ({ currentQuestion, totalQuestions, answers, onJumpToQuestion }) => {
-    // Generate an array of progress items
-    const progressItems = [...Array(totalQuestions)].map((_, index) => {
-      // Determine the status of each question
-      let status = "pending"; // not answered yet
-      if (index === currentQuestion) status = "current";
-      if (answers[index]?.answered) {
-        status = answers[index]?.isCorrect ? "correct" : "incorrect";
-      }
-
-      return { index, status };
-    });
-
-    return (
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {progressItems.map((item) => (
-          <button
-            key={item.index}
-            onClick={() => onJumpToQuestion(item.index)}
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all duration-300 text-xs sm:text-sm ${
-              item.status === "current"
-                ? "bg-blue-500/50 border-2 border-blue-400 text-white transform scale-110"
-                : item.status === "correct"
-                ? "bg-green-500/40 border border-green-400 text-green-300 hover:bg-green-500/50"
-                : item.status === "incorrect"
-                ? "bg-red-500/40 border border-red-400 text-red-300 hover:bg-red-500/50"
-                : "bg-white/20 border border-white/40 text-white/80 hover:bg-white/30"
-            }`}
-            title={`سؤال ${item.index + 1}`}
-          >
-            {item.index + 1}
-          </button>
-        ))}
-      </div>
-    );
-  }
-);
-
-// Main component
-export default function TrainingQuestionsPage() {
-  const router = useRouter();
+// This component will use useSearchParams and must be wrapped in Suspense
+const QuestionContent = memo(() => {
+  // Import useSearchParams inside the component that's wrapped in Suspense
+  const { useSearchParams } = require("next/navigation");
   const searchParams = useSearchParams();
+
   const subject = searchParams.get("subject");
   const phase = searchParams.get("phase");
   const name = searchParams.get("name");
 
-  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -261,14 +43,13 @@ export default function TrainingQuestionsPage() {
   const questionCardRef = useRef(null);
   const contentRef = useRef(null);
 
-  // Set mounted state after hydration
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Load questions based on the selected phase
   useEffect(() => {
-    if (!mounted || !subject || !phase) return;
+    if (!subject || !phase) return;
+
+    // We need to dynamically import these since they're only used client-side
+    const getRandomQuestions =
+      require("../../data/questionsUtils").getRandomQuestions;
 
     // Fetch questions from the question bank
     try {
@@ -311,7 +92,7 @@ export default function TrainingQuestionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [mounted, subject, phase]);
+  }, [subject, phase]);
 
   // Update stats when answers change
   useEffect(() => {
@@ -516,15 +297,6 @@ export default function TrainingQuestionsPage() {
     });
   }, [router]);
 
-  // Don't render during SSR to prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   // Display a loading state while fetching questions
   if (loading) {
     return (
@@ -555,7 +327,6 @@ export default function TrainingQuestionsPage() {
   if (error) {
     return (
       <>
-        <Header />
         <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28">
           <div className="w-16 h-16 bg-red-500/30 rounded-full flex items-center justify-center mb-6 border border-red-500/60">
             <svg
@@ -592,7 +363,6 @@ export default function TrainingQuestionsPage() {
   if (!questions.length) {
     return (
       <>
-        <Header />
         <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28">
           <div className="w-16 h-16 bg-amber-500/30 rounded-full flex items-center justify-center mb-6 border border-amber-500/60">
             <svg
@@ -637,13 +407,239 @@ export default function TrainingQuestionsPage() {
   const progressPercentage =
     ((currentQuestionIndex + 1) / questions.length) * 100;
 
+  // Memoized question option component with improved visual design and better contrast
+  const QuestionOption = memo(
+    ({
+      option,
+      index,
+      isSelected,
+      isCorrect,
+      isAnswered,
+      isCorrectAnswer,
+      onSelect,
+    }) => (
+      <button
+        onClick={() => !isAnswered && onSelect(index)}
+        className={`w-full p-4 rounded-xl border text-right transition-all duration-300 mb-3 transform ${
+          isAnswered
+            ? isSelected
+              ? isCorrect
+                ? "border-green-500 bg-gradient-to-r from-green-500/20 to-green-600/30 text-white shadow-md shadow-green-500/20"
+                : "border-red-500 bg-gradient-to-r from-red-500/20 to-red-600/30 text-white shadow-md shadow-red-500/20"
+              : isCorrectAnswer
+              ? "border-green-500 bg-gradient-to-r from-green-500/15 to-green-600/20 text-white/90"
+              : "border-gray-300/50 bg-white/10 text-white/70"
+            : isSelected
+            ? "border-blue-400 bg-gradient-to-r from-blue-500/20 to-indigo-600/30 text-white shadow-md shadow-blue-500/20 scale-[1.01]"
+            : "border-white/30 hover:border-white/50 glass-effect text-white hover:shadow-md hover:scale-[1.01]"
+        }`}
+        disabled={isAnswered}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+              isAnswered
+                ? isSelected
+                  ? isCorrect
+                    ? "bg-green-200 border-2 border-green-500"
+                    : "bg-red-200 border-2 border-red-500"
+                  : isCorrectAnswer
+                  ? "bg-green-200/70 border-2 border-green-500"
+                  : "bg-white/20 border border-white/50"
+                : isSelected
+                ? "bg-blue-200 border-2 border-blue-500"
+                : "bg-white/20 border border-white/50"
+            }`}
+          >
+            {isSelected && (
+              <div
+                className={`w-3.5 h-3.5 rounded-full animate-in fade-in duration-300 ${
+                  isAnswered
+                    ? isCorrect
+                      ? "bg-green-600"
+                      : "bg-red-600"
+                    : "bg-blue-600"
+                }`}
+              />
+            )}
+            {isAnswered && isCorrectAnswer && !isSelected && (
+              <div className="w-3.5 h-3.5 bg-green-600 rounded-full animate-in fade-in duration-300" />
+            )}
+          </div>
+          <span
+            className={`text-sm md:text-base ${
+              isAnswered
+                ? isSelected && !isCorrect
+                  ? "text-white"
+                  : "text-white"
+                : "text-white"
+            }`}
+          >
+            {option}
+          </span>
+        </div>
+      </button>
+    )
+  );
+
+  // Enhanced feedback component with better contrast
+  const AnswerFeedback = memo(({ isCorrect, correctAnswer, explanation }) => (
+    <div
+      className={`p-5 rounded-xl mb-6 transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 ${
+        isCorrect
+          ? "bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-green-500/50"
+          : "bg-gradient-to-r from-red-500/20 to-rose-600/20 border border-red-500/50"
+      }`}
+    >
+      <div className="flex flex-col sm:flex-row items-start gap-4">
+        {isCorrect ? (
+          <div className="mt-1 w-12 h-12 bg-green-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-green-500/30">
+            <svg
+              className="w-7 h-7 text-green-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+        ) : (
+          <div className="mt-1 w-12 h-12 bg-red-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-500/30">
+            <svg
+              className="w-7 h-7 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </div>
+        )}
+        <div className="flex-1">
+          <h4
+            className={`font-bold text-lg ${
+              isCorrect ? "text-green-400" : "text-red-400"
+            } mb-2`}
+          >
+            {isCorrect ? "إجابة صحيحة! أحسنت!" : "إجابة خاطئة"}
+          </h4>
+          {!isCorrect && (
+            <p className="text-white/90 text-sm mb-3 bg-white/10 p-3 rounded-lg border border-white/20">
+              الإجابة الصحيحة هي:{" "}
+              <span className="font-bold text-green-300">{correctAnswer}</span>
+            </p>
+          )}
+          {explanation && (
+            <div className="glass-effect p-3 rounded-xl mt-2 border border-white/30">
+              <div className="flex gap-2 items-center mb-2">
+                <svg
+                  className="w-5 h-5 text-blue-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="font-bold text-blue-300 text-sm">
+                  شرح الإجابة
+                </span>
+              </div>
+              <p className="text-white/90 text-sm mr-7">{explanation}</p>
+            </div>
+          )}
+
+          {/* Quick tip for wrong answers */}
+          {!isCorrect && !explanation && (
+            <div className="glass-effect p-3 rounded-xl mt-2 border border-white/30">
+              <div className="flex gap-2 items-center mb-2">
+                <svg
+                  className="w-5 h-5 text-amber-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
+                <span className="font-bold text-amber-300 text-sm">نصيحة</span>
+              </div>
+              <p className="text-white/90 text-sm mr-7">
+                راجع هذا النوع من الأسئلة جيداً، وتدرب على المزيد من الأمثلة
+                المشابهة
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  ));
+
+  // Improved progress indicator with question status visualization
+  const ProgressIndicator = memo(
+    ({ currentQuestion, totalQuestions, answers, onJumpToQuestion }) => {
+      // Generate an array of progress items
+      const progressItems = [...Array(totalQuestions)].map((_, index) => {
+        // Determine the status of each question
+        let status = "pending"; // not answered yet
+        if (index === currentQuestion) status = "current";
+        if (answers[index]?.answered) {
+          status = answers[index]?.isCorrect ? "correct" : "incorrect";
+        }
+
+        return { index, status };
+      });
+
+      return (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {progressItems.map((item) => (
+            <button
+              key={item.index}
+              onClick={() => onJumpToQuestion(item.index)}
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all duration-300 text-xs sm:text-sm ${
+                item.status === "current"
+                  ? "bg-blue-500/50 border-2 border-blue-400 text-white transform scale-110"
+                  : item.status === "correct"
+                  ? "bg-green-500/40 border border-green-400 text-green-300 hover:bg-green-500/50"
+                  : item.status === "incorrect"
+                  ? "bg-red-500/40 border border-red-400 text-red-300 hover:bg-red-500/50"
+                  : "bg-white/20 border border-white/40 text-white/80 hover:bg-white/30"
+              }`}
+              title={`سؤال ${item.index + 1}`}
+            >
+              {item.index + 1}
+            </button>
+          ))}
+        </div>
+      );
+    }
+  );
+
   return (
     <>
-      <div className="flex flex-col min-h-screen max-h-screen  pt-20">
+      <div className="flex flex-col min-h-screen max-h-screen pt-20">
         {/* Container with appropriate max width */}
         <div className="w-full max-w-4xl mx-auto px-4 flex flex-col flex-1">
           {/* Training info header */}
-          <div className="glass-card border border-white/30  sticky top-20 z-20 shadow-lg mt-4">
+          <div className="glass-card border border-white/30 sticky top-20 z-20 shadow-lg mt-4">
             <div className="px-4 py-3 sm:p-4 bg-gradient-to-r from-blue-900/80 to-indigo-900/80">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -941,6 +937,40 @@ export default function TrainingQuestionsPage() {
           </div>
         </div>
       </div>
+    </>
+  );
+});
+
+// Main component
+export default function TrainingQuestionsPage() {
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Header />
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+          </div>
+        }
+      >
+        <QuestionContent />
+      </Suspense>
     </>
   );
 }

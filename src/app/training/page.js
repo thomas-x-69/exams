@@ -1,7 +1,7 @@
 // src/app/training/page.js
 "use client";
 
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "../../../components/Header";
