@@ -121,11 +121,11 @@ export default function RootLayout({ children }) {
           href="https://pagead2.googlesyndication.com"
           crossOrigin="anonymous"
         />
-        <link
+        {/* <link
           rel="preconnect"
           href="https://resolvedinsaneox.com"
           crossOrigin="anonymous"
-        />
+        /> */}
 
         {/* Preload critical assets */}
         <link rel="preload" href="/logo.png" as="image" type="image/png" />
