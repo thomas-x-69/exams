@@ -167,7 +167,7 @@ export default function RootLayout({ children }) {
     }, 10000);  // 0 seconds
   `}
         </Script> */}
-        <Script id="smart-popunder" strategy="afterInteractive">
+        {/* <Script id="smart-popunder" strategy="afterInteractive">
           {`
     // Wait for the page to be fully interactive
     function loadPopunderWithRules() {
@@ -231,7 +231,7 @@ export default function RootLayout({ children }) {
       window.addEventListener('DOMContentLoaded', loadPopunderWithRules);
     }
   `}
-        </Script>
+        </Script> */}
       </head>
 
       <body
