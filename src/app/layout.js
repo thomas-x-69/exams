@@ -156,7 +156,7 @@ export default function RootLayout({ children }) {
           type="text/javascript"
           src="//resolvedinsaneox.com/55/0f/6e/550f6e2624c4b06afeb9e2c9270717f9.js"
         ></Script> */}
-       <Script
+        <Script
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-M3W9MBS7XV"
         />
@@ -185,14 +185,7 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
-<Script async src="https://www.googletagmanager.com/gtag/js?id=G-M3W9MBS7XV"></Script>
-<Script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-M3W9MBS7XV');
-</Script>
         {/* Structured data for Organization */}
         <Script
           id="organization-schema"
