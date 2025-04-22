@@ -172,6 +172,57 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
+        <Script id="ad-delay-script" strategy="afterInteractive">
+          {`
+    (function() {
+      // Only run on landing page
+      if (window.location.pathname === '/' || window.location.pathname === '') {
+        // Create a style element to hide ads
+        const style = document.createElement('style');
+        style.id = 'ad-blocker-style';
+        style.innerHTML = \`
+          iframe[src*="resolvedinsaneox.com"],
+          div[id*="container-8ec6bdce286a228c65ed68b05a0ddd40"],
+          #container-8ec6bdce286a228c65ed68b05a0ddd40,
+          [src*="googleads"],
+          [src*="pagead"],
+          ins.adsbygoogle,
+          .ad-container { 
+            opacity: 0 !important; 
+            pointer-events: none !important;
+            transition: opacity 1s ease-in-out;
+          }
+        \`;
+        document.head.appendChild(style);
+        
+        // Remove the style after 20 seconds with a fade-in effect
+        setTimeout(() => {
+          const blocker = document.getElementById('ad-blocker-style');
+          if (blocker) {
+            blocker.innerHTML = \`
+              iframe[src*="resolvedinsaneox.com"],
+              div[id*="container-8ec6bdce286a228c65ed68b05a0ddd40"],
+              #container-8ec6bdce286a228c65ed68b05a0ddd40,
+              [src*="googleads"],
+              [src*="pagead"],
+              ins.adsbygoogle,
+              .ad-container { 
+                opacity: 1 !important; 
+                pointer-events: auto !important;
+                transition: opacity 1s ease-in-out;
+              }
+            \`;
+            
+            // Remove the style completely after the fade-in
+            setTimeout(() => {
+              blocker.remove();
+            }, 1000);
+          }
+        }, 20000);
+      }
+    })();
+  `}
+        </Script>
       </head>
 
       <body

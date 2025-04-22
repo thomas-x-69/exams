@@ -61,6 +61,9 @@ export default function TrainingPage() {
   const [userName, setUserName] = useState("");
   const [mounted, setMounted] = useState(false);
   const [selectedSubphase, setSelectedSubphase] = useState(null);
+  const [questionCount, setQuestionCount] = useState(10);
+  const [defaultQuestionCount, setDefaultQuestionCount] = useState(10);
+
   useEffect(() => {
     // Block popups and new window creation attempts
     const originalOpen = window.open;
@@ -97,6 +100,7 @@ export default function TrainingPage() {
       observer.disconnect();
     };
   }, []);
+
   // Set mounted state after hydration
   useEffect(() => {
     setMounted(true);
@@ -129,6 +133,19 @@ export default function TrainingPage() {
   const handlePhaseSelect = (phase) => {
     setSelectedPhase(phase);
 
+    // Set default question count based on phase type
+    let defaultCount = 10;
+    if (phase.id === "behavioral") {
+      defaultCount = 20;
+    } else if (phase.id === "language" || phase.id === "knowledge") {
+      defaultCount = 10;
+    } else if (phase.id === "specialization" || phase.id === "education") {
+      defaultCount = 15;
+    }
+
+    setDefaultQuestionCount(defaultCount);
+    setQuestionCount(defaultCount);
+
     // If this phase has subphases, show them
     if (phase.hasSubphases) {
       setShowSubphases(true);
@@ -146,6 +163,14 @@ export default function TrainingPage() {
     setShowNameInput(true);
   };
 
+  // Handle question count change
+  const handleQuestionCountChange = (e) => {
+    const count = parseInt(e.target.value, 10);
+    if (!isNaN(count) && count >= 5 && count <= 200) {
+      setQuestionCount(count);
+    }
+  };
+
   // Handle start training
   const handleStartTraining = () => {
     if (!userName.trim()) {
@@ -161,11 +186,13 @@ export default function TrainingPage() {
       ? `${selectedPhase.id}_${selectedSubphase.id}`
       : selectedPhase.id;
 
-    // Navigate to questions page with query params
+    // Navigate to questions page with query params, including questionCount
     router.push(
       `/training/questions?subject=${
         selectedSubject.id
-      }&phase=${phaseId}&name=${encodeURIComponent(userName)}`
+      }&phase=${phaseId}&name=${encodeURIComponent(
+        userName
+      )}&count=${questionCount}`
     );
   };
 
@@ -342,7 +369,7 @@ export default function TrainingPage() {
     if (!selectedPhase) return "اختر المرحلة المراد التدريب عليها";
     if (selectedPhase.hasSubphases && !selectedSubphase)
       return "اختر الفئة الفرعية للتدريب";
-    if (showNameInput) return "أدخل اسمك للبدء";
+    if (showNameInput) return "أدخل اسمك وعدد الأسئلة للبدء";
     return "";
   };
 
@@ -537,12 +564,12 @@ export default function TrainingPage() {
             </div>
           )}
 
-          {/* Name Input */}
+          {/* Name Input and Question Count */}
           {showNameInput && (
             <div className="space-y-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-white">
-                  أدخل اسمك للبدء
+                  أدخل اسمك وعدد الأسئلة للبدء
                 </h3>
                 <button
                   onClick={() => {
@@ -561,6 +588,7 @@ export default function TrainingPage() {
               </div>
 
               <div className="bg-white/10 rounded-xl p-6 border border-white/30">
+                {/* Name input */}
                 <div className="mb-4">
                   <label className="block text-white mb-2">الاسم</label>
                   <input
@@ -570,6 +598,35 @@ export default function TrainingPage() {
                     placeholder="أدخل اسمك"
                     className="w-full p-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:border-blue-500 focus:outline-none"
                   />
+                </div>
+
+                {/* Question count input */}
+                <div className="mb-6">
+                  <label className="block text-white mb-2">عدد الأسئلة</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min="5"
+                      max="200"
+                      step="1"
+                      value={questionCount}
+                      onChange={handleQuestionCountChange}
+                      className="flex-1 accent-blue-500"
+                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="5"
+                        max="200"
+                        value={questionCount}
+                        onChange={handleQuestionCountChange}
+                        className="w-20 p-2 bg-white/20 border border-white/30 rounded-lg text-white text-center focus:border-blue-500 focus:outline-none"
+                      />
+                      <div className="absolute -bottom-6 right-0 text-white/60 text-xs">
+                        الافتراضي: {defaultQuestionCount}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-4 mt-8">
@@ -653,6 +710,22 @@ export default function TrainingPage() {
                 يمكنك التدرب على مراحل محددة لتحسين مستواك قبل خوض الامتحان
                 الكامل
               </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <svg
+                className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>يمكنك اختيار عدد الأسئلة المناسب لك في كل جلسة تدريب</span>
             </li>
           </ul>
         </div>

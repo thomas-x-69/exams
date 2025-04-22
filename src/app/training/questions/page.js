@@ -21,6 +21,7 @@ const QuestionContent = memo(() => {
   const subject = searchParams.get("subject");
   const phase = searchParams.get("phase");
   const name = searchParams.get("name");
+  const customCount = searchParams.get("count");
 
   const router = useRouter();
   const [questions, setQuestions] = useState([]);
@@ -54,18 +55,26 @@ const QuestionContent = memo(() => {
     try {
       setLoading(true);
 
-      // Determine appropriate number of questions based on the phase
-      let questionsCount = 10; // Default for training mode - using fewer questions than exam
+      // Parse custom question count from URL if provided, otherwise use defaults
+      let questionsCount = 10; // Default for training mode
 
-      if (phase === "behavioral") {
-        questionsCount = 20; // 20 questions for behavioral
-      } else if (
-        phase.startsWith("language_") ||
-        phase.startsWith("knowledge_")
-      ) {
-        questionsCount = 10; // 10 questions for language and knowledge subphases
-      } else if (phase === "specialization" || phase === "education") {
-        questionsCount = 15; // 15 questions for specialization or education
+      if (customCount) {
+        const parsedCount = parseInt(customCount, 10);
+        if (!isNaN(parsedCount) && parsedCount >= 5 && parsedCount <= 50) {
+          questionsCount = parsedCount;
+        }
+      } else {
+        // Fallback to default counts if no custom count provided
+        if (phase === "behavioral") {
+          questionsCount = 20; // 20 questions for behavioral
+        } else if (
+          phase.startsWith("language_") ||
+          phase.startsWith("knowledge_")
+        ) {
+          questionsCount = 10; // 10 questions for language and knowledge subphases
+        } else if (phase === "specialization" || phase === "education") {
+          questionsCount = 15; // 15 questions for specialization or education
+        }
       }
 
       // Get the questions
@@ -91,7 +100,7 @@ const QuestionContent = memo(() => {
     } finally {
       setLoading(false);
     }
-  }, [subject, phase]);
+  }, [subject, phase, customCount]);
 
   // Update stats when answers change
   useEffect(() => {
@@ -158,6 +167,7 @@ const QuestionContent = memo(() => {
 
       // Wait for animation to complete before changing the question
       setTimeout(() => {
+        const nextIndex = currentQuestionIndex + 1;
         setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
         setSelectedOption(null);
         setIsAnswered(false);

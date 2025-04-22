@@ -1,4 +1,4 @@
-// src/app/training/results/page.js
+// src/app/training/results/page.js - Updated to support custom question count
 "use client";
 
 import React, { useState, useEffect, memo, Suspense } from "react";
@@ -84,6 +84,7 @@ const ResultsContent = memo(() => {
   const total = parseInt(searchParams.get("total") || "0");
   const correct = parseInt(searchParams.get("correct") || "0");
   const incorrect = total - correct;
+  const count = searchParams.get("count"); // Get the custom count parameter
 
   // If parameters are missing, redirect to training page
   if (!subject || !phase || !name) {
@@ -540,7 +541,7 @@ const ResultsContent = memo(() => {
         <Link
           href={`/training/questions?subject=${subject}&phase=${phase}&name=${encodeURIComponent(
             name
-          )}`}
+          )}${count ? `&count=${count}` : ""}`}
           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg hover:shadow-xl border border-blue-500/50"
         >
           إعادة التدريب
