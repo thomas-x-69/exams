@@ -169,7 +169,14 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+<Script async src="https://www.googletagmanager.com/gtag/js?id=G-M3W9MBS7XV"></Script>
+<Script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-M3W9MBS7XV');
+</Script>
         {/* Structured data for Organization */}
         <Script
           id="organization-schema"
