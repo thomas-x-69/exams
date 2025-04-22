@@ -11,7 +11,6 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "../../../../components/Header";
 
 // This component will use useSearchParams and must be wrapped in Suspense
 const QuestionContent = memo(() => {
@@ -301,7 +300,7 @@ const QuestionContent = memo(() => {
   if (loading) {
     return (
       <>
-        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28 overflow-auto">
+        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28 overflow-hidden">
           <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin mb-6"></div>
           <div className="text-white text-lg font-bold">
             جاري تحميل الأسئلة...
@@ -326,8 +325,36 @@ const QuestionContent = memo(() => {
   // If there was an error
   if (error) {
     return (
-      <>
-        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28">
+      <div className="bg-gradient-to-br from-slate-900 to-indigo-900 pattern-grid">
+        {/* Mini header - self-contained */}
+        <div className="sticky top-0 z-30 w-full bg-gradient-to-r from-slate-900/90 to-indigo-900/90 backdrop-blur-md shadow-md border-b border-white/10">
+          <div className="max-w-4xl mx-auto px-3 py-3">
+            <div className="flex items-center justify-between">
+              <Link
+                href="/training"
+                className="flex items-center gap-2 rounded-lg px-2 py-1 bg-white/10 hover:bg-white/20 transition-colors border border-white/20 text-white text-sm"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                <span>العودة</span>
+              </Link>
+              <div className="text-white font-medium text-sm">وضع التدريب</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[80vh] pt-16">
           <div className="w-16 h-16 bg-red-500/30 rounded-full flex items-center justify-center mb-6 border border-red-500/60">
             <svg
               className="w-8 h-8 text-red-400"
@@ -344,7 +371,7 @@ const QuestionContent = memo(() => {
             </svg>
           </div>
           <div className="text-red-400 font-bold text-lg mb-4">{error}</div>
-          <p className="text-white/70 mb-6 text-center">
+          <p className="text-white/70 mb-6 text-center max-w-md">
             لم نتمكن من تحميل الأسئلة لهذه المرحلة. يرجى المحاولة مرة أخرى أو
             اختيار مرحلة مختلفة للتدريب.
           </p>
@@ -355,15 +382,43 @@ const QuestionContent = memo(() => {
             العودة لصفحة التدريب
           </Link>
         </div>
-      </>
+      </div>
     );
   }
 
   // If no questions were loaded after loading completes, show an error
   if (!questions.length) {
     return (
-      <>
-        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh] pt-28">
+      <div className="bg-gradient-to-br from-slate-900 to-indigo-900 pattern-grid">
+        {/* Mini header - self-contained */}
+        <div className="sticky top-0 z-30 w-full bg-gradient-to-r from-slate-900/90 to-indigo-900/90 backdrop-blur-md shadow-md border-b border-white/10">
+          <div className="max-w-4xl mx-auto px-3 py-3">
+            <div className="flex items-center justify-between">
+              <Link
+                href="/training"
+                className="flex items-center gap-2 rounded-lg px-2 py-1 bg-white/10 hover:bg-white/20 transition-colors border border-white/20 text-white text-sm"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                <span>العودة</span>
+              </Link>
+              <div className="text-white font-medium text-sm">وضع التدريب</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[80vh] pt-16">
           <div className="w-16 h-16 bg-amber-500/30 rounded-full flex items-center justify-center mb-6 border border-amber-500/60">
             <svg
               className="w-8 h-8 text-amber-400"
@@ -382,7 +437,7 @@ const QuestionContent = memo(() => {
           <div className="text-amber-400 font-bold text-lg mb-4">
             لا توجد أسئلة متاحة لهذه المرحلة
           </div>
-          <p className="text-white/70 mb-6 text-center">
+          <p className="text-white/70 mb-6 text-center max-w-md">
             يرجى اختيار مرحلة أخرى للتدريب حيث لا تتوفر أسئلة لهذه المرحلة
             حالياً.
           </p>
@@ -393,7 +448,7 @@ const QuestionContent = memo(() => {
             العودة لصفحة التدريب
           </Link>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -420,7 +475,7 @@ const QuestionContent = memo(() => {
     }) => (
       <button
         onClick={() => !isAnswered && onSelect(index)}
-        className={`w-full p-4 rounded-xl border text-right transition-all duration-300 mb-3 transform ${
+        className={`w-full p-3 sm:p-4 rounded-xl border text-right transition-all duration-300 mb-2 transform ${
           isAnswered
             ? isSelected
               ? isCorrect
@@ -437,7 +492,7 @@ const QuestionContent = memo(() => {
       >
         <div className="flex items-center gap-3">
           <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+            className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
               isAnswered
                 ? isSelected
                   ? isCorrect
@@ -453,7 +508,7 @@ const QuestionContent = memo(() => {
           >
             {isSelected && (
               <div
-                className={`w-3.5 h-3.5 rounded-full animate-in fade-in duration-300 ${
+                className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full animate-in fade-in duration-300 ${
                   isAnswered
                     ? isCorrect
                       ? "bg-green-600"
@@ -463,11 +518,11 @@ const QuestionContent = memo(() => {
               />
             )}
             {isAnswered && isCorrectAnswer && !isSelected && (
-              <div className="w-3.5 h-3.5 bg-green-600 rounded-full animate-in fade-in duration-300" />
+              <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-600 rounded-full animate-in fade-in duration-300" />
             )}
           </div>
           <span
-            className={`text-sm md:text-base ${
+            className={`text-sm ${
               isAnswered
                 ? isSelected && !isCorrect
                   ? "text-white"
@@ -485,7 +540,7 @@ const QuestionContent = memo(() => {
   // Enhanced feedback component with better contrast
   const AnswerFeedback = memo(({ isCorrect, correctAnswer, explanation }) => (
     <div
-      className={`p-5 rounded-xl mb-6 transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 ${
+      className={`p-4 sm:p-5 rounded-xl mb-6 transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 ${
         isCorrect
           ? "bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-green-500/50"
           : "bg-gradient-to-r from-red-500/20 to-rose-600/20 border border-red-500/50"
@@ -493,9 +548,9 @@ const QuestionContent = memo(() => {
     >
       <div className="flex flex-col sm:flex-row items-start gap-4">
         {isCorrect ? (
-          <div className="mt-1 w-12 h-12 bg-green-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-green-500/30">
+          <div className="mt-1 w-10 h-10 sm:w-12 sm:h-12 bg-green-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-green-500/30">
             <svg
-              className="w-7 h-7 text-green-500"
+              className="w-6 h-6 sm:w-7 sm:h-7 text-green-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -509,9 +564,9 @@ const QuestionContent = memo(() => {
             </svg>
           </div>
         ) : (
-          <div className="mt-1 w-12 h-12 bg-red-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-500/30">
+          <div className="mt-1 w-10 h-10 sm:w-12 sm:h-12 bg-red-100/40 rounded-xl flex items-center justify-center flex-shrink-0 border border-red-500/30">
             <svg
-              className="w-7 h-7 text-red-500"
+              className="w-6 h-6 sm:w-7 sm:h-7 text-red-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -527,14 +582,14 @@ const QuestionContent = memo(() => {
         )}
         <div className="flex-1">
           <h4
-            className={`font-bold text-lg ${
+            className={`font-bold text-base sm:text-lg ${
               isCorrect ? "text-green-400" : "text-red-400"
             } mb-2`}
           >
             {isCorrect ? "إجابة صحيحة! أحسنت!" : "إجابة خاطئة"}
           </h4>
           {!isCorrect && (
-            <p className="text-white/90 text-sm mb-3 bg-white/10 p-3 rounded-lg border border-white/20">
+            <p className="text-white/90 text-xs sm:text-sm mb-3 bg-white/10 p-3 rounded-lg border border-white/20">
               الإجابة الصحيحة هي:{" "}
               <span className="font-bold text-green-300">{correctAnswer}</span>
             </p>
@@ -543,7 +598,7 @@ const QuestionContent = memo(() => {
             <div className="glass-effect p-3 rounded-xl mt-2 border border-white/30">
               <div className="flex gap-2 items-center mb-2">
                 <svg
-                  className="w-5 h-5 text-blue-300"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -555,11 +610,13 @@ const QuestionContent = memo(() => {
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="font-bold text-blue-300 text-sm">
+                <span className="font-bold text-blue-300 text-xs sm:text-sm">
                   شرح الإجابة
                 </span>
               </div>
-              <p className="text-white/90 text-sm mr-7">{explanation}</p>
+              <p className="text-white/90 text-xs sm:text-sm mr-7">
+                {explanation}
+              </p>
             </div>
           )}
 
@@ -568,7 +625,7 @@ const QuestionContent = memo(() => {
             <div className="glass-effect p-3 rounded-xl mt-2 border border-white/30">
               <div className="flex gap-2 items-center mb-2">
                 <svg
-                  className="w-5 h-5 text-amber-300"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -580,9 +637,11 @@ const QuestionContent = memo(() => {
                     d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                   />
                 </svg>
-                <span className="font-bold text-amber-300 text-sm">نصيحة</span>
+                <span className="font-bold text-amber-300 text-xs sm:text-sm">
+                  نصيحة
+                </span>
               </div>
-              <p className="text-white/90 text-sm mr-7">
+              <p className="text-white/90 text-xs sm:text-sm mr-7">
                 راجع هذا النوع من الأسئلة جيداً، وتدرب على المزيد من الأمثلة
                 المشابهة
               </p>
@@ -609,12 +668,12 @@ const QuestionContent = memo(() => {
       });
 
       return (
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1 flex-wrap">
           {progressItems.map((item) => (
             <button
               key={item.index}
               onClick={() => onJumpToQuestion(item.index)}
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all duration-300 text-xs sm:text-sm ${
+              className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center transition-all duration-300 text-xs ${
                 item.status === "current"
                   ? "bg-blue-500/50 border-2 border-blue-400 text-white transform scale-110"
                   : item.status === "correct"
@@ -635,141 +694,127 @@ const QuestionContent = memo(() => {
 
   return (
     <>
-      <div className="flex flex-col min-h-screen max-h-screen pt-20">
+      <div className="flex flex-col min-h-screen">
+        {/* Mini header - self-contained */}
+        <div className="sticky top-0 z-30 w-full bg-gradient-to-r from-slate-900/90 to-indigo-900/90 backdrop-blur-md shadow-md border-b border-white/10">
+          <div className="max-w-4xl mx-auto px-3 py-3">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleExit}
+                className="flex items-center gap-2 rounded-lg px-2 py-1 bg-white/10 hover:bg-white/20 transition-colors border border-white/20 text-white text-sm"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                <span>إلغاء التدريب</span>
+              </button>
+              <div className="text-white font-medium text-sm">
+                <span className="hidden sm:inline">وضع التدريب - </span>
+                {getPhaseName(phase)}
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="bg-green-600/40 text-white px-1.5 py-0.5 rounded-md border border-green-500/50 flex items-center gap-1 text-xs">
+                  {stats.correct}
+                </span>
+                <span className="bg-red-600/40 text-white px-1.5 py-0.5 rounded-md border border-red-500/50 flex items-center gap-1 text-xs">
+                  {stats.incorrect}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Container with appropriate max width */}
-        <div className="w-full max-w-4xl mx-auto px-4 flex flex-col flex-1  overflow-scroll">
-          {/* Training info header */}
-          <div className="glass-card border border-white/30 sticky top-20 z-20 shadow-lg mt-4">
-            <div className="px-4 py-3 sm:p-4 bg-gradient-to-r from-blue-900/80 to-indigo-900/80">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center border border-white/30">
-                    <span className="text-base sm:text-xl text-white">🏋️‍♂️</span>
-                  </div>
-                  <div>
-                    <h1 className="text-base sm:text-lg font-bold text-white">
-                      {name}
-                    </h1>
-                    <div className="text-white/80 text-xs">
+        <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col flex-1 pt-2 sm:pt-4 pb-16">
+          {/* Training info header - additional info */}
+          <div className="glass-card border border-white/30 shadow-lg rounded-xl mb-3">
+            <div className="p-3 sm:p-4 bg-gradient-to-r from-indigo-600/20 to-blue-700/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                  <span className="text-lg sm:text-xl text-white">🏋️‍♂️</span>
+                </div>
+                <div>
+                  <h1 className="text-base sm:text-lg font-bold text-white">
+                    {name}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                    <div className="bg-white/10 px-2 py-1 rounded text-white/90 text-xs border border-white/20">
                       {subject === "mail" && "البريد"}
                       {subject === "math" && "تربية رياضيات"}
                       {subject === "english" && "تربية انجليزي"}
                       {subject === "science" && "تربية علوم"}
                       {subject === "social" && "تربية دراسات"}
                       {subject === "arabic" && "تربية لغة عربية"}
+                    </div>
 
-                      {phase && " - "}
-                      {getPhaseName(phase)}
+                    <div className="text-blue-300 text-xs flex items-center gap-1">
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span>وضع التدريب</span>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="hidden md:flex items-center gap-2 text-sm">
-                    <span className="bg-green-600/40 text-white px-2 py-1 rounded-lg border border-green-500/50 flex items-center gap-1">
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      {stats.correct}
-                    </span>
-                    <span className="bg-red-600/40 text-white px-2 py-1 rounded-lg border border-red-500/50 flex items-center gap-1">
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      {stats.incorrect}
-                    </span>
-                    <span className="bg-white/20 text-white/90 px-2 py-1 rounded-lg border border-white/30 flex items-center gap-1">
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      {stats.unanswered}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={handleExit}
-                    className="px-2 py-1 sm:px-3 sm:py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs sm:text-sm transition-colors border border-white/30"
-                  >
-                    إلغاء التدريب
-                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Progress bar - always visible under header */}
-          <div className="h-1.5 bg-white/10 mt-1">
-            <div
-              className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-
-          {/* Scrollable content area - THIS IS THE KEY RESPONSIVE FIX */}
+          {/* Scrollable content area */}
           <div className="flex-1 p-2 sm:p-4 overflow-auto" ref={contentRef}>
-            {/* Question progress and navigation */}
-            <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6 ">
-              <div className="p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-white/20 text-white px-3 py-2 rounded-lg border border-white/30 font-medium text-sm">
-                      سؤال {currentQuestionIndex + 1} من {questions.length}
-                    </div>
+            {/* Progress bar */}
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-3">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
 
-                    <div className="flex md:hidden items-center gap-2 text-xs">
-                      <span className="bg-green-600/40 text-white px-2 py-1 rounded-lg border border-green-500/50 flex items-center gap-1">
-                        {stats.correct}
-                      </span>
-                      <span className="bg-red-600/40 text-white px-2 py-1 rounded-lg border border-red-500/50 flex items-center gap-1">
-                        {stats.incorrect}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Progress navigation buttons - IMPROVED SCROLLING */}
-                  <div className="overflow-x-auto pb-2 sm:pb-0 flex justify-center sm:justify-start">
-                    <ProgressIndicator
-                      currentQuestion={currentQuestionIndex}
-                      totalQuestions={questions.length}
-                      answers={answers}
-                      onJumpToQuestion={handleJumpToQuestion}
-                    />
-                  </div>
+            {/* Questions Navigator */}
+            <div className="glass-card rounded-xl border border-white/30 mb-3 sm:mb-4 overflow-hidden">
+              <div className="py-2 px-3">
+                <div className="overflow-x-auto no-scrollbar flex items-center justify-start">
+                  <ProgressIndicator
+                    currentQuestion={currentQuestionIndex}
+                    totalQuestions={questions.length}
+                    answers={answers}
+                    onJumpToQuestion={handleJumpToQuestion}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Question card - IMPROVED WITH PROPER OVERFLOW */}
+            {/* Include this CSS somewhere in your global styles or in a style tag */}
+            <style jsx>{`
+              .no-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+              .no-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}</style>
+
+            {/* Question card */}
             <div
               ref={questionCardRef}
               className={`relative transition-all duration-300 ease-out ${
@@ -780,21 +825,21 @@ const QuestionContent = memo(() => {
                   : "opacity-100 transform translate-y-0"
               }`}
             >
-              <div className="glass-card rounded-xl border border-white/30 mb-4 sm:mb-6">
-                <div className="p-3 sm:p-5 border-b border-white/20 bg-gradient-to-r from-blue-900/50 to-indigo-900/50">
-                  <div className="flex items-start sm:items-center gap-3">
+              <div className="glass-card rounded-xl border border-white/30 mb-3 sm:mb-4">
+                <div className="p-3 sm:p-4 border-b border-white/20 bg-gradient-to-r from-blue-900/50 to-indigo-900/50">
+                  <div className="flex items-start gap-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/30">
                       <span className="text-base sm:text-lg">❓</span>
                     </div>
-                    <h2 className="text-base sm:text-lg font-bold text-white">
+                    <h2 className="text-sm sm:text-base font-bold text-white">
                       {currentQuestion?.text}
                     </h2>
                   </div>
                 </div>
 
-                <div className="p-3 sm:p-5">
+                <div className="p-3 sm:p-4">
                   {/* Options */}
-                  <div className="space-y-2 mb-2">
+                  <div className="space-y-0 mb-2">
                     {currentQuestion?.options.map((option, index) => (
                       <QuestionOption
                         key={index}
@@ -812,11 +857,11 @@ const QuestionContent = memo(() => {
                   </div>
 
                   {!isAnswered && (
-                    <div className="bg-blue-600/20 rounded-xl p-3 sm:p-4 border border-blue-500/40 mt-4 sm:mt-6">
-                      <div className="flex items-start gap-3">
+                    <div className="bg-blue-600/20 rounded-xl p-3 sm:p-4 border border-blue-500/40 mt-3 sm:mt-4">
+                      <div className="flex items-start gap-2 sm:gap-3">
                         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/30 rounded-lg flex items-center justify-center flex-shrink-0 border border-blue-400/50">
                           <svg
-                            className="w-4 h-4 sm:w-6 sm:h-6 text-blue-300"
+                            className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -830,10 +875,10 @@ const QuestionContent = memo(() => {
                           </svg>
                         </div>
                         <div>
-                          <h4 className="font-bold text-blue-300 mb-1 text-sm sm:text-base">
+                          <h4 className="font-bold text-blue-300 mb-1 text-xs sm:text-sm">
                             وضع التدريب
                           </h4>
-                          <p className="text-white/90 text-xs sm:text-sm">
+                          <p className="text-white/90 text-xs">
                             اختر إجابتك وستظهر لك النتيجة فوراً مع توضيح الإجابة
                             الصحيحة
                           </p>
@@ -855,77 +900,20 @@ const QuestionContent = memo(() => {
             </div>
           </div>
 
-          {/* Fixed footer with navigation buttons - RESPONSIVE IMPROVEMENTS */}
-          <div className="glass-card border-t border-white/30 p-3 sm:p-4 shadow-lg flex justify-between mb-4">
-            <button
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestionIndex === 0 || isTransitioning}
-              className={`px-3 py-2 sm:px-4 sm:py-2 rounded-xl transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
-                currentQuestionIndex === 0 || isTransitioning
-                  ? "bg-white/10 text-white/40 cursor-not-allowed"
-                  : "bg-white/20 text-white hover:bg-white/30 border border-white/30"
-              }`}
-            >
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span className="hidden xs:inline">السؤال السابق</span>
-              <span className="inline xs:hidden">السابق</span>
-            </button>
-
-            {showCompleteButton ? (
+          {/* Fixed footer with navigation buttons */}
+          <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-900/95 to-indigo-900/95 backdrop-blur-md border-t border-white/10 shadow-lg z-40">
+            <div className="max-w-4xl mx-auto p-3 flex justify-between items-center">
               <button
-                onClick={handleComplete}
-                className="px-3 py-2 sm:px-6 sm:py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 text-xs sm:text-sm border border-green-500/50"
-              >
-                <span className="hidden xs:inline">
-                  إنهاء التدريب وعرض النتائج
-                </span>
-                <span className="inline xs:hidden">عرض النتائج</span>
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                  />
-                </svg>
-              </button>
-            ) : (
-              <button
-                onClick={handleNextQuestion}
-                disabled={
-                  !isAnswered ||
-                  isTransitioning ||
-                  currentQuestionIndex === questions.length - 1
-                }
-                className={`px-3 py-2 sm:px-6 sm:py-2 rounded-xl transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
-                  !isAnswered ||
-                  isTransitioning ||
-                  currentQuestionIndex === questions.length - 1
+                onClick={handlePreviousQuestion}
+                disabled={currentQuestionIndex === 0 || isTransitioning}
+                className={`px-3 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 text-xs ${
+                  currentQuestionIndex === 0 || isTransitioning
                     ? "bg-white/10 text-white/40 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg border border-blue-500/50"
+                    : "bg-white/15 text-white hover:bg-white/25 border border-white/30"
                 }`}
               >
-                <span className="hidden xs:inline">السؤال التالي</span>
-                <span className="inline xs:hidden">التالي</span>
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  className="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -934,11 +922,76 @@ const QuestionContent = memo(() => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 5l7 7-7 7"
+                    d="M15 19l-7-7 7-7"
                   />
                 </svg>
+                <span className="hidden sm:inline">السؤال السابق</span>
+                <span className="sm:hidden">السابق</span>
               </button>
-            )}
+
+              <div className="text-center">
+                <div className="text-white/90 text-xs">
+                  {currentQuestionIndex + 1} من {questions.length}
+                </div>
+              </div>
+
+              {showCompleteButton ? (
+                <button
+                  onClick={handleComplete}
+                  className="px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center gap-2 text-xs border border-green-500/50"
+                >
+                  <span className="hidden sm:inline">
+                    إنهاء التدريب وعرض النتائج
+                  </span>
+                  <span className="sm:hidden">إنهاء التدريب</span>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={handleNextQuestion}
+                  disabled={
+                    !isAnswered ||
+                    isTransitioning ||
+                    currentQuestionIndex === questions.length - 1
+                  }
+                  className={`px-3 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 text-xs ${
+                    !isAnswered ||
+                    isTransitioning ||
+                    currentQuestionIndex === questions.length - 1
+                      ? "bg-white/10 text-white/40 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg border border-blue-500/50"
+                  }`}
+                >
+                  <span className="hidden sm:inline">السؤال التالي</span>
+                  <span className="sm:hidden">التالي</span>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -965,8 +1018,24 @@ export default function TrainingQuestionsPage() {
   }
 
   return (
-    <>
-      {/* <Header /> */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 pattern-grid">
+      {/* Background Elements - Self-contained in this component */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute inset-0 pattern-dots opacity-30"></div>
+        <div className="absolute top-0 -right-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-3xl floating"></div>
+        <div
+          className="absolute bottom-0 -left-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-3xl floating"
+          style={{ animationDelay: "-4s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 w-[1200px] h-[1200px] bg-purple-600/5 rounded-full blur-3xl floating"
+          style={{
+            animationDelay: "-2s",
+            transform: "translate(-50%, -50%)",
+          }}
+        ></div>
+      </div>
+
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">
@@ -976,7 +1045,7 @@ export default function TrainingQuestionsPage() {
       >
         <QuestionContent />
       </Suspense>
-    </>
+    </div>
   );
 }
 
