@@ -223,6 +223,10 @@ export default function RootLayout({ children }) {
     })();
   `}
         </Script>
+        <meta
+          name="google-site-verification"
+          content="9ONgVce-npC3xfNatprDnUxBA4iOXA0tyeX87199ev4"
+        />
       </head>
 
       <body

@@ -1503,7 +1503,7 @@ export default function Home() {
             </button>
 
             {/* NEW Training Mode Button */}
-            {/* <Link
+            <Link
               href="/training"
               className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-300 group"
               aria-label="وضع التدريب"
@@ -1534,7 +1534,7 @@ export default function Home() {
                   </p>
                 </div>
               </div>
-            </Link> */}
+            </Link>
 
             <Link
               href="/pdfs"
